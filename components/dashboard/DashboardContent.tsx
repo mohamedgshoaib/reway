@@ -49,6 +49,7 @@ import {
   checkDuplicateBookmarks,
   deleteBookmark as deleteAction,
   enrichCreatedBookmark,
+  moveBookmarksToGroup,
   restoreBookmark as restoreAction,
   updateBookmark as updateBookmarkAction,
   updateBookmarksOrder,
@@ -385,6 +386,7 @@ export function DashboardContent({
     handleToggleSelection,
     handleOpenSelected,
     handleBulkDelete,
+    handleMoveSelectedToGroup,
     handleCancelSelection,
   } = useSelectionActions({
     bookmarks: dashboard.bookmarks,
@@ -395,6 +397,7 @@ export function DashboardContent({
     initialBookmarks,
     deleteBookmark: deleteAction,
     restoreBookmark: restoreAction,
+    moveBookmarksToGroup,
     lastBulkDeletedRef: dashboard.lastBulkDeletedRef,
   });
 
@@ -481,6 +484,7 @@ export function DashboardContent({
       handleSetTodosCompleted={handleSetTodosCompleted}
       handleOpenSelected={handleOpenSelected}
       handleBulkDelete={handleBulkDelete}
+      handleMoveSelectedToGroup={handleMoveSelectedToGroup}
       handleCancelSelection={handleCancelSelection}
       isFilteredSearch={isFilteredSearch}
     />

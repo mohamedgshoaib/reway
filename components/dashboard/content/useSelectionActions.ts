@@ -34,6 +34,10 @@ interface UseSelectionActionsOptions {
   initialBookmarks: BookmarkRow[];
   deleteBookmark: (id: string) => Promise<void>;
   restoreBookmark: (bookmark: BookmarkRow) => Promise<void>;
+  moveBookmarksToGroup: (
+    ids: string[],
+    targetGroupId: string | null,
+  ) => Promise<void>;
   lastBulkDeletedRef: React.MutableRefObject<
     { bookmark: BookmarkRow; index: number }[]
   >;
@@ -48,6 +52,7 @@ export function useSelectionActions({
   initialBookmarks,
   deleteBookmark,
   restoreBookmark,
+  moveBookmarksToGroup,
   lastBulkDeletedRef,
 }: UseSelectionActionsOptions) {
   const pendingRequestsRef = useRef(
@@ -228,6 +233,92 @@ export function useSelectionActions({
     setSelectionMode,
   ]);
 
+  const handleMoveSelectedToGroup = useCallback(
+    async (targetGroupId: string | null) => {
+      const idsToMove = Array.from(selectedIds);
+      if (idsToMove.length === 0) return;
+
+      const idSet = new Set(idsToMove);
+      const previousGroups = new Map<string, string | null>();
+      let changedCount = 0;
+
+      bookmarks.forEach((bookmark) => {
+        if (!idSet.has(bookmark.id)) return;
+        const prevGroupId = bookmark.group_id ?? null;
+        previousGroups.set(bookmark.id, prevGroupId);
+        if (prevGroupId !== targetGroupId) {
+          changedCount += 1;
+        }
+      });
+
+      if (changedCount === 0) {
+        toast.info("Selected bookmarks are already in that group");
+        return;
+      }
+
+      setBookmarks((prev) =>
+        prev.map((bookmark) =>
+          idSet.has(bookmark.id)
+            ? {
+                ...bookmark,
+                group_id: targetGroupId,
+              }
+            : bookmark,
+        ),
+      );
+      setSelectionMode(false);
+      setSelectedIds(new Set());
+
+      toast.success(
+        `Moved ${changedCount} bookmark${changedCount === 1 ? "" : "s"}`,
+        {
+          action: {
+            label: "Undo",
+            onClick: async () => {
+              setBookmarks((prev) =>
+                prev.map((bookmark) => {
+                  const originalGroupId = previousGroups.get(bookmark.id);
+                  if (originalGroupId === undefined) return bookmark;
+                  return {
+                    ...bookmark,
+                    group_id: originalGroupId,
+                  };
+                }),
+              );
+
+              try {
+                const restoreTasks = Array.from(previousGroups.entries()).map(
+                  ([id, groupId]) => moveBookmarksToGroup([id], groupId),
+                );
+                await Promise.all(restoreTasks);
+              } catch (error) {
+                console.error("Undo move failed:", error);
+                toast.error("Failed to undo move");
+              }
+            },
+          },
+        },
+      );
+
+      try {
+        await moveBookmarksToGroup(idsToMove, targetGroupId);
+      } catch (error) {
+        console.error("Bulk move failed:", error);
+        toast.error("Failed to move selected bookmarks");
+        setBookmarks(initialBookmarks);
+      }
+    },
+    [
+      bookmarks,
+      initialBookmarks,
+      moveBookmarksToGroup,
+      selectedIds,
+      setBookmarks,
+      setSelectedIds,
+      setSelectionMode,
+    ],
+  );
+
   const handleCancelSelection = useCallback(() => {
     setSelectionMode(false);
     setSelectedIds(new Set());
@@ -237,6 +328,7 @@ export function useSelectionActions({
     handleToggleSelection,
     handleOpenSelected,
     handleBulkDelete,
+    handleMoveSelectedToGroup,
     handleCancelSelection,
   };
 }

@@ -27,6 +27,7 @@ interface UseImportHandlersOptions {
     id?: string;
     title?: string;
     group_id?: string;
+    order_index?: number;
   }) => Promise<string | undefined>;
   createGroup: (formData: {
     name: string;
@@ -106,7 +107,10 @@ export function useImportHandlers({
         },
       });
 
-      setImportPreview({ groups: preview.groupSummaries, entries: preview.entries });
+      setImportPreview({
+        groups: preview.groupSummaries,
+        entries: preview.entries,
+      });
     },
     [checkDuplicateBookmarks, normalizeGroupName, parseBookmarkHtml],
   );
@@ -202,7 +206,7 @@ export function useImportHandlers({
           entry,
           groupId,
           optimisticId: crypto.randomUUID(),
-          orderIndex: startingOrder - (index + 1),
+          orderIndex: startingOrder - (entries.length - index),
           normalizedUrl: (() => {
             try {
               return normalizeUrl(entry.url);
@@ -266,6 +270,7 @@ export function useImportHandlers({
             id: optimisticId,
             title: entry.title,
             group_id: groupId ?? undefined,
+            order_index: orderIndex,
           });
 
           const stableId = bookmarkId ?? optimisticId;
@@ -403,9 +408,14 @@ export function useImportHandlers({
         );
       };
 
-      await runWithConcurrency(pendingEntries, CREATE_CONCURRENCY, handleCreate, {
-        shouldStop: () => stopRequestedRef.current,
-      });
+      await runWithConcurrency(
+        pendingEntries,
+        CREATE_CONCURRENCY,
+        handleCreate,
+        {
+          shouldStop: () => stopRequestedRef.current,
+        },
+      );
 
       setImportProgress({
         processed: Math.min(processedRef.current, entries.length),

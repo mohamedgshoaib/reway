@@ -42,6 +42,7 @@ const createdAtFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const CROSS_GROUP_DROP_TOAST_DELAY_MS = 240;
+const UNGROUPED_DRAG_BUCKET = "__ungrouped__";
 
 interface BookmarkBoardProps {
   bookmarks: BookmarkRow[];
@@ -121,7 +122,8 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     });
 
     const getGroupKey = (groupId?: string | null) => {
-      if (!groupId) return Number.POSITIVE_INFINITY;
+      // In All Bookmarks only, keep sidebar order but render ungrouped first.
+      if (!groupId) return Number.NEGATIVE_INFINITY;
       return groupOrder.get(groupId) ?? Number.POSITIVE_INFINITY;
     };
 
@@ -191,12 +193,15 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     ? (bookmarks.find((b) => b.id === activeId) ?? null)
     : null;
 
-  const activeBookmarkGroupId = activeBookmark?.group_id ?? null;
+  const getDragBucket = (groupId?: string | null) =>
+    groupId ?? UNGROUPED_DRAG_BUCKET;
+
+  const activeDragBucket = activeBookmark
+    ? getDragBucket(activeBookmark.group_id)
+    : null;
 
   const isGroupRestrictedDragActive =
-    activeGroupId === "all" &&
-    Boolean(activeId) &&
-    Boolean(activeBookmarkGroupId);
+    activeGroupId === "all" && Boolean(activeId) && activeDragBucket !== null;
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
@@ -215,15 +220,13 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       const overItem = bookmarks.find((b) => b.id === over.id) ?? null;
 
       const groupId = activeItem?.group_id ?? null;
-      if (!groupId) {
-        setActiveId(null);
-        return;
-      }
+      const activeBucket = getDragBucket(groupId);
+      const overBucket = overItem ? getDragBucket(overItem.group_id) : null;
 
-      if (!overItem || (overItem.group_id ?? null) !== groupId) {
+      if (!overItem || overBucket !== activeBucket) {
         setActiveId(null);
 
-        if (overItem && (overItem.group_id ?? null) !== groupId) {
+        if (overItem && overBucket !== activeBucket) {
           window.setTimeout(() => {
             toast.error("Bookmarks can’t be dragged between groups");
           }, CROSS_GROUP_DROP_TOAST_DELAY_MS);
@@ -233,12 +236,15 @@ export const BookmarkBoard = memo(function BookmarkBoard({
 
       if (active.id !== over.id) {
         const groupBookmarks = orderedBookmarks.filter(
-          (b) => (b.group_id ?? null) === groupId,
+          (b) => getDragBucket(b.group_id) === activeBucket,
         );
         const oldIndex = groupBookmarks.findIndex((b) => b.id === active.id);
         const newIndex = groupBookmarks.findIndex((b) => b.id === over.id);
         if (oldIndex >= 0 && newIndex >= 0) {
-          onReorder(groupId, arrayMove(groupBookmarks, oldIndex, newIndex));
+          onReorder(
+            groupId ?? "no-group",
+            arrayMove(groupBookmarks, oldIndex, newIndex),
+          );
         }
       }
 
@@ -305,6 +311,10 @@ export const BookmarkBoard = memo(function BookmarkBoard({
             data-slot="bookmark-board"
           >
             {renderedDisplayBookmarks.map((bookmark, index) => {
+              const bookmarkDragBucket = getDragBucket(
+                renderedBookmarks[index]?.group_id ?? null,
+              );
+
               if (viewMode === "card") {
                 return (
                   <SortableBookmarkCard
@@ -318,8 +328,8 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                     activeGroupId={activeGroupId}
                     dragDimmed={
                       Boolean(isGroupRestrictedDragActive) &&
-                      Boolean(activeBookmarkGroupId) &&
-                      bookmark.groupId !== activeBookmarkGroupId
+                      activeDragBucket !== null &&
+                      bookmarkDragBucket !== activeDragBucket
                     }
                     onDelete={onDeleteBookmark}
                     onEdit={(id: string) => {
@@ -367,8 +377,8 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                   selectionMode={selectionMode}
                   dragDimmed={
                     Boolean(isGroupRestrictedDragActive) &&
-                    Boolean(activeBookmarkGroupId) &&
-                    bookmark.groupId !== activeBookmarkGroupId
+                    activeDragBucket !== null &&
+                    bookmarkDragBucket !== activeDragBucket
                   }
                   isSelectionChecked={stableSelectedIds.has(bookmark.id)}
                   onToggleSelection={onToggleSelection}

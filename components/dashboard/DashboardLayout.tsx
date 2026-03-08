@@ -115,6 +115,7 @@ export function DashboardLayout({
   handleSetTodosCompleted,
   handleOpenSelected,
   handleBulkDelete,
+  handleMoveSelectedToGroup,
   handleCancelSelection,
   isFilteredSearch,
 }: {
@@ -257,6 +258,7 @@ export function DashboardLayout({
   handleSetTodosCompleted: (ids: string[], completed: boolean) => Promise<void>;
   handleOpenSelected: () => void;
   handleBulkDelete: () => Promise<void>;
+  handleMoveSelectedToGroup: (groupId: string | null) => Promise<void>;
   handleCancelSelection: () => void;
   isFilteredSearch: boolean;
 }) {
@@ -449,8 +451,10 @@ export function DashboardLayout({
           {selectionMode && selectedIds.size > 0 && (
             <FloatingActionBar
               selectedCount={selectedIds.size}
+              groups={groups}
               onOpenSelected={handleOpenSelected}
               onBulkDelete={handleBulkDelete}
+              onMoveSelectedToGroup={handleMoveSelectedToGroup}
               onCancelSelection={handleCancelSelection}
             />
           )}

@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   AlertDialog,
@@ -15,18 +22,31 @@ import {
 
 interface FloatingActionBarProps {
   selectedCount: number;
+  groups: { id: string; name: string }[];
   onOpenSelected: () => void;
   onBulkDelete: () => void;
+  onMoveSelectedToGroup: (groupId: string | null) => Promise<void>;
   onCancelSelection: () => void;
 }
 
 export function FloatingActionBar({
   selectedCount,
+  groups,
   onOpenSelected,
   onBulkDelete,
+  onMoveSelectedToGroup,
   onCancelSelection,
 }: FloatingActionBarProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [moveValue, setMoveValue] = useState<string | undefined>(undefined);
+  const [isMoving, setIsMoving] = useState(false);
+
+  const moveOptions = [
+    { id: "no-group", name: "No Group" },
+    ...groups
+      .filter((group) => group.id !== "no-group")
+      .map((group) => ({ id: group.id, name: group.name })),
+  ];
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -47,6 +67,38 @@ export function FloatingActionBar({
           >
             Open
           </button>
+          <Select
+            value={moveValue}
+            onValueChange={async (value) => {
+              if (isMoving) return;
+              setMoveValue(value);
+              setIsMoving(true);
+              try {
+                await onMoveSelectedToGroup(
+                  value === "no-group" ? null : value,
+                );
+              } finally {
+                setIsMoving(false);
+                setMoveValue(undefined);
+              }
+            }}
+            disabled={isMoving}
+          >
+            <SelectTrigger
+              size="sm"
+              className="h-8 rounded-xl bg-muted/50 hover:bg-muted text-foreground font-medium text-sm"
+              aria-label="Move selected bookmarks to a group"
+            >
+              <SelectValue placeholder={isMoving ? "Moving..." : "Move to"} />
+            </SelectTrigger>
+            <SelectContent>
+              {moveOptions.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             type="button"
             onClick={() => setDeleteDialogOpen(true)}

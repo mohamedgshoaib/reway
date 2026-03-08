@@ -48,6 +48,7 @@ export async function addBookmark(formData: {
   og_image_url?: string;
   description?: string;
   group_id?: string;
+  order_index?: number;
 }) {
   const supabase = await createClient();
 
@@ -56,14 +57,17 @@ export async function addBookmark(formData: {
     throw new Error("Unauthorized");
   }
 
-  const { data: minOrderData } = await supabase
-    .from("bookmarks")
-    .select("order_index")
-    .order("order_index", { ascending: true })
-    .limit(1)
-    .single();
+  let nextOrderIndex = formData.order_index;
+  if (nextOrderIndex === undefined || nextOrderIndex === null) {
+    const { data: minOrderData } = await supabase
+      .from("bookmarks")
+      .select("order_index")
+      .order("order_index", { ascending: true })
+      .limit(1)
+      .single();
 
-  const nextOrderIndex = minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0;
+    nextOrderIndex = minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0;
+  }
 
   const normalizedUrl = normalizeUrl(formData.url);
   const title = formData.title || normalizedUrl;
@@ -130,7 +134,8 @@ export async function enrichCreatedBookmark(id: string, url: string) {
       if (key === "x.com" || key === "twitter.com") return "X";
       if (key === "tiktok.com") return "TikTok";
       const parts = key.split(".").filter(Boolean);
-      const base = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || key;
+      const base =
+        parts.length >= 2 ? parts[parts.length - 2] : parts[0] || key;
       return base ? base.charAt(0).toUpperCase() + base.slice(1) : null;
     };
 
@@ -138,10 +143,14 @@ export async function enrichCreatedBookmark(id: string, url: string) {
     const currentUrl = (existingBookmark.url ?? "").trim();
     const currentNormalized = (existingBookmark.normalized_url ?? "").trim();
     const isDefaultTitle =
-      !currentTitle || currentTitle === currentUrl || currentTitle === currentNormalized;
+      !currentTitle ||
+      currentTitle === currentUrl ||
+      currentTitle === currentNormalized;
 
     const computedFallbackTitle =
-      !nextTitle && isDefaultTitle ? fallbackTitleFromDomain(metadata.domain) : null;
+      !nextTitle && isDefaultTitle
+        ? fallbackTitleFromDomain(metadata.domain)
+        : null;
 
     const titleToWrite = nextTitle || computedFallbackTitle || null;
 
@@ -222,6 +231,47 @@ export async function updateBookmarksOrder(
   if (firstError) {
     console.error("Error updating order:", firstError);
     throw new Error(`Failed to update order: ${firstError.message}`);
+  }
+
+  revalidatePath("/dashboard");
+}
+
+export async function moveBookmarksToGroup(
+  ids: string[],
+  targetGroupId: string | null,
+) {
+  const supabase = await createClient();
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const uniqueIds = Array.from(new Set(ids)).filter(Boolean);
+  if (uniqueIds.length === 0) return;
+
+  if (targetGroupId) {
+    const { data: group, error: groupError } = await supabase
+      .from("groups")
+      .select("id")
+      .eq("id", targetGroupId)
+      .eq("user_id", userData.user.id)
+      .single();
+
+    if (groupError || !group) {
+      throw new Error("Invalid target group");
+    }
+  }
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .update({ group_id: targetGroupId })
+    .in("id", uniqueIds)
+    .eq("user_id", userData.user.id);
+
+  if (error) {
+    console.error("Error moving bookmarks:", error);
+    throw new Error("Failed to move bookmarks");
   }
 
   revalidatePath("/dashboard");
