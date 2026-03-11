@@ -67,7 +67,9 @@ export async function getGroups() {
 
   const { data, error } = await supabase
     .from("groups")
-    .select("id,name,icon,color,user_id,created_at,order_index")
+    .select(
+      "id,name,icon,color,user_id,created_at,order_index,hide_from_all_bookmarks",
+    )
     .order("order_index", { ascending: true })
     .order("name", { ascending: true });
 

@@ -118,6 +118,7 @@ export function DashboardLayout({
   handleMoveSelectedToGroup,
   handleCancelSelection,
   isFilteredSearch,
+  handleToggleHideFromAllBookmarks,
 }: {
   layoutDensity: "compact" | "extended";
   showNotesTodos: boolean;
@@ -261,6 +262,10 @@ export function DashboardLayout({
   handleMoveSelectedToGroup: (groupId: string | null) => Promise<void>;
   handleCancelSelection: () => void;
   isFilteredSearch: boolean;
+  handleToggleHideFromAllBookmarks: (
+    id: string,
+    hide: boolean,
+  ) => Promise<void>;
 }) {
   const groupsWithNoGroup = useMemo(() => {
     const hasUngrouped = bookmarks.some((b) => !b.group_id);
@@ -275,6 +280,7 @@ export function DashboardLayout({
         color: null,
         user_id: "",
         created_at: new Date().toISOString(),
+        hide_from_all_bookmarks: false,
         order_index: null,
       },
     ];
@@ -316,6 +322,7 @@ export function DashboardLayout({
             setNewGroupColor={setNewGroupColor}
             isCreatingGroup={isCreatingGroup}
             handleInlineCreateGroup={handleInlineCreateGroup}
+            onToggleHideFromAllBookmarks={handleToggleHideFromAllBookmarks}
             layoutDensity={layoutDensity}
           />
 

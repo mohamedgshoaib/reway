@@ -2,7 +2,10 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { checkDuplicateGroup } from "@/app/dashboard/actions/groups";
+import {
+  checkDuplicateGroup,
+  toggleHideFromAllBookmarks,
+} from "@/app/dashboard/actions/groups";
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
 
 interface UseGroupActionsOptions {
@@ -29,7 +32,12 @@ interface UseGroupActionsOptions {
   }) => Promise<string>;
   updateGroup: (
     id: string,
-    formData: { name: string; icon: string; color?: string | null },
+    formData: {
+      name: string;
+      icon: string;
+      color?: string | null;
+      hide_from_all_bookmarks?: boolean | null;
+    },
   ) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
   restoreGroup: (group: {
@@ -37,6 +45,7 @@ interface UseGroupActionsOptions {
     name: string;
     icon: string;
     color?: string | null;
+    hide_from_all_bookmarks?: boolean | null;
   }) => Promise<void>;
   restoreBookmark: (bookmark: BookmarkRow) => Promise<void>;
   lastDeletedGroupBookmarksRef: React.MutableRefObject<BookmarkRow[]>;
@@ -103,6 +112,7 @@ export function useGroupActions({
         icon,
         user_id: userId,
         created_at: new Date().toISOString(),
+        hide_from_all_bookmarks: false,
         color: color ?? null,
         order_index: null,
       };
@@ -232,6 +242,7 @@ export function useGroupActions({
                   name: lastDeleted.name,
                   icon: lastDeleted.icon || "folder",
                   color: lastDeleted.color,
+                  hide_from_all_bookmarks: lastDeleted.hide_from_all_bookmarks,
                 });
                 if (restoreBookmarks.length > 0) {
                   await Promise.allSettled(
@@ -344,11 +355,36 @@ export function useGroupActions({
     ],
   );
 
+  const handleToggleHideFromAllBookmarks = useCallback(
+    async (id: string, hide: boolean) => {
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === id ? { ...g, hide_from_all_bookmarks: hide } : g,
+        ),
+      );
+
+      try {
+        await toggleHideFromAllBookmarks(id, hide);
+        toast.success(hide ? "Hidden from All" : "Visible in All");
+      } catch (error) {
+        console.error("Toggle group visibility failed:", error);
+        toast.error("Failed to update group visibility");
+        setGroups((prev) =>
+          prev.map((g) =>
+            g.id === id ? groups.find((og) => og.id === id) || g : g,
+          ),
+        );
+      }
+    },
+    [groups, setGroups],
+  );
+
   return {
     handleGroupCreated,
     handleUpdateGroup,
     handleSidebarGroupUpdate,
     handleDeleteGroup,
     handleInlineCreateGroup,
+    handleToggleHideFromAllBookmarks,
   };
 }

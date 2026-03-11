@@ -84,7 +84,12 @@ export async function createGroup(formData: {
 
 export async function updateGroup(
   id: string,
-  formData: { name: string; icon: string; color?: string | null },
+  formData: {
+    name: string;
+    icon: string;
+    color?: string | null;
+    hide_from_all_bookmarks?: boolean | null;
+  },
 ) {
   const supabase = await createClient();
 
@@ -99,6 +104,7 @@ export async function updateGroup(
       name: formData.name,
       icon: formData.icon,
       color: formData.color ?? null,
+      hide_from_all_bookmarks: formData.hide_from_all_bookmarks ?? false,
     })
     .eq("id", id)
     .eq("user_id", userData.user.id);
@@ -170,6 +176,7 @@ export async function restoreGroup(group: {
   name: string;
   icon: string;
   color?: string | null;
+  hide_from_all_bookmarks?: boolean | null;
 }) {
   const supabase = await createClient();
 
@@ -185,6 +192,7 @@ export async function restoreGroup(group: {
       name: group.name,
       icon: group.icon,
       color: group.color ?? null,
+      hide_from_all_bookmarks: group.hide_from_all_bookmarks ?? false,
       user_id: userData.user.id,
     })
     .eq("user_id", userData.user.id);
@@ -192,6 +200,30 @@ export async function restoreGroup(group: {
   if (error) {
     console.error("Error restoring group:", error);
     throw new Error("Failed to restore group");
+  }
+
+  revalidatePath("/dashboard");
+}
+
+export async function toggleHideFromAllBookmarks(id: string, hide: boolean) {
+  const supabase = await createClient();
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const { error } = await supabase
+    .from("groups")
+    .update({
+      hide_from_all_bookmarks: hide,
+    })
+    .eq("id", id)
+    .eq("user_id", userData.user.id);
+
+  if (error) {
+    console.error("Error toggling group visibility:", error);
+    throw new Error("Failed to update group visibility");
   }
 
   revalidatePath("/dashboard");

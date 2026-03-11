@@ -65,6 +65,7 @@ interface DashboardSidebarProps {
   setNewGroupColor: (value: string | null) => void;
   isCreatingGroup: boolean;
   handleInlineCreateGroup: (onError?: () => void) => void;
+  onToggleHideFromAllBookmarks: (id: string, hide: boolean) => void;
   layoutDensity?: "compact" | "extended";
 }
 
@@ -95,6 +96,7 @@ export function DashboardSidebar({
   setNewGroupColor,
   isCreatingGroup,
   handleInlineCreateGroup,
+  onToggleHideFromAllBookmarks,
   layoutDensity = "compact",
 }: DashboardSidebarProps) {
   const reorderableGroups = groups.filter((g) => g.id !== "no-group");
@@ -353,6 +355,9 @@ export function DashboardSidebar({
                           setEditGroupColor(group.color || "#6366f1");
                         }}
                         onRequestDelete={() => openDeleteDialog(group)}
+                        onToggleHideFromAllBookmarks={(hide) =>
+                          onToggleHideFromAllBookmarks(group.id, hide)
+                        }
                       />
                     </SortableGroupRowItem>
                   );

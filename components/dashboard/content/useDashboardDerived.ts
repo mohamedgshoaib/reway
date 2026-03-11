@@ -21,7 +21,10 @@ export function useDashboardDerived({
     return bookmarks.filter((b) => {
       const matchesGroup =
         activeGroupId === "all"
-          ? true
+          ? (() => {
+              const group = groups.find((g) => g.id === b.group_id);
+              return !group?.hide_from_all_bookmarks;
+            })()
           : activeGroupId === "no-group"
             ? !b.group_id
             : b.group_id === activeGroupId;
@@ -33,7 +36,7 @@ export function useDashboardDerived({
         .toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [activeGroupId, bookmarks, deferredSearchQuery]);
+  }, [activeGroupId, bookmarks, deferredSearchQuery, groups]);
 
   const groupCounts = useMemo(() => {
     const counts: Record<string, number> = {};

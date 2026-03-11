@@ -6,6 +6,7 @@ import {
   Folder01Icon,
   MoreVerticalIcon,
   PencilEdit01Icon,
+  ViewOffIcon,
 } from "@hugeicons/core-free-icons";
 import {
   ContextMenu,
@@ -34,6 +35,7 @@ export function GroupRowItem({
   onOpenGroup,
   onEdit,
   onRequestDelete,
+  onToggleHideFromAllBookmarks,
 }: {
   group: GroupRow;
   active: boolean;
@@ -45,6 +47,7 @@ export function GroupRowItem({
   onOpenGroup: () => void;
   onEdit: () => void;
   onRequestDelete: () => void;
+  onToggleHideFromAllBookmarks: (hide: boolean) => void;
 }) {
   const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon;
 
@@ -109,6 +112,13 @@ export function GroupRowItem({
                   className={group.color ? "" : "text-foreground/80"}
                 />
                 <span className="truncate max-w-32">{group.name}</span>
+                {group.hide_from_all_bookmarks && (
+                  <HugeiconsIcon
+                    icon={ViewOffIcon}
+                    size={12}
+                    className="text-muted-foreground/60 ml-auto"
+                  />
+                )}
               </div>
             </div>
           )}
@@ -166,6 +176,18 @@ export function GroupRowItem({
                 <HugeiconsIcon icon={Delete02Icon} size={14} />
                 Delete group
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleHideFromAllBookmarks(!group.hide_from_all_bookmarks);
+                }}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                <HugeiconsIcon icon={ViewOffIcon} size={14} />
+                {group.hide_from_all_bookmarks
+                  ? "Show in All"
+                  : "Hide from All"}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -207,6 +229,15 @@ export function GroupRowItem({
         >
           <HugeiconsIcon icon={Delete02Icon} size={14} />
           Delete group
+        </ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() => {
+            onToggleHideFromAllBookmarks(!group.hide_from_all_bookmarks);
+          }}
+          className="gap-2 text-xs cursor-pointer"
+        >
+          <HugeiconsIcon icon={ViewOffIcon} size={14} />
+          {group.hide_from_all_bookmarks ? "Show in All" : "Hide from All"}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

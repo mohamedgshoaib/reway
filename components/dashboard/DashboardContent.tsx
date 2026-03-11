@@ -280,6 +280,7 @@ export function DashboardContent({
     handleSidebarGroupUpdate,
     handleDeleteGroup,
     handleInlineCreateGroup,
+    handleToggleHideFromAllBookmarks,
   } = useGroupActions({
     userId: user.id,
     activeGroupId: dashboard.activeGroupId,
@@ -445,6 +446,7 @@ export function DashboardContent({
       handleSidebarGroupUpdate={handleSidebarGroupUpdate}
       handleDeleteGroup={handleDeleteGroup}
       handleInlineCreateGroup={handleInlineCreateGroup}
+      handleToggleHideFromAllBookmarks={handleToggleHideFromAllBookmarks}
       exportGroupOptions={exportGroupOptions}
       handleGroupCreated={handleGroupCreated}
       handleUpdateGroup={handleUpdateGroup}
