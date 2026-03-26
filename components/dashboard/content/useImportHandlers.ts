@@ -178,6 +178,7 @@ export function useImportHandlers({
             color,
             user_id: userId,
             created_at: new Date().toISOString(),
+            hide_from_all_bookmarks: false,
             order_index: null,
           } satisfies GroupRow;
         }),

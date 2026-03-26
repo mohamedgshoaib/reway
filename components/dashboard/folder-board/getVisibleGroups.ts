@@ -1,5 +1,18 @@
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
 
+function createNoGroupRow(): GroupRow {
+  return {
+    id: "no-group",
+    name: "No Group",
+    icon: "alert-circle",
+    color: null,
+    user_id: "",
+    created_at: new Date().toISOString(),
+    hide_from_all_bookmarks: false,
+    order_index: null,
+  };
+}
+
 export function getVisibleGroups(options: {
   groups: GroupRow[];
   bookmarks: BookmarkRow[];
@@ -19,15 +32,7 @@ export function getVisibleGroups(options: {
 
     return [
       ...filtered,
-      {
-        id: "no-group",
-        name: "No Group",
-        icon: "folder",
-        color: null,
-        user_id: "",
-        created_at: new Date().toISOString(),
-        order_index: null,
-      },
+      createNoGroupRow(),
     ];
   }
 
@@ -36,14 +41,6 @@ export function getVisibleGroups(options: {
 
   return [
     ...groups,
-    {
-      id: "no-group",
-      name: "No Group",
-      icon: "folder",
-      color: null,
-      user_id: "",
-      created_at: new Date().toISOString(),
-      order_index: null,
-    },
+    createNoGroupRow(),
   ];
 }
