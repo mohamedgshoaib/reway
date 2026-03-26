@@ -237,10 +237,74 @@ body {
   margin-bottom: 12px;
 }
 
+.destination-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  width: fit-content;
+  margin: 0;
+}
+
+.destination-toggle-button {
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 16px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.destination-toggle-button:hover {
+  color: var(--foreground);
+  background: transparent;
+}
+
+.destination-toggle-button.active {
+  color: var(--foreground);
+  box-shadow: none;
+}
+
+.destination-toggle-button:not(:last-child)::after {
+  content: "/";
+  margin-left: 4px;
+  color: color-mix(in oklab, var(--muted-foreground), transparent 30%);
+}
+
+[id$="-existing-group-field"],
+[id$="-new-group-field"] {
+  margin-top: 8px;
+}
+
+.input-with-suffix {
+  position: relative;
+}
+
+.input-with-suffix input {
+  height: 36px;
+  padding-right: 48px;
+}
+
+.input-suffix {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 10px;
+  line-height: 1;
+}
+
 .field-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .field span {
@@ -547,7 +611,7 @@ button.success::after {
     0 0 0 2px color-mix(in oklab, var(--primary), transparent 70%);
 }
 
-.select-trigger #group-label {
+.select-trigger span:first-child {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -96,17 +96,24 @@ export async function loadGrabbedLinks() {
   });
 }
 
-export async function createGroupFromLinks() {
-  const nameInput = document.getElementById("links-group-name");
+export async function createGroupFromLinks(destination) {
   const createBtn = document.getElementById("create-group-from-links");
-  const groupName = nameInput.value.trim();
+  const statusTarget = document.getElementById("links-status");
+  const mode = destination?.mode || "new";
+  const groupName = destination?.groupName?.trim() || "";
+  const existingGroupId = destination?.groupId || "";
 
-  if (!groupName) {
+  if (mode === "new" && !groupName) {
     setStatus(
       "Please enter a group name",
       "error",
-      document.getElementById("links-status"),
+      statusTarget,
     );
+    return;
+  }
+
+  if (mode === "existing" && !existingGroupId) {
+    setStatus("Please select an existing group", "error", statusTarget);
     return;
   }
 
@@ -118,12 +125,17 @@ export async function createGroupFromLinks() {
   setLoading(createBtn, true, "Saving...");
 
   try {
-    const groupData = await apiFetch("/api/extension/groups", {
-      method: "POST",
-      body: JSON.stringify({ name: groupName }),
-    });
+    let groupId = existingGroupId;
 
-    const groupId = groupData.group.id;
+    if (mode === "new") {
+      const groupData = await apiFetch("/api/extension/groups", {
+        method: "POST",
+        body: JSON.stringify({ name: groupName }),
+      });
+
+      groupId = groupData.group.id;
+    }
+
     const promises = links.map((link) =>
       apiFetch("/api/extension/bookmarks", {
         method: "POST",
@@ -155,20 +167,23 @@ export async function createGroupFromLinks() {
     setLoading(createBtn, false, "✓ Saved!");
     if (duplicates.length > 0) {
       setStatus(
-        `Saved group. Skipped ${duplicates.length} duplicate bookmark(s).`,
+        `Saved links. Skipped ${duplicates.length} duplicate bookmark(s).`,
         "success",
-        document.getElementById("links-status"),
+        statusTarget,
       );
     }
     setTimeout(() => window.close(), 800);
   } catch (err) {
-    setLoading(createBtn, false, "Save as Group");
+    setLoading(createBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group");
 
     let message = "Failed to create group";
     if (err.status === 409) {
-      message = "⚠️ Group name already exists";
+      message =
+        "A group with this name already exists. Switch to Add to existing group.";
+    } else if (mode === "existing") {
+      message = "Failed to add links to group";
     }
 
-    setStatus(message, "error", document.getElementById("links-status"));
+    setStatus(message, "error", statusTarget);
   }
 }

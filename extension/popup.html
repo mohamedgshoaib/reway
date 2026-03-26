@@ -142,17 +142,62 @@
             ></textarea>
           </label>
 
-          <label class="field">
-            <span>Group</span>
-            <div class="select" id="group-select">
-              <button id="group-trigger" class="select-trigger" type="button">
-                <span id="group-label">No group</span>
-                <span class="select-chevron" aria-hidden="true"></span>
-              </button>
-              <div id="group-menu" class="select-menu" role="listbox"></div>
+          <div class="field">
+            <div class="field-header">
+              <div class="destination-toggle" id="save-destination-toggle">
+                <button
+                  type="button"
+                  class="destination-toggle-button active"
+                  data-flow="save"
+                  data-mode="existing"
+                  aria-pressed="true"
+                >
+                  Add to existing group
+                </button>
+                <button
+                  type="button"
+                  class="destination-toggle-button"
+                  data-flow="save"
+                  data-mode="new"
+                  aria-pressed="false"
+                >
+                  Add to new group
+                </button>
+              </div>
+            </div>
+            <div id="save-existing-group-field">
+              <div class="select" id="save-group-select">
+                <button
+                  id="save-group-trigger"
+                  class="select-trigger"
+                  type="button"
+                  aria-expanded="false"
+                >
+                  <span id="save-group-label">Select a group</span>
+                  <span class="select-chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="save-group-menu"
+                  class="select-menu"
+                  role="listbox"
+                ></div>
+              </div>
+            </div>
+            <div id="save-new-group-field" class="hidden">
+              <div class="input-with-suffix">
+                <input
+                  id="save-group-name"
+                  type="text"
+                  placeholder="New group name"
+                  maxlength="18"
+                />
+                <span id="save-group-char-count" class="input-suffix char-count"
+                  >0/18</span
+                >
+              </div>
             </div>
             <div id="status" class="status"></div>
-          </label>
+          </div>
 
           <div class="actions">
             <button id="save" class="primary">Save bookmark</button>
@@ -193,23 +238,64 @@
           </div>
 
           <div id="links-actions" class="link-grab-actions">
-            <label class="field">
+            <div class="field">
               <div class="field-header">
-                <span>Group Name</span>
-                <span id="links-group-char-count" class="char-count">0/18</span>
+                <div class="destination-toggle" id="links-destination-toggle">
+                  <button
+                    type="button"
+                    class="destination-toggle-button active"
+                    data-flow="links"
+                    data-mode="existing"
+                    aria-pressed="true"
+                  >
+                    Add to existing group
+                  </button>
+                  <button
+                    type="button"
+                    class="destination-toggle-button"
+                    data-flow="links"
+                    data-mode="new"
+                    aria-pressed="false"
+                  >
+                    Add to new group
+                  </button>
+                </div>
               </div>
-              <input
-                id="links-group-name"
-                type="text"
-                placeholder="My Research Links"
-                maxlength="18"
-              />
+              <div id="links-existing-group-field">
+                <div class="select" id="links-group-select">
+                  <button
+                    id="links-group-trigger"
+                    class="select-trigger"
+                    type="button"
+                    aria-expanded="false"
+                  >
+                    <span id="links-group-label">Select a group</span>
+                    <span class="select-chevron" aria-hidden="true"></span>
+                  </button>
+                  <div
+                    id="links-group-menu"
+                    class="select-menu"
+                    role="listbox"
+                  ></div>
+                </div>
+              </div>
+              <div id="links-new-group-field" class="hidden">
+                <div class="input-with-suffix">
+                  <input
+                    id="links-group-name"
+                    type="text"
+                    placeholder="My Research Links"
+                    maxlength="18"
+                  />
+                  <span id="links-group-char-count" class="input-suffix char-count"
+                    >0/18</span
+                  >
+                </div>
+              </div>
               <div id="links-status" class="status"></div>
-            </label>
+            </div>
             <div class="actions">
-              <button id="create-group-from-links" class="primary">
-                Save as Group
-              </button>
+              <button id="create-group-from-links" class="primary">Save Links</button>
             </div>
           </div>
         </div>
@@ -228,19 +314,62 @@
             </div>
           </div>
 
-          <label class="field">
+          <div class="field">
             <div class="field-header">
-              <span>Session Name</span>
-              <span id="session-char-count" class="char-count">0/18</span>
+              <div class="destination-toggle" id="session-destination-toggle">
+                <button
+                  type="button"
+                  class="destination-toggle-button active"
+                  data-flow="session"
+                  data-mode="existing"
+                  aria-pressed="true"
+                >
+                  Add to existing group
+                </button>
+                <button
+                  type="button"
+                  class="destination-toggle-button"
+                  data-flow="session"
+                  data-mode="new"
+                  aria-pressed="false"
+                >
+                  Add to new group
+                </button>
+              </div>
             </div>
-            <input
-              id="session-name"
-              type="text"
-              placeholder="My Work Session"
-              maxlength="18"
-            />
+            <div id="session-existing-group-field">
+              <div class="select" id="session-group-select">
+                <button
+                  id="session-group-trigger"
+                  class="select-trigger"
+                  type="button"
+                  aria-expanded="false"
+                >
+                  <span id="session-group-label">Select a group</span>
+                  <span class="select-chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="session-group-menu"
+                  class="select-menu"
+                  role="listbox"
+                ></div>
+              </div>
+            </div>
+            <div id="session-new-group-field" class="hidden">
+              <div class="input-with-suffix">
+                <input
+                  id="session-name"
+                  type="text"
+                  placeholder="My Work Session"
+                  maxlength="18"
+                />
+                <span id="session-char-count" class="input-suffix char-count"
+                  >0/18</span
+                >
+              </div>
+            </div>
             <div id="session-status" class="status"></div>
-          </label>
+          </div>
 
           <div class="actions">
             <button id="save-session" class="primary">Save Session</button>

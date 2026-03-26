@@ -69,17 +69,24 @@ export async function loadTabSession() {
   }
 }
 
-export async function saveTabSession() {
-  const nameInput = document.getElementById("session-name");
+export async function saveTabSession(destination) {
   const saveBtn = document.getElementById("save-session");
-  const sessionName = nameInput.value.trim();
+  const statusTarget = document.getElementById("session-status");
+  const mode = destination?.mode || "new";
+  const sessionName = destination?.groupName?.trim() || "";
+  const existingGroupId = destination?.groupId || "";
 
-  if (!sessionName) {
+  if (mode === "new" && !sessionName) {
     setStatus(
       "Please enter a session name",
       "error",
-      document.getElementById("session-status"),
+      statusTarget,
     );
+    return;
+  }
+
+  if (mode === "existing" && !existingGroupId) {
+    setStatus("Please select an existing group", "error", statusTarget);
     return;
   }
 
@@ -113,31 +120,28 @@ export async function saveTabSession() {
     });
 
     if (selectedTabs.length === 0) {
-      setLoading(saveBtn, false, "Save Session");
-      setStatus(
-        "No tabs selected",
-        "error",
-        document.getElementById("session-status"),
-      );
+      setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group");
+      setStatus("No tabs selected", "error", statusTarget);
       return;
     }
 
     if (selectedHttpTabs.length === 0) {
-      setLoading(saveBtn, false, "Save Session");
-      setStatus(
-        "No supported tabs selected",
-        "error",
-        document.getElementById("session-status"),
-      );
+      setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group");
+      setStatus("No supported tabs selected", "error", statusTarget);
       return;
     }
 
-    const groupData = await apiFetch("/api/extension/groups", {
-      method: "POST",
-      body: JSON.stringify({ name: sessionName }),
-    });
+    let groupId = existingGroupId;
 
-    const groupId = groupData.group.id;
+    if (mode === "new") {
+      const groupData = await apiFetch("/api/extension/groups", {
+        method: "POST",
+        body: JSON.stringify({ name: sessionName }),
+      });
+
+      groupId = groupData.group.id;
+    }
+
     const results = await Promise.allSettled(
       selectedHttpTabs.map((tab) =>
         apiFetch("/api/extension/bookmarks", {
@@ -172,7 +176,7 @@ export async function saveTabSession() {
       setStatus(
         `Saved session. Skipped ${duplicates.length} duplicate bookmark(s).`,
         "success",
-        document.getElementById("session-status"),
+        statusTarget,
       );
       setTimeout(() => window.close(), 900);
       return;
@@ -182,13 +186,16 @@ export async function saveTabSession() {
     setLoading(saveBtn, false, "✓ Saved!");
     setTimeout(() => window.close(), 800);
   } catch (err) {
-    setLoading(saveBtn, false, "Save Session");
+    setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group");
 
     let message = "Failed to save session";
     if (err.status === 409) {
-      message = "⚠️ Session name already exists";
+      message =
+        "A group with this name already exists. Switch to Add to existing group.";
+    } else if (mode === "existing") {
+      message = "Failed to add tabs to group";
     }
 
-    setStatus(message, "error", document.getElementById("session-status"));
+    setStatus(message, "error", statusTarget);
   }
 }

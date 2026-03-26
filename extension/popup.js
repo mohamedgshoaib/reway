@@ -11,8 +11,13 @@ import { fetchPageMeta } from "./js/metadata.js";
 import { loadGrabbedLinks, createGroupFromLinks } from "./js/grabber.js";
 import { loadTabSession, saveTabSession } from "./js/sessions.js";
 
-let selectedGroupId = "";
-let hasManualGroupSelection = false;
+const destinationState = {
+  save: { mode: "existing" },
+  links: { mode: "existing" },
+  session: { mode: "existing" },
+};
+
+const groupSelects = {};
 
 function setPopupHeader(mode) {
   const titleEl = document.getElementById("popup-header-title");
@@ -29,16 +34,349 @@ function setPopupHeader(mode) {
   subtitleEl.textContent = "Choose one of the 3 options below";
 }
 
-// UI Initialization
+function setDestinationMode(flow, mode) {
+  destinationState[flow].mode = mode;
+
+  document
+    .querySelectorAll(`.destination-toggle-button[data-flow="${flow}"]`)
+    .forEach((button) => {
+      const isActive = button.dataset.mode === mode;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+  const existingField = document.getElementById(`${flow}-existing-group-field`);
+  const newField = document.getElementById(`${flow}-new-group-field`);
+
+  existingField?.classList.toggle("hidden", mode !== "existing");
+  newField?.classList.toggle("hidden", mode !== "new");
+
+  if (mode !== "existing") {
+    groupSelects[flow]?.close();
+  }
+
+  const statusTarget =
+    flow === "save"
+      ? elements.status
+      : document.getElementById(`${flow}-status`);
+  setStatus("", "", statusTarget);
+}
+
+function createGroupSelect(flow) {
+  const trigger = document.getElementById(`${flow}-group-trigger`);
+  const label = document.getElementById(`${flow}-group-label`);
+  const menu = document.getElementById(`${flow}-group-menu`);
+  const container = trigger?.closest(".select");
+  const placeholder = flow === "save" ? "No group" : "Select a group";
+
+  if (!trigger || !label || !menu || !container) return null;
+
+  let options = [];
+  let selectedId = "";
+
+  const updateLabel = () => {
+    const selected = options.find((option) => option.id === selectedId);
+    label.textContent = selected?.name || placeholder;
+  };
+
+  const renderOptions = () => {
+    menu.replaceChildren();
+
+    options.forEach((option, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "select-option";
+      button.textContent = option.name;
+      button.setAttribute("role", "option");
+      button.setAttribute("tabindex", "-1");
+      button.dataset.index = String(index);
+      button.dataset.groupId = option.id;
+      button.setAttribute("aria-selected", String(option.id === selectedId));
+
+      if (option.id === selectedId) {
+        button.classList.add("active");
+      }
+
+      button.addEventListener("click", () => {
+        selectedId = option.id;
+        updateLabel();
+        renderOptions();
+        close();
+        trigger.focus();
+      });
+
+      menu.appendChild(button);
+    });
+  };
+
+  const close = () => {
+    container.classList.remove("open");
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  const focusSelectedOrFirst = () => {
+    const activeOption =
+      menu.querySelector(".select-option.active") ||
+      menu.querySelector(".select-option");
+    activeOption?.focus();
+  };
+
+  const open = () => {
+    if (options.length === 0) return;
+    container.classList.add("open");
+    trigger.setAttribute("aria-expanded", "true");
+    focusSelectedOrFirst();
+  };
+
+  const toggle = () => {
+    if (container.classList.contains("open")) {
+      close();
+      return;
+    }
+
+    Object.values(groupSelects).forEach((select) => select?.close());
+    open();
+  };
+
+  trigger.addEventListener("click", toggle);
+  trigger.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggle();
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (!container.classList.contains("open")) {
+        open();
+      } else {
+        const first = menu.querySelector(".select-option");
+        first?.focus();
+      }
+    }
+  });
+
+  container.addEventListener("keydown", (event) => {
+    const optionElements = Array.from(
+      menu.querySelectorAll(".select-option"),
+    );
+    const currentIndex = optionElements.indexOf(document.activeElement);
+
+    if (event.key === "Escape") {
+      close();
+      trigger.focus();
+      return;
+    }
+
+    if (event.key === "ArrowDown" && optionElements.length > 0) {
+      event.preventDefault();
+      const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % optionElements.length;
+      optionElements[nextIndex]?.focus();
+    }
+
+    if (event.key === "ArrowUp" && optionElements.length > 0) {
+      event.preventDefault();
+      const prevIndex =
+        currentIndex < 0
+          ? optionElements.length - 1
+          : (currentIndex - 1 + optionElements.length) % optionElements.length;
+      optionElements[prevIndex]?.focus();
+    }
+  });
+
+  updateLabel();
+
+  return {
+    close,
+    setOptions(groups) {
+      options =
+        flow === "save"
+          ? [{ id: "", name: "No group" }, ...groups.map((group) => ({ id: group.id, name: group.name }))]
+          : groups.map((group) => ({ id: group.id, name: group.name }));
+      if (!options.some((option) => option.id === selectedId)) {
+        selectedId = "";
+      }
+      updateLabel();
+      renderOptions();
+    },
+    getValue() {
+      return selectedId;
+    },
+  };
+}
+
+function setupGroupSelects() {
+  ["save", "links", "session"].forEach((flow) => {
+    groupSelects[flow] = createGroupSelect(flow);
+  });
+
+  document.addEventListener("click", (event) => {
+    Object.entries(groupSelects).forEach(([flow, select]) => {
+      const container = document
+        .getElementById(`${flow}-group-trigger`)
+        ?.closest(".select");
+      if (container && !container.contains(event.target)) {
+        select?.close();
+      }
+    });
+  });
+}
+
+function renderGroups(groups) {
+  Object.values(groupSelects).forEach((select) => select?.setOptions(groups));
+}
+
+async function createGroup(name) {
+  const data = await apiFetch("/api/extension/groups", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+
+  return data.group?.id || null;
+}
+
+async function broadcastBookmark(bookmark) {
+  const settings = await getSettings();
+  const dashboardTabs = await chrome.tabs.query({
+    url: `${settings.baseUrl}/*`,
+  });
+
+  dashboardTabs.forEach((tab) => {
+    chrome.tabs
+      .sendMessage(tab.id, {
+        type: "broadcastBookmark",
+        bookmark,
+      })
+      .catch(() => {});
+  });
+}
+
+async function saveBookmark() {
+  const statusTarget = elements.status;
+  const mode = destinationState.save.mode;
+  const existingGroupId = groupSelects.save?.getValue() || "";
+  const newGroupName = document.getElementById("save-group-name")?.value.trim() || "";
+
+  if (mode === "new" && !newGroupName) {
+    setStatus("Enter a new group name", "error", statusTarget);
+    return;
+  }
+
+  setLoading(elements.saveBookmarkBtn, true, "Saving...");
+
+  try {
+    let groupId = null;
+
+    if (mode === "existing") {
+      groupId = existingGroupId;
+    } else if (mode === "new") {
+      try {
+        groupId = await createGroup(newGroupName);
+      } catch (error) {
+        setLoading(elements.saveBookmarkBtn, false, "Save bookmark");
+
+        if (error?.status === 409) {
+          setStatus(
+            "A group with this name already exists. Switch to Add to existing group.",
+            "error",
+            statusTarget,
+          );
+          return;
+        }
+
+        setStatus("Failed to create group", "error", statusTarget);
+        return;
+      }
+    }
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const payload = {
+      url: tab.url,
+      title: elements.title.value.trim(),
+      description: elements.description.value.trim(),
+      groupId,
+    };
+
+    const data = await apiFetch("/api/extension/bookmarks", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    if (data?.bookmark) {
+      await broadcastBookmark(data.bookmark);
+    }
+
+    elements.saveBookmarkBtn.classList.add("success");
+    setLoading(elements.saveBookmarkBtn, false, "✓ Saved!");
+    setTimeout(() => window.close(), 800);
+  } catch (error) {
+    setLoading(elements.saveBookmarkBtn, false, "Save bookmark");
+
+    if (error?.status === 409) {
+      setStatus(
+        mode === "existing"
+          ? "This bookmark already exists in this group"
+          : "This bookmark already exists",
+        "error",
+        statusTarget,
+      );
+      return;
+    }
+
+    setStatus("Failed to save", "error", statusTarget);
+  }
+}
+
+// Dev Mode Helpers
+let currentDevEnv = "prod";
+function switchEnv(env) {
+  currentDevEnv = env;
+  const isProd = env === "prod";
+  elements.envProd.classList.toggle("secondary", isProd);
+  elements.envProd.classList.toggle("ghost", !isProd);
+  elements.envLocal.classList.toggle("secondary", !isProd);
+  elements.envLocal.classList.toggle("ghost", isProd);
+  elements.localPortField.style.display = isProd ? "none" : "block";
+}
+
+async function handleSaveDevSettings() {
+  if (currentDevEnv === "prod") {
+    await chrome.storage.local.remove("rewayBaseUrl");
+  } else {
+    const port = elements.localPort.value.trim() || "3000";
+    await chrome.storage.local.set({
+      rewayBaseUrl: `http://localhost:${port}`,
+    });
+  }
+  window.location.reload();
+}
+
+let logoClickCount = 0;
+let logoClickTimeout;
+function handleLogoClick() {
+  logoClickCount++;
+  clearTimeout(logoClickTimeout);
+  if (logoClickCount === 3) {
+    elements.devPanel.classList.toggle("open");
+    logoClickCount = 0;
+    return;
+  }
+  logoClickTimeout = setTimeout(() => (logoClickCount = 0), 1000);
+}
+
 async function init() {
   document.querySelector(".shell").style.opacity = "1";
   const loadingView = document.getElementById("loading-view");
   const footerLinks = document.getElementById("footer-links");
 
+  setupGroupSelects();
+  setDestinationMode("save", "existing");
+  setDestinationMode("links", "existing");
+  setDestinationMode("session", "existing");
+
   await getSettings();
   const { rewayBaseUrl } = await chrome.storage.local.get("rewayBaseUrl");
 
-  // Handle Dev Mode Toggle State
   if (rewayBaseUrl && rewayBaseUrl.includes("localhost")) {
     switchEnv("local");
     try {
@@ -50,7 +388,6 @@ async function init() {
     switchEnv("prod");
   }
 
-  // Check Auth by attempting to load groups
   try {
     const data = await apiFetch("/api/extension/groups");
     const groups = data.groups || [];
@@ -81,11 +418,9 @@ async function init() {
     }
   }
 
-  // Populate UI even if auth fails
   fetchMeta();
 }
 
-// Metadata Fetching (On-Demand)
 async function fetchMeta() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return;
@@ -100,194 +435,16 @@ async function fetchMeta() {
   }
 }
 
-// Save Page Logic
-async function saveBookmark() {
-  setLoading(elements.saveBookmarkBtn, true, "Saving...");
-
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const payload = {
-    url: tab.url,
-    title: elements.title.value.trim(),
-    description: elements.description.value.trim(),
-    groupId: selectedGroupId || null,
-  };
-
-  try {
-    const data = await apiFetch("/api/extension/bookmarks", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-
-    if (data?.bookmark) {
-      // Broadcast to any open dashboard tabs
-      const settings = await getSettings();
-      const dashboardTabs = await chrome.tabs.query({
-        url: `${settings.baseUrl}/*`,
-      });
-      dashboardTabs.forEach((t) => {
-        chrome.tabs
-          .sendMessage(t.id, {
-            type: "broadcastBookmark",
-            bookmark: data.bookmark,
-          })
-          .catch(() => {
-            // Ignore - dashboard tab might not have listener ready
-          });
-      });
-    }
-
-    elements.saveBookmarkBtn.classList.add("success");
-    setLoading(elements.saveBookmarkBtn, false, "✓ Saved!");
-    setTimeout(() => window.close(), 800);
-  } catch (err) {
-    setLoading(elements.saveBookmarkBtn, false, "Save Page");
-
-    if (err?.status === 409) {
-      setStatus("This bookmark already exists in this group", "error");
-      return;
-    }
-
-    setStatus("Failed to save", "error");
-  }
+function updateChars(input, countEl) {
+  if (!input || !countEl) return;
+  const len = input.value.length;
+  countEl.textContent = `${len}/${MAX_NAME_LENGTH}`;
+  countEl.classList.toggle("error", len >= MAX_NAME_LENGTH);
 }
 
-// Dev Mode Helpers
-let currentDevEnv = "prod";
-function switchEnv(env) {
-  currentDevEnv = env;
-  const isProd = env === "prod";
-  elements.envProd.classList.toggle("secondary", isProd);
-  elements.envProd.classList.toggle("ghost", !isProd);
-  elements.envLocal.classList.toggle("secondary", !isProd);
-  elements.envLocal.classList.toggle("ghost", isProd);
-  elements.localPortField.style.display = isProd ? "none" : "block";
-}
-
-async function handleSaveDevSettings() {
-  if (currentDevEnv === "prod") {
-    await chrome.storage.local.remove("rewayBaseUrl");
-  } else {
-    const port = elements.localPort.value.trim() || "3000";
-    await chrome.storage.local.set({
-      rewayBaseUrl: `http://localhost:${port}`,
-    });
-  }
-  window.location.reload();
-}
-
-// Triple-click logo logic for Dev Mode
-let logoClickCount = 0;
-let logoClickTimeout;
-function handleLogoClick() {
-  logoClickCount++;
-  clearTimeout(logoClickTimeout);
-  if (logoClickCount === 3) {
-    elements.devPanel.classList.toggle("open");
-    logoClickCount = 0;
-    return;
-  }
-  logoClickTimeout = setTimeout(() => (logoClickCount = 0), 1000);
-}
-
-// Group UI helpers
-function renderGroups(groups) {
-  elements.groupMenu.replaceChildren();
-  const options = [{ id: "", name: "No group" }, ...groups];
-
-  options.forEach((group, index) => {
-    const btn = document.createElement("button");
-    btn.className = "select-option";
-    btn.textContent = group.name;
-    btn.setAttribute("role", "option");
-    btn.setAttribute("tabindex", "-1");
-    btn.dataset.index = index;
-
-    btn.addEventListener("click", () => {
-      selectedGroupId = group.id;
-      elements.groupLabel.textContent = group.name;
-      const container = elements.groupTrigger.closest(".select");
-      container?.classList.remove("open");
-      elements.groupTrigger.setAttribute("aria-expanded", "false");
-      hasManualGroupSelection = true;
-
-      document
-        .querySelectorAll(".select-option")
-        .forEach((opt) => opt.classList.remove("active"));
-      btn.classList.add("active");
-    });
-    elements.groupMenu.appendChild(btn);
-  });
-
-  if (!hasManualGroupSelection) {
-    elements.groupLabel.textContent = options[0].name;
-  }
-}
-
-// Event Listeners
 document.addEventListener("DOMContentLoaded", init);
 
 elements.saveBookmarkBtn?.addEventListener("click", saveBookmark);
-elements.groupTrigger?.addEventListener("click", () => {
-  const container = elements.groupTrigger.closest(".select");
-  if (!container) return;
-  const isOpen = container.classList.toggle("open");
-  elements.groupTrigger.setAttribute("aria-expanded", isOpen);
-  if (isOpen) {
-    const activeOpt =
-      elements.groupMenu.querySelector(".select-option.active") ||
-      elements.groupMenu.querySelector(".select-option");
-    activeOpt?.focus();
-  }
-});
-
-document.addEventListener("click", (e) => {
-  const container = elements.groupTrigger?.closest(".select");
-  if (!container) return;
-  if (!container.classList.contains("open")) return;
-  if (container.contains(e.target)) return;
-  container.classList.remove("open");
-  elements.groupTrigger?.setAttribute("aria-expanded", "false");
-});
-
-elements.groupTrigger?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    elements.groupTrigger.click();
-  }
-});
-
-// Keyboard Navigation for Dropdown
-elements.groupTrigger.parentElement?.addEventListener("keydown", (e) => {
-  const container = elements.groupTrigger.closest(".select");
-  if (!container) return;
-  const isOpen = container.classList.contains("open");
-  const options = Array.from(
-    elements.groupMenu.querySelectorAll(".select-option"),
-  );
-  const currentIndex = options.indexOf(document.activeElement);
-
-  if (e.key === "Escape") {
-    container.classList.remove("open");
-    elements.groupTrigger.setAttribute("aria-expanded", "false");
-    elements.groupTrigger.focus();
-  } else if (e.key === "ArrowDown") {
-    e.preventDefault();
-    if (!isOpen) {
-      container.classList.add("open");
-      elements.groupTrigger.setAttribute("aria-expanded", "true");
-      options[0]?.focus();
-    } else {
-      const nextIndex = (currentIndex + 1) % options.length;
-      options[nextIndex]?.focus();
-    }
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    if (isOpen) {
-      const prevIndex = (currentIndex - 1 + options.length) % options.length;
-      options[prevIndex]?.focus();
-    }
-  }
-});
 
 if (elements.loginButton) {
   elements.loginButton.addEventListener("click", async () => {
@@ -301,15 +458,31 @@ elements.envProd?.addEventListener("click", () => switchEnv("prod"));
 elements.envLocal?.addEventListener("click", () => switchEnv("local"));
 elements.saveDevSettings?.addEventListener("click", handleSaveDevSettings);
 
-// Save Actions Listeners
+document.querySelectorAll(".destination-toggle-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    setDestinationMode(button.dataset.flow, button.dataset.mode);
+  });
+});
+
 document
   .getElementById("create-group-from-links")
-  ?.addEventListener("click", createGroupFromLinks);
-document
-  .getElementById("save-session")
-  ?.addEventListener("click", saveTabSession);
+  ?.addEventListener("click", () =>
+    createGroupFromLinks({
+      mode: destinationState.links.mode,
+      groupId: groupSelects.links?.getValue() || "",
+      groupName:
+        document.getElementById("links-group-name")?.value.trim() || "",
+    }),
+  );
 
-// Manual Link Adding with Duplicate Check
+document.getElementById("save-session")?.addEventListener("click", () =>
+  saveTabSession({
+    mode: destinationState.session.mode,
+    groupId: groupSelects.session?.getValue() || "",
+    groupName: document.getElementById("session-name")?.value.trim() || "",
+  }),
+);
+
 const addManualLinkBtn = document.getElementById("add-manual-link");
 const manualLinkInput = document.getElementById("links-manual-url");
 
@@ -320,7 +493,6 @@ if (addManualLinkBtn && manualLinkInput) {
 
     addManualLinkBtn.disabled = true;
 
-    // Optimistic URL parsing
     let urlToAdd = value;
     if (!/^https?:\/\//i.test(urlToAdd)) {
       urlToAdd = `https://${urlToAdd}`;
@@ -350,8 +522,8 @@ if (addManualLinkBtn && manualLinkInput) {
         manualLinkInput.value = "";
         loadGrabbedLinks();
       }
-    } catch (err) {
-      console.error("Failed to add link", err);
+    } catch (error) {
+      console.error("Failed to add link", error);
     } finally {
       addManualLinkBtn.disabled = false;
       manualLinkInput.focus();
@@ -359,44 +531,37 @@ if (addManualLinkBtn && manualLinkInput) {
   };
 
   addManualLinkBtn.addEventListener("click", handleAddLink);
-  manualLinkInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleAddLink();
+  manualLinkInput.addEventListener("keypress", (event) => {
+    if (event.key === "Enter") handleAddLink();
   });
 }
 
-// Tab Navigation Listener
-document.querySelectorAll(".tab-button").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const tabId = btn.dataset.tab;
+document.querySelectorAll(".tab-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    const tabId = button.dataset.tab;
     switchTab(tabId);
     if (tabId === "links") loadGrabbedLinks();
     if (tabId === "session") loadTabSession();
   });
 });
 
-// Character count helpers
-const updateChars = (input, countEl) => {
-  const len = input.value.length;
-  countEl.textContent = `${len}/${MAX_NAME_LENGTH}`;
-  countEl.classList.toggle("error", len >= MAX_NAME_LENGTH);
-};
-
-elements.linksGroupName?.addEventListener("input", () =>
+document.getElementById("save-group-name")?.addEventListener("input", () =>
   updateChars(
-    elements.linksGroupName,
+    document.getElementById("save-group-name"),
+    document.getElementById("save-group-char-count"),
+  ),
+);
+
+document.getElementById("links-group-name")?.addEventListener("input", () =>
+  updateChars(
+    document.getElementById("links-group-name"),
     document.getElementById("links-group-char-count"),
   ),
 );
-elements.sessionName?.addEventListener("input", () =>
+
+document.getElementById("session-name")?.addEventListener("input", () =>
   updateChars(
-    elements.sessionName,
+    document.getElementById("session-name"),
     document.getElementById("session-char-count"),
   ),
 );
-
-// Close menus on outside click
-document.addEventListener("click", (e) => {
-  if (!elements.groupTrigger.parentElement.contains(e.target)) {
-    elements.groupTrigger.parentElement.classList.remove("open");
-  }
-});

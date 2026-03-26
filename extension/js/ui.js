@@ -20,9 +20,6 @@ export const selectors = {
   saveDevSettings: "#save-dev-settings",
   // Save Page
   saveBookmarkBtn: "#save",
-  groupMenu: "#group-menu",
-  groupTrigger: "#group-trigger",
-  groupLabel: "#group-label",
   favicon: "#favicon",
   pageUrl: "#page-url",
   title: "#title",
