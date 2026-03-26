@@ -48,6 +48,7 @@ import { deleteAccount } from "@/app/dashboard/actions/account";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { DASHBOARD_THEMES, type DashboardPaletteTheme } from "@/lib/themes";
+import { ThemeIcon } from "@/components/theme-icons/ThemeIcon";
 
 interface SettingsDialogProps {
   children?: React.ReactNode;
@@ -326,18 +327,7 @@ export function SettingsDialog({
                             value={themeOption.value}
                           >
                             <span className="flex items-center gap-2 min-w-0">
-                              <span
-                                className="flex items-center gap-1.5 shrink-0"
-                                aria-hidden="true"
-                              >
-                                {themeOption.dots.map((dot) => (
-                                  <span
-                                    key={dot}
-                                    className="size-2.5 rounded-full ring-1 ring-foreground/10"
-                                    style={{ backgroundColor: dot }}
-                                  />
-                                ))}
-                              </span>
+                              <ThemeIcon theme={themeOption.value} />
                               <span className="font-medium truncate">
                                 {themeOption.label}
                               </span>

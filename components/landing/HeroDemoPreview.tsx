@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { ThemeIcon } from "@/components/theme-icons/ThemeIcon";
 
 import {
   NotesSectionPreview,
@@ -117,7 +118,7 @@ export function HeroDemoPreview() {
         <SelectTrigger
           size="sm"
           aria-labelledby="hero-demo-theme-label"
-          className="h-6 w-38 rounded-lg bg-background/60 px-2 text-[10px] ring-0 after:content-none hover:bg-background/60 dark:hover:bg-background/60"
+          className="h-7 w-42 rounded-lg bg-background/60 px-2 text-xs font-medium ring-0 after:content-none hover:bg-background/60 dark:hover:bg-background/60"
         >
           <SelectValue placeholder="Theme" />
         </SelectTrigger>
@@ -126,18 +127,7 @@ export function HeroDemoPreview() {
             {DASHBOARD_THEMES.map((themeOption) => (
               <SelectItem key={themeOption.value} value={themeOption.value}>
                 <span className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="flex items-center gap-1.5 shrink-0"
-                    aria-hidden="true"
-                  >
-                    {themeOption.dots.map((dot) => (
-                      <span
-                        key={dot}
-                        className="size-2.5 rounded-full ring-1 ring-foreground/10"
-                        style={{ backgroundColor: dot }}
-                      />
-                    ))}
-                  </span>
+                  <ThemeIcon theme={themeOption.value} />
                   <span className="font-medium truncate">
                     {themeOption.label}
                   </span>

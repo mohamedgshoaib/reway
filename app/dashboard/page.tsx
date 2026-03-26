@@ -57,9 +57,6 @@ export default async function DashboardPage() {
   };
 
   const parsePaletteTheme = (value: string | undefined) => {
-    if (value === "dark-forge") {
-      return "sunset-horizon";
-    }
     if (value && isDashboardPaletteTheme(value)) {
       return value as DashboardPaletteTheme;
     }
