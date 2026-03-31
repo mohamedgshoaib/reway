@@ -52,7 +52,9 @@ export default async function PrivacyPage() {
                 1. Data Collection
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Reway collects the email address you provide at signup and the URLs you explicitly save. This data is stored in an encrypted PostgreSQL database via Supabase.
+                Reway collects the email address you provide at signup and the
+                URLs you explicitly save. This data is stored in an encrypted
+                PostgreSQL database via Supabase.
               </p>
             </section>
 
@@ -61,7 +63,10 @@ export default async function PrivacyPage() {
                 2. Data Usage
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                We use your data solely to provide the bookmarking service. This includes automated metadata extraction (fetching page titles and icons) to enrich your library. We do not sell your personal data or saved links to third parties.
+                We use your data solely to provide the bookmarking service. This
+                includes automated metadata extraction (fetching page titles and
+                icons) to enrich your library. We do not sell your personal data
+                or saved links to third parties.
               </p>
             </section>
 
@@ -90,7 +95,20 @@ export default async function PrivacyPage() {
 
             <section className="space-y-4">
               <h2 className="text-2xl font-semibold text-foreground">
-                5. Your Choices
+                5. Administrator Data Access
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                As the service administrator, I have access to the database
+                containing user emails and saved bookmarks. This access is
+                limited to what is necessary for maintaining and improving the
+                service. Your data is handled with care and is not shared with
+                third parties.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold text-foreground">
+                6. Your Choices
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 You can access, update, or delete your saved links and account

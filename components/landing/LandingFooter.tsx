@@ -43,9 +43,21 @@ export function LandingFooter() {
   const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started";
 
   const socialLinks = [
-    { icon: NewTwitterIcon, href: "https://x.com", label: "Twitter" },
-    { icon: Linkedin02Icon, href: "https://linkedin.com", label: "LinkedIn" },
-    { icon: GithubIcon, href: "https://github.com", label: "GitHub" },
+    {
+      icon: NewTwitterIcon,
+      href: "https://x.com/mo0hamed_gamal",
+      label: "Twitter",
+    },
+    {
+      icon: Linkedin02Icon,
+      href: "https://www.linkedin.com/in/mohamed-g-shoaib/",
+      label: "LinkedIn",
+    },
+    {
+      icon: GithubIcon,
+      href: "https://github.com/mohamed-g-shoaib/reway",
+      label: "GitHub",
+    },
   ] as const;
 
   const footerVariants: Variants = {
