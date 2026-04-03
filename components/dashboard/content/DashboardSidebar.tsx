@@ -11,6 +11,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { RepeatIcon } from "@hugeicons/core-free-icons";
 import type { GroupRow } from "@/lib/supabase/queries";
 import type { IconPickerPopoverProps } from "../IconPickerPopover";
 import { AllBookmarksRow } from "./sidebar/AllBookmarksRow";
@@ -27,6 +28,13 @@ import { useGroupReorderDnd } from "./sidebar/useGroupReorderDnd";
 import { useGroupSelection } from "./sidebar/useGroupSelection";
 import { SortableGroupRowItem } from "./sidebar/SortableGroupRowItem";
 import { ALL_ICONS_MAP } from "@/lib/hugeicons-list";
+import {
+  ALL_BOOKMARKS_GROUP_ID,
+  MOST_VISITED_GROUP_ID,
+  MOST_VISITED_GROUP_NAME,
+  NO_GROUP_ID,
+  NO_GROUP_NAME,
+} from "@/lib/system-groups";
 
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
@@ -99,7 +107,7 @@ export function DashboardSidebar({
   onToggleHideFromAllBookmarks,
   layoutDensity = "compact",
 }: DashboardSidebarProps) {
-  const reorderableGroups = groups.filter((g) => g.id !== "no-group");
+  const reorderableGroups = groups.filter((g) => g.id !== NO_GROUP_ID);
 
   const [viewportWidth, setViewportWidth] = useState<number>(0);
   const [isPinnedOpen, setIsPinnedOpen] = useState(false);
@@ -212,14 +220,28 @@ export function DashboardSidebar({
 
       <div className="flex flex-1 min-h-0 flex-col gap-1 cursor-default">
         <AllBookmarksRow
-          active={activeGroupId === "all"}
+          active={activeGroupId === ALL_BOOKMARKS_GROUP_ID}
           selectionMode={selectionMode}
-          onSelectAll={() => setActiveGroupId("all")}
-          onOpenAll={() => handleOpenGroup("all")}
+          onSelectAll={() => setActiveGroupId(ALL_BOOKMARKS_GROUP_ID)}
+          onOpenAll={() => handleOpenGroup(ALL_BOOKMARKS_GROUP_ID)}
           onToggleSelectionMode={() => {
             if (selectionMode) exitSelectionMode();
             else enterSelectionMode();
           }}
+        />
+
+        <AllBookmarksRow
+          active={activeGroupId === MOST_VISITED_GROUP_ID}
+          selectionMode={selectionMode}
+          onSelectAll={() => setActiveGroupId(MOST_VISITED_GROUP_ID)}
+          onOpenAll={() => handleOpenGroup(MOST_VISITED_GROUP_ID)}
+          onToggleSelectionMode={() => {
+            if (selectionMode) exitSelectionMode();
+            else enterSelectionMode();
+          }}
+          label={MOST_VISITED_GROUP_NAME}
+          openLabel="Open most visited"
+          icon={RepeatIcon}
         />
 
         {selectionMode ? (
@@ -256,8 +278,8 @@ export function DashboardSidebar({
             >
               <div className="flex flex-col gap-1">
                 {groups.map((group) => {
-                  if (group.id === "no-group") {
-                    const isActive = activeGroupId === "no-group";
+                  if (group.id === NO_GROUP_ID) {
+                    const isActive = activeGroupId === NO_GROUP_ID;
                     const NoGroupIcon =
                       ALL_ICONS_MAP[group.icon || "folder"] ??
                       ALL_ICONS_MAP["folder"];
@@ -268,13 +290,13 @@ export function DashboardSidebar({
                         tabIndex={0}
                         onClick={() => {
                           if (selectionMode) return;
-                          setActiveGroupId("no-group");
+                          setActiveGroupId(NO_GROUP_ID);
                         }}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
                             if (selectionMode) return;
-                            setActiveGroupId("no-group");
+                            setActiveGroupId(NO_GROUP_ID);
                           }
                         }}
                         className={`group flex items-center gap-3 px-2 py-1.5 transition-all duration-200 cursor-pointer active:scale-[0.97] outline-none ${
@@ -300,7 +322,7 @@ export function DashboardSidebar({
                               strokeWidth={2}
                               className="text-foreground/80"
                             />
-                            <span className="truncate max-w-32">No Group</span>
+                            <span className="truncate max-w-32">{NO_GROUP_NAME}</span>
                           </div>
                         </div>
                       </div>

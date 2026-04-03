@@ -2,6 +2,7 @@
 
 import {
   Folder01Icon,
+  RepeatIcon,
 } from "@hugeicons/core-free-icons";
 import { type IconSvgElement } from "@hugeicons/react";
 import {
@@ -22,6 +23,13 @@ import { GroupRow } from "./group-menu/GroupRow";
 import { GroupEditRow } from "./group-menu/GroupEditRow";
 import { GroupCreateRow } from "./group-menu/GroupCreateRow";
 import { GroupDeleteDialogs } from "./group-menu/GroupDeleteDialogs";
+import {
+  ALL_BOOKMARKS_GROUP_ID,
+  ALL_BOOKMARKS_GROUP_NAME,
+  MOST_VISITED_GROUP_ID,
+  MOST_VISITED_GROUP_NAME,
+  NO_GROUP_ID,
+} from "@/lib/system-groups";
 
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
@@ -134,17 +142,26 @@ export function GroupMenu({
   }, []);
 
   const activeGroup =
-    activeGroupId === "all"
-      ? { name: "All Bookmarks", icon: "folder", color: null }
+    activeGroupId === ALL_BOOKMARKS_GROUP_ID
+      ? { name: ALL_BOOKMARKS_GROUP_NAME, color: null }
+      : activeGroupId === MOST_VISITED_GROUP_ID
+        ? { name: MOST_VISITED_GROUP_NAME, color: null }
       : groups.find((g) => g.id === activeGroupId) || {
           name: "Unknown",
-          icon: "folder",
           color: null,
         };
 
-  const ActiveIcon = activeGroup.icon
-    ? (iconsMap?.[activeGroup.icon] ?? Folder01Icon)
-    : Folder01Icon;
+  const ActiveIcon =
+    activeGroupId === ALL_BOOKMARKS_GROUP_ID
+      ? Folder01Icon
+      : activeGroupId === MOST_VISITED_GROUP_ID
+        ? RepeatIcon
+        : (() => {
+            const activeGroupRow = groups.find((g) => g.id === activeGroupId);
+            return activeGroupRow?.icon
+              ? (iconsMap?.[activeGroupRow.icon] ?? Folder01Icon)
+              : Folder01Icon;
+          })();
 
   const openDeleteDialog = (group: GroupRowType) => {
     setDeleteTarget(group);
@@ -225,12 +242,23 @@ export function GroupMenu({
           ) : null}
 
           <AllBookmarksItem
-            active={activeGroupId === "all"}
+            active={activeGroupId === ALL_BOOKMARKS_GROUP_ID}
             selectionMode={selectionMode}
             onSelectAll={() => {
-              onGroupSelect("all");
+              onGroupSelect(ALL_BOOKMARKS_GROUP_ID);
               setMenuOpen(false);
             }}
+          />
+
+          <AllBookmarksItem
+            active={activeGroupId === MOST_VISITED_GROUP_ID}
+            selectionMode={selectionMode}
+            onSelectAll={() => {
+              onGroupSelect(MOST_VISITED_GROUP_ID);
+              setMenuOpen(false);
+            }}
+            label={MOST_VISITED_GROUP_NAME}
+            icon={RepeatIcon}
           />
 
           {groups.length > 0 ? (
@@ -246,7 +274,7 @@ export function GroupMenu({
                   ? (iconsMap?.[group.icon] ?? Folder01Icon)
                   : Folder01Icon;
                 const isEditing = editingGroupId === group.id;
-                const isNoGroup = group.id === "no-group";
+                const isNoGroup = group.id === NO_GROUP_ID;
 
                 if (isNoGroup) {
                   return (

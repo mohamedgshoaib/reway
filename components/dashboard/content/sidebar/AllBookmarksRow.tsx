@@ -1,4 +1,4 @@
-import { HugeiconsIcon } from "@hugeicons/react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
   ArrowUpRight03Icon,
   CheckmarkSquare02Icon,
@@ -24,12 +24,18 @@ export function AllBookmarksRow({
   onSelectAll,
   onOpenAll,
   onToggleSelectionMode,
+  label = "All Bookmarks",
+  openLabel = "Open bookmarks",
+  icon = Folder01Icon,
 }: {
   active: boolean;
   selectionMode: boolean;
   onSelectAll: () => void;
   onOpenAll: () => void;
   onToggleSelectionMode: () => void;
+  label?: string;
+  openLabel?: string;
+  icon?: IconSvgElement;
 }) {
   return (
     <ContextMenu>
@@ -68,12 +74,12 @@ export function AllBookmarksRow({
             />
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <HugeiconsIcon
-                icon={Folder01Icon}
+                icon={icon}
                 size={16}
                 strokeWidth={2}
                 className="text-muted-foreground"
               />
-              <span className="truncate">All Bookmarks</span>
+              <span className="truncate">{label}</span>
             </div>
           </div>
 
@@ -99,7 +105,7 @@ export function AllBookmarksRow({
                 className="gap-2 text-xs cursor-pointer"
               >
                 <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
-                Open bookmarks
+                {openLabel}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -112,7 +118,7 @@ export function AllBookmarksRow({
           className="gap-2 text-xs cursor-pointer"
         >
           <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
-          Open bookmarks
+          {openLabel}
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() => {
