@@ -7,6 +7,10 @@ import {
   normalizeAlphaNumericKey,
   shouldIgnoreDashboardHotkey,
 } from "@/lib/keyboard";
+import {
+  ALL_BOOKMARKS_GROUP_ID,
+  MOST_VISITED_GROUP_ID,
+} from "@/lib/system-groups";
 
 interface UseGroupShortcutsOptions {
   groups: GroupRow[];
@@ -33,7 +37,13 @@ export function useGroupShortcuts({
     if (!map[allBookmarksFirstLetter]) {
       map[allBookmarksFirstLetter] = [];
     }
-    map[allBookmarksFirstLetter].push("all");
+    map[allBookmarksFirstLetter].push(ALL_BOOKMARKS_GROUP_ID);
+
+    const mostVisitedFirstLetter = "m";
+    if (!map[mostVisitedFirstLetter]) {
+      map[mostVisitedFirstLetter] = [];
+    }
+    map[mostVisitedFirstLetter].push(MOST_VISITED_GROUP_ID);
 
     for (const group of groups) {
       const groupName = group.name ?? "";

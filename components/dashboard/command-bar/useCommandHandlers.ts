@@ -11,6 +11,11 @@ import {
 import { extractUrlsFromText, isUrl } from "./helpers";
 import { useGlobalKeydown } from "@/hooks/useGlobalKeydown";
 import { isTypingTarget } from "@/lib/keyboard";
+import {
+  isAllBookmarksGroupId,
+  isMostVisitedGroupId,
+  isNoGroupId,
+} from "@/lib/system-groups";
 
 interface UseCommandHandlersOptions {
   onAddBookmark: (bookmark: BookmarkRow) => void;
@@ -36,6 +41,17 @@ export function useCommandHandlers({
   onAddBusyChange,
 }: UseCommandHandlersOptions) {
   const isSubmittingRef = useRef(false);
+  const getActiveTargetGroupId = useCallback(() => {
+    if (
+      isAllBookmarksGroupId(activeGroupId) ||
+      isMostVisitedGroupId(activeGroupId) ||
+      isNoGroupId(activeGroupId)
+    ) {
+      return null;
+    }
+
+    return activeGroupId;
+  }, [activeGroupId]);
 
   const setAddStatus = useCallback(
     (status: string | null, busy?: boolean) => {
@@ -52,17 +68,20 @@ export function useCommandHandlers({
       const executeAdd = async (url: string) => {
         const stableId = crypto.randomUUID();
         let createdId: string | null = null;
+        const targetGroupId = getActiveTargetGroupId();
         const optimistic = {
           id: stableId,
           url,
           title: url,
           favicon_url: null,
           description: null,
-          group_id: activeGroupId !== "all" ? activeGroupId : null,
+          group_id: targetGroupId,
           user_id: "",
           created_at: new Date().toISOString(),
           order_index: Number.MIN_SAFE_INTEGER,
           status: "pending",
+          visit_count: 0,
+          last_visited_at: null,
         } as BookmarkRow;
 
         onAddBookmark(optimistic);
@@ -71,7 +90,7 @@ export function useCommandHandlers({
           const bookmarkId = await addBookmark({
             url,
             id: stableId,
-            group_id: activeGroupId !== "all" ? activeGroupId : undefined,
+            group_id: targetGroupId ?? undefined,
           });
           createdId = bookmarkId ?? null;
           if (bookmarkId) {
@@ -107,18 +126,21 @@ export function useCommandHandlers({
         const fullUrl = u.startsWith("http") ? u : `https://${u}`;
         const stableId = crypto.randomUUID();
         let createdId: string | null = null;
+        const targetGroupId = getActiveTargetGroupId();
         const optimistic = {
           id: stableId,
           url: fullUrl,
           title: fullUrl,
           favicon_url: null,
           description: null,
-          group_id: activeGroupId !== "all" ? activeGroupId : null,
+          group_id: targetGroupId,
           user_id: "",
           created_at: new Date().toISOString(),
           order_index: Number.MIN_SAFE_INTEGER,
           status: "pending",
           is_enriching: true,
+          visit_count: 0,
+          last_visited_at: null,
         } as BookmarkRow;
 
         onAddBookmark(optimistic);
@@ -127,7 +149,7 @@ export function useCommandHandlers({
           const bookmarkId = await addBookmark({
             url: fullUrl,
             id: stableId,
-            group_id: activeGroupId !== "all" ? activeGroupId : undefined,
+            group_id: targetGroupId ?? undefined,
           });
           createdId = bookmarkId ?? null;
           if (bookmarkId) {
@@ -162,7 +184,7 @@ export function useCommandHandlers({
       const fullUrls = urls.map((u) => (u.startsWith("http") ? u : `https://${u}`));
       await Promise.all(fullUrls.map(executeAdd));
     },
-    [activeGroupId, onAddBookmark, onApplyEnrichment, onReplaceBookmarkId],
+    [getActiveTargetGroupId, onAddBookmark, onApplyEnrichment, onReplaceBookmarkId],
   );
 
   const handlePaste = useCallback(

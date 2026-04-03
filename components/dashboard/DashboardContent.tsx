@@ -25,6 +25,7 @@ import { useDashboardPreferences } from "./content/useDashboardPreferences";
 import { useNotesTodosActions } from "./content/useNotesTodosActions";
 import { useDashboardState } from "./content/useDashboardState";
 import { DashboardLayout } from "./DashboardLayout";
+import { NO_GROUP_ID } from "@/lib/system-groups";
 
 let resumePendingEnrichmentTask: Promise<void> | null = null;
 
@@ -318,7 +319,7 @@ export function DashboardContent({
 
   const handleGroupsReorder = useCallback(
     async (newOrder: GroupRow[]) => {
-      const reorderableOrder = newOrder.filter((g) => g.id !== "no-group");
+      const reorderableOrder = newOrder.filter((g) => g.id !== NO_GROUP_ID);
       const prev = dashboard.groups;
       dashboard.setGroups(
         reorderableOrder.map((group, index) => ({

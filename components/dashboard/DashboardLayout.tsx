@@ -24,6 +24,7 @@ import { TableHeader } from "./content/TableHeader";
 import { FolderBoard } from "./FolderBoard";
 import { BookmarkBoard } from "./BookmarkBoard";
 import { FloatingActionBar } from "./content/FloatingActionBar";
+import { createNoGroupRow, NO_GROUP_ID } from "@/lib/system-groups";
 
 export function DashboardLayout({
   layoutDensity,
@@ -270,19 +271,10 @@ export function DashboardLayout({
   const groupsWithNoGroup = useMemo(() => {
     const hasUngrouped = bookmarks.some((b) => !b.group_id);
     if (!hasUngrouped) return groups;
-    if (groups.some((g) => g.id === "no-group")) return groups;
+    if (groups.some((g) => g.id === NO_GROUP_ID)) return groups;
     return [
       ...groups,
-      {
-        id: "no-group",
-        name: "No Group",
-        icon: "alert-circle",
-        color: null,
-        user_id: "",
-        created_at: new Date().toISOString(),
-        hide_from_all_bookmarks: false,
-        order_index: null,
-      },
+      createNoGroupRow(),
     ];
   }, [bookmarks, groups]);
 

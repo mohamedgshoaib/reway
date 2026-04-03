@@ -7,6 +7,7 @@ import {
   toggleHideFromAllBookmarks,
 } from "@/app/dashboard/actions/groups";
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
+import { ALL_BOOKMARKS_GROUP_ID } from "@/lib/system-groups";
 
 interface UseGroupActionsOptions {
   userId: string;
@@ -201,7 +202,7 @@ export function useGroupActions({
       });
 
       if (activeGroupId === id) {
-        setActiveGroupId("all");
+        setActiveGroupId(ALL_BOOKMARKS_GROUP_ID);
       }
 
       deletedBookmarks = bookmarks.filter(

@@ -260,6 +260,8 @@ export function useImportHandlers({
                 status: "pending",
                 is_enriching: true,
                 last_fetched_at: null,
+                last_visited_at: null,
+                visit_count: 0,
                 error_reason: null,
               },
               ...prev,

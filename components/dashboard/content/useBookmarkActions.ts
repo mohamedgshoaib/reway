@@ -5,6 +5,11 @@ import { toast } from "sonner";
 import type { BookmarkRow } from "@/lib/supabase/queries";
 import type { EnrichmentResult } from "./dashboard-types";
 import { getDomain } from "@/lib/utils";
+import {
+  isAllBookmarksGroupId,
+  isMostVisitedGroupId,
+  isNoGroupId,
+} from "@/lib/system-groups";
 
 interface UseBookmarkActionsOptions {
   activeGroupId: string;
@@ -44,6 +49,18 @@ export function useBookmarkActions({
   updateBookmark,
   lastDeletedRef,
 }: UseBookmarkActionsOptions) {
+  const getActiveTargetGroupId = useCallback(() => {
+    if (
+      isAllBookmarksGroupId(activeGroupId) ||
+      isMostVisitedGroupId(activeGroupId) ||
+      isNoGroupId(activeGroupId)
+    ) {
+      return null;
+    }
+
+    return activeGroupId;
+  }, [activeGroupId]);
+
   const addOptimisticBookmark = useCallback(
     (bookmark: BookmarkRow) => {
       setBookmarks((prev) => {
@@ -57,7 +74,7 @@ export function useBookmarkActions({
           ...bookmark,
           created_at: bookmark.created_at ?? new Date().toISOString(),
           order_index: bookmark.order_index ?? nextOrder,
-          group_id: activeGroupId !== "all" ? activeGroupId : bookmark.group_id,
+          group_id: getActiveTargetGroupId() ?? bookmark.group_id ?? null,
         };
 
         const existingIndex = prev.findIndex(
@@ -72,7 +89,7 @@ export function useBookmarkActions({
         return sortBookmarks([newBookmark, ...prev]);
       });
     },
-    [activeGroupId, setBookmarks, sortBookmarks],
+    [getActiveTargetGroupId, setBookmarks, sortBookmarks],
   );
 
   const applyEnrichment = useCallback(

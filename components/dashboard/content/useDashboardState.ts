@@ -14,6 +14,7 @@ import type {
   TodoRow,
 } from "@/lib/supabase/queries";
 import type { DashboardPaletteTheme } from "@/lib/themes";
+import { ALL_BOOKMARKS_GROUP_ID, isAllBookmarksGroupId } from "@/lib/system-groups";
 
 export function useDashboardState({
   initialBookmarks,
@@ -47,7 +48,9 @@ export function useDashboardState({
   const [notes, setNotes] = useState<NoteRow[]>(initialNotes);
   const [todos, setTodos] = useState<TodoRow[]>(initialTodos);
 
-  const [activeGroupId, setActiveGroupId] = useState<string>("all");
+  const [activeGroupId, setActiveGroupId] = useState<string>(
+    ALL_BOOKMARKS_GROUP_ID,
+  );
 
   const [rowContent, setRowContent] = useState<"date" | "group">(
     initialRowContent,
@@ -86,10 +89,12 @@ export function useDashboardState({
     "off" | "low" | "medium" | "high"
   >(initialFolderHeaderTint);
 
-  const viewMode = activeGroupId === "all" ? viewModeAll : viewModeGroups;
+  const viewMode = isAllBookmarksGroupId(activeGroupId)
+    ? viewModeAll
+    : viewModeGroups;
   const setViewMode = useCallback(
     (value: "list" | "card" | "folders") => {
-      if (activeGroupId === "all") {
+      if (isAllBookmarksGroupId(activeGroupId)) {
         setViewModeAll(value);
       } else {
         setViewModeGroups(value);
