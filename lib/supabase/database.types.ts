@@ -26,6 +26,7 @@ export type Database = {
           image_url: string | null;
           is_enriching: boolean | null;
           last_fetched_at: string | null;
+          last_visited_at: string | null;
           normalized_url: string | null;
           og_image_url: string | null;
           order_index: number | null;
@@ -34,6 +35,7 @@ export type Database = {
           title: string;
           url: string;
           user_id: string;
+          visit_count: number;
         };
         Insert: {
           created_at?: string;
@@ -46,6 +48,7 @@ export type Database = {
           image_url?: string | null;
           is_enriching?: boolean | null;
           last_fetched_at?: string | null;
+          last_visited_at?: string | null;
           normalized_url?: string | null;
           og_image_url?: string | null;
           order_index?: number | null;
@@ -54,6 +57,7 @@ export type Database = {
           title: string;
           url: string;
           user_id: string;
+          visit_count?: number;
         };
         Update: {
           created_at?: string;
@@ -66,6 +70,7 @@ export type Database = {
           image_url?: string | null;
           is_enriching?: boolean | null;
           last_fetched_at?: string | null;
+          last_visited_at?: string | null;
           normalized_url?: string | null;
           og_image_url?: string | null;
           order_index?: number | null;
@@ -74,6 +79,7 @@ export type Database = {
           title?: string;
           url?: string;
           user_id?: string;
+          visit_count?: number;
         };
         Relationships: [
           {
@@ -210,7 +216,13 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      increment_bookmark_visits: {
+        Args: {
+          p_bookmark_ids: string[];
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeUrl } from "@/lib/metadata";
 import { getCorsHeaders, jsonResponse } from "../utils";
+import { toPersistedGroupId } from "@/lib/system-groups";
 
 interface BookmarkPayload {
   url: string;
@@ -37,12 +38,13 @@ export async function POST(request: Request) {
     const title = payload.title?.trim() || normalizedUrl;
     const description = payload.description?.trim() || null;
     const faviconUrl = payload.faviconUrl?.trim() || null;
+    const persistedGroupId = toPersistedGroupId(payload.groupId);
 
-    if (payload.groupId) {
+    if (persistedGroupId) {
       const { data: group, error: groupError } = await supabaseAdmin
         .from("groups")
         .select("id")
-        .eq("id", payload.groupId)
+        .eq("id", persistedGroupId)
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -86,14 +88,16 @@ export async function POST(request: Request) {
         title,
         description,
         favicon_url: faviconUrl,
-        group_id: payload.groupId ?? null,
+        group_id: persistedGroupId,
         user_id: userId,
         status: "ready",
+        visit_count: 0,
+        last_visited_at: null,
         last_fetched_at: new Date().toISOString(),
         order_index: nextOrderIndex,
       })
       .select(
-        "id, url, normalized_url, title, description, group_id, created_at, order_index, status, favicon_url, og_image_url, image_url",
+        "id, url, normalized_url, title, description, group_id, created_at, order_index, status, favicon_url, og_image_url, image_url, visit_count, last_visited_at",
       )
       .single();
 

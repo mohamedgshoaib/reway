@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { fetchMetadata, normalizeUrl } from "@/lib/metadata";
 import { getDomain } from "@/lib/utils";
+import { toPersistedGroupId } from "@/lib/system-groups";
 
 export async function checkDuplicateBookmarks(urls: string[]): Promise<{
   duplicates: Record<string, { id: string; title: string; url: string }>;
@@ -72,6 +73,7 @@ export async function addBookmark(formData: {
   const normalizedUrl = normalizeUrl(formData.url);
   const title = formData.title || normalizedUrl;
   const domain = getDomain(formData.url);
+  const persistedGroupId = toPersistedGroupId(formData.group_id);
 
   const { data, error } = await supabase
     .from("bookmarks")
@@ -85,9 +87,11 @@ export async function addBookmark(formData: {
       og_image_url: formData.og_image_url,
       image_url: formData.og_image_url,
       description: formData.description,
-      group_id: formData.group_id,
+      group_id: persistedGroupId,
       user_id: userData.user.id,
       status: "pending",
+      visit_count: 0,
+      last_visited_at: null,
       order_index: nextOrderIndex,
     })
     .select("id")
@@ -314,6 +318,8 @@ export async function restoreBookmark(bookmark: {
   order_index?: number | null;
   created_at?: string | null;
   status?: string | null;
+  visit_count?: number | null;
+  last_visited_at?: string | null;
 }) {
   const supabase = await createClient();
 
@@ -340,6 +346,8 @@ export async function restoreBookmark(bookmark: {
       order_index: bookmark.order_index ?? null,
       created_at: bookmark.created_at ?? new Date().toISOString(),
       status: bookmark.status ?? "ready",
+      visit_count: bookmark.visit_count ?? 0,
+      last_visited_at: bookmark.last_visited_at ?? null,
       user_id: userData.user.id,
     },
     { onConflict: "id" },

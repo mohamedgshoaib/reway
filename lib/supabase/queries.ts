@@ -12,7 +12,7 @@ export async function getBookmarks() {
   const { data, error } = await supabase
     .from("bookmarks")
     .select(
-      "id,url,normalized_url,domain,title,description,favicon_url,og_image_url,image_url,screenshot_url,group_id,user_id,created_at,order_index,status,is_enriching,last_fetched_at,error_reason",
+      "id,url,normalized_url,domain,title,description,favicon_url,og_image_url,image_url,screenshot_url,group_id,user_id,created_at,order_index,status,is_enriching,last_fetched_at,last_visited_at,visit_count,error_reason",
     )
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: false });
