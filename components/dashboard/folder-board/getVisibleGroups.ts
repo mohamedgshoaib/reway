@@ -1,17 +1,10 @@
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
-
-function createNoGroupRow(): GroupRow {
-  return {
-    id: "no-group",
-    name: "No Group",
-    icon: "alert-circle",
-    color: null,
-    user_id: "",
-    created_at: new Date().toISOString(),
-    hide_from_all_bookmarks: false,
-    order_index: null,
-  };
-}
+import {
+  createNoGroupRow,
+  isAllBookmarksGroupId,
+  isMostVisitedGroupId,
+  NO_GROUP_ID,
+} from "@/lib/system-groups";
 
 export function getVisibleGroups(options: {
   groups: GroupRow[];
@@ -21,14 +14,26 @@ export function getVisibleGroups(options: {
 }) {
   const { groups, bookmarks, activeGroupId, isFiltered } = options;
 
-  if (activeGroupId !== "all") {
+  if (isMostVisitedGroupId(activeGroupId)) {
+    const groupIds = new Set(
+      bookmarks.map((bookmark) => bookmark.group_id ?? NO_GROUP_ID),
+    );
+    const visibleGroups = groups.filter((group) => groupIds.has(group.id));
+    if (!groupIds.has(NO_GROUP_ID)) return visibleGroups;
+
+    return [...visibleGroups, createNoGroupRow()];
+  }
+
+  if (!isAllBookmarksGroupId(activeGroupId)) {
     return groups.filter((group) => group.id === activeGroupId);
   }
 
   if (isFiltered) {
-    const groupIds = new Set(bookmarks.map((bookmark) => bookmark.group_id ?? "no-group"));
+    const groupIds = new Set(
+      bookmarks.map((bookmark) => bookmark.group_id ?? NO_GROUP_ID),
+    );
     const filtered = groups.filter((group) => groupIds.has(group.id));
-    if (!groupIds.has("no-group")) return filtered;
+    if (!groupIds.has(NO_GROUP_ID)) return filtered;
 
     return [
       ...filtered,

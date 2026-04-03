@@ -2,6 +2,12 @@
 
 import { useMemo } from "react";
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
+import { hasVisitedBookmark, sortBookmarksByVisitRanking } from "@/lib/bookmark-sorting";
+import {
+  isAllBookmarksGroupId,
+  isMostVisitedGroupId,
+  isNoGroupId,
+} from "@/lib/system-groups";
 
 interface UseDashboardDerivedOptions {
   bookmarks: BookmarkRow[];
@@ -16,27 +22,46 @@ export function useDashboardDerived({
   activeGroupId,
   deferredSearchQuery,
 }: UseDashboardDerivedOptions) {
+  const hiddenFromAllGroupIds = useMemo(
+    () =>
+      new Set(
+        groups
+          .filter((group) => group.hide_from_all_bookmarks)
+          .map((group) => group.id),
+      ),
+    [groups],
+  );
+
   const filteredBookmarks = useMemo(() => {
     const normalizedQuery = deferredSearchQuery.trim().toLowerCase();
-    return bookmarks.filter((b) => {
-      const matchesGroup =
-        activeGroupId === "all"
-          ? (() => {
-              const group = groups.find((g) => g.id === b.group_id);
-              return !group?.hide_from_all_bookmarks;
-            })()
-          : activeGroupId === "no-group"
-            ? !b.group_id
-            : b.group_id === activeGroupId;
-      if (!matchesGroup) return false;
+    const matchesSearch = (bookmark: BookmarkRow) => {
       if (!normalizedQuery) return true;
-      const haystack = [b.title, b.url, b.description]
+      const haystack = [bookmark.title, bookmark.url, bookmark.description]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
       return haystack.includes(normalizedQuery);
+    };
+
+    const filtered = bookmarks.filter((b) => {
+      const matchesGroup =
+        isAllBookmarksGroupId(activeGroupId)
+          ? !b.group_id || !hiddenFromAllGroupIds.has(b.group_id)
+          : isMostVisitedGroupId(activeGroupId)
+            ? hasVisitedBookmark(b)
+            : isNoGroupId(activeGroupId)
+              ? !b.group_id
+              : b.group_id === activeGroupId;
+      if (!matchesGroup) return false;
+      return matchesSearch(b);
     });
-  }, [activeGroupId, bookmarks, deferredSearchQuery, groups]);
+
+    if (isMostVisitedGroupId(activeGroupId)) {
+      return sortBookmarksByVisitRanking(filtered);
+    }
+
+    return filtered;
+  }, [activeGroupId, bookmarks, deferredSearchQuery, hiddenFromAllGroupIds]);
 
   const groupCounts = useMemo(() => {
     const counts: Record<string, number> = {};

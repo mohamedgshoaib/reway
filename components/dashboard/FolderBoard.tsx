@@ -36,6 +36,7 @@ import {
   AccordionContent,
   AccordionItem,
 } from "@/components/ui/accordion";
+import { isMostVisitedGroupId } from "@/lib/system-groups";
 
 interface FolderBoardProps {
   bookmarks: BookmarkRow[];
@@ -115,7 +116,13 @@ export const FolderBoard = memo(function FolderBoard({
     });
   }, [activeGroupId, bookmarks, groups, isFiltered]);
 
-  const bookmarkBuckets = useBookmarkBuckets({ bookmarks, visibleGroups });
+  const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId);
+
+  const bookmarkBuckets = useBookmarkBuckets({
+    bookmarks,
+    visibleGroups,
+    activeGroupId,
+  });
 
   const {
     gridColumns,
@@ -137,8 +144,8 @@ export const FolderBoard = memo(function FolderBoard({
     bookmarks,
     bookmarkBuckets,
     onReorder,
+    disabled: isMostVisitedGroup,
   });
-
   const isExtendedFolderGrid = layoutDensity === "extended";
 
   const openFolders = useMemo(
@@ -332,6 +339,7 @@ export const FolderBoard = memo(function FolderBoard({
                                   isSelectionChecked={stableSelectedIds.has(
                                     bookmark.id,
                                   )}
+                                  dragDisabled={isMostVisitedGroup}
                                   onToggleSelection={onToggleSelection}
                                   onEnterSelectionMode={onEnterSelectionMode}
                                   onDelete={onDeleteBookmark}

@@ -17,8 +17,9 @@ export function useFolderDnd<T extends { id: string; group_id?: string | null }>
   bookmarks: T[];
   bookmarkBuckets: Record<string, T[]>;
   onReorder: (groupId: string, newOrder: T[]) => void;
+  disabled?: boolean;
 }) {
-  const { bookmarks, bookmarkBuckets, onReorder } = options;
+  const { bookmarks, bookmarkBuckets, onReorder, disabled = false } = options;
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -37,10 +38,15 @@ export function useFolderDnd<T extends { id: string; group_id?: string | null }>
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (disabled) return;
     setActiveId(event.active.id as string);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (disabled) {
+      setActiveId(null);
+      return;
+    }
     const { active, over } = event;
     const activeGroupId = active.data?.current?.sortable?.containerId as
       | string

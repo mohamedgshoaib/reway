@@ -35,6 +35,12 @@ import { getDisplayTitle, getDomain } from "@/lib/utils";
 import { QuickGlanceDialog } from "./QuickGlanceDialog";
 import { BookmarkEditSheet } from "./BookmarkEditSheet";
 import { useIsMac } from "@/hooks/useIsMac";
+import {
+  ALL_BOOKMARKS_GROUP_ID,
+  isAllBookmarksGroupId,
+  isMostVisitedGroupId,
+  NO_GROUP_ID,
+} from "@/lib/system-groups";
 
 const createdAtFormatter = new Intl.DateTimeFormat(undefined, {
   month: "short",
@@ -89,6 +95,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     () => selectedIds ?? new Set<string>(),
     [selectedIds],
   );
+  const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId);
 
   // ... existing sensors and handlers
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -114,7 +121,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   });
 
   const orderedBookmarks = useMemo(() => {
-    if (activeGroupId !== "all") return bookmarks;
+    if (!isAllBookmarksGroupId(activeGroupId)) return bookmarks;
 
     const groupOrder = new Map<string, number>();
     initialGroups.forEach((g, index) => {
@@ -143,7 +150,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   }, [activeGroupId, bookmarks, initialGroups]);
 
   const renderedBookmarks = useMemo(() => {
-    return activeGroupId === "all" ? orderedBookmarks : bookmarks;
+    return isAllBookmarksGroupId(activeGroupId) ? orderedBookmarks : bookmarks;
   }, [activeGroupId, bookmarks, orderedBookmarks]);
 
   const renderedDisplayBookmarks = useMemo(() => {
@@ -163,7 +170,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       favicon: b.favicon_url || undefined,
       isEnriching: Boolean(b.is_enriching),
       createdAt: createdAtFormatter.format(new Date(b.created_at)),
-      groupId: b.group_id || "all",
+      groupId: b.group_id || ALL_BOOKMARKS_GROUP_ID,
       status: b.status || "ready",
     }));
   }, [renderedBookmarks]);
@@ -201,13 +208,20 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     : null;
 
   const isGroupRestrictedDragActive =
-    activeGroupId === "all" && Boolean(activeId) && activeDragBucket !== null;
+    isAllBookmarksGroupId(activeGroupId) &&
+    Boolean(activeId) &&
+    activeDragBucket !== null;
 
   function handleDragStart(event: DragStartEvent) {
+    if (isMostVisitedGroup) return;
     setActiveId(event.active.id as string);
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    if (isMostVisitedGroup) {
+      setActiveId(null);
+      return;
+    }
     const { active, over } = event;
 
     if (!over) {
@@ -215,7 +229,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       return;
     }
 
-    if (activeGroupId === "all") {
+    if (isAllBookmarksGroupId(activeGroupId)) {
       const activeItem = bookmarks.find((b) => b.id === active.id) ?? null;
       const overItem = bookmarks.find((b) => b.id === over.id) ?? null;
 
@@ -242,7 +256,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         const newIndex = groupBookmarks.findIndex((b) => b.id === over.id);
         if (oldIndex >= 0 && newIndex >= 0) {
           onReorder(
-            groupId ?? "no-group",
+            groupId ?? NO_GROUP_ID,
             arrayMove(groupBookmarks, oldIndex, newIndex),
           );
         }
@@ -326,6 +340,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                     onEnterSelectionMode={onEnterSelectionMode}
                     groupsMap={groupsMap}
                     activeGroupId={activeGroupId}
+                    dragDisabled={isMostVisitedGroup}
                     dragDimmed={
                       Boolean(isGroupRestrictedDragActive) &&
                       activeDragBucket !== null &&
@@ -365,6 +380,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                   }}
                   isSelected={clampedSelectedIndex === index}
                   activeGroupId={activeGroupId}
+                  dragDisabled={isMostVisitedGroup}
                   onPreview={(id) => {
                     const b = bookmarks.find((bm) => bm.id === id);
                     if (b) {
