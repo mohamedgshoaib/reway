@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { BookmarkActions } from "./sortable-bookmark/BookmarkActions";
 import { MobileActionMenu } from "./sortable-bookmark/MobileActionMenu";
 import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu";
+import { recordBookmarkVisit } from "@/lib/bookmark-visits";
 
 interface SortableBookmarkProps {
   id: string;
@@ -44,6 +45,7 @@ interface SortableBookmarkProps {
   onToggleSelection?: (id: string) => void;
   onEnterSelectionMode?: () => void;
   dragDimmed?: boolean;
+  dragDisabled?: boolean;
 }
 
 export const SortableBookmark = memo(function SortableBookmark({
@@ -69,6 +71,7 @@ export const SortableBookmark = memo(function SortableBookmark({
   onToggleSelection,
   onEnterSelectionMode,
   dragDimmed = false,
+  dragDisabled = false,
 }: SortableBookmarkProps) {
   void description;
   const [isCopied, setIsCopied] = useState(false);
@@ -81,7 +84,7 @@ export const SortableBookmark = memo(function SortableBookmark({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({ id, disabled: dragDisabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -98,7 +101,20 @@ export const SortableBookmark = memo(function SortableBookmark({
 
   const openInNewTab = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    recordBookmarkVisit(id);
     window.open(url, "_blank");
+  };
+
+  const handleAnchorClick = (event: React.MouseEvent) => {
+    if (event.shiftKey && !selectionMode) {
+      event.preventDefault();
+      event.stopPropagation();
+      onEnterSelectionMode?.();
+      onToggleSelection?.(id);
+      return;
+    }
+
+    recordBookmarkVisit(id);
   };
 
   const handleCopyLink = async (e?: React.MouseEvent) => {
@@ -147,6 +163,8 @@ export const SortableBookmark = memo(function SortableBookmark({
                 ? "opacity-60"
                 : selectionMode
                   ? "hover:bg-muted/50 cursor-pointer"
+                  : dragDisabled
+                    ? "hover:bg-muted/50 cursor-default"
                   : "hover:bg-muted/50 cursor-grab active:cursor-grabbing"
             } ${dragStyle} ${dragDimmed ? "opacity-40 saturate-0" : ""} ${
               isDragging ? "opacity-0" : "opacity-100"
@@ -205,14 +223,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={(event) => {
-                    if (event.shiftKey) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onEnterSelectionMode?.();
-                      onToggleSelection?.(id);
-                    }
-                  }}
+                  onClick={handleAnchorClick}
                   onPointerDown={(event) => {
                     event.stopPropagation();
                   }}
@@ -246,14 +257,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                       href={url}
                       target="_blank"
                       rel="noreferrer"
-                      onClick={(event) => {
-                        if (event.shiftKey && !selectionMode) {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          onEnterSelectionMode?.();
-                          onToggleSelection?.(id);
-                        }
-                      }}
+                      onClick={handleAnchorClick}
                       onPointerDown={(event) => {
                         event.stopPropagation();
                       }}
@@ -279,14 +283,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                       href={url}
                       target="_blank"
                       rel="noreferrer"
-                      onClick={(event) => {
-                        if (event.shiftKey && !selectionMode) {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          onEnterSelectionMode?.();
-                          onToggleSelection?.(id);
-                        }
-                      }}
+                      onClick={handleAnchorClick}
                       onPointerDown={(event) => {
                         event.stopPropagation();
                       }}

@@ -28,6 +28,7 @@ import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Favicon } from "./Favicon";
 import { GroupRow } from "@/lib/supabase/queries";
 import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu";
+import { recordBookmarkVisit } from "@/lib/bookmark-visits";
 
 interface SortableBookmarkCardProps {
   id: string;
@@ -50,6 +51,7 @@ interface SortableBookmarkCardProps {
   onEdit?: (id: string) => void;
   onPreview?: (id: string) => void;
   dragDimmed?: boolean;
+  dragDisabled?: boolean;
 }
 
 export function SortableBookmarkCard({
@@ -73,6 +75,7 @@ export function SortableBookmarkCard({
   onEdit,
   onPreview,
   dragDimmed = false,
+  dragDisabled = false,
 }: SortableBookmarkCardProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -84,7 +87,7 @@ export function SortableBookmarkCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({ id, disabled: dragDisabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -104,7 +107,20 @@ export function SortableBookmarkCard({
 
   const handleOpen = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    recordBookmarkVisit(id);
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleAnchorClick = (event: React.MouseEvent) => {
+    if (event.shiftKey && !selectionMode) {
+      event.preventDefault();
+      event.stopPropagation();
+      onEnterSelectionMode?.();
+      onToggleSelection?.(id);
+      return;
+    }
+
+    recordBookmarkVisit(id);
   };
 
   const handleCopy = async (e?: React.MouseEvent) => {
@@ -158,7 +174,9 @@ export function SortableBookmarkCard({
             className={`group relative flex flex-col gap-3 rounded-2xl bg-muted/20 p-4 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden ${
               selectionMode
                 ? "cursor-pointer"
-                : isDragging
+                : dragDisabled
+                  ? "cursor-default"
+                  : isDragging
                   ? "cursor-grabbing"
                   : "cursor-grab"
             } ${
@@ -212,14 +230,7 @@ export function SortableBookmarkCard({
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={(event) => {
-                    if (event.shiftKey) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onEnterSelectionMode?.();
-                      onToggleSelection?.(id);
-                    }
-                  }}
+                  onClick={handleAnchorClick}
                   onPointerDown={(event) => {
                     event.stopPropagation();
                   }}
@@ -248,14 +259,7 @@ export function SortableBookmarkCard({
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={(event) => {
-                      if (event.shiftKey && !selectionMode) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onEnterSelectionMode?.();
-                        onToggleSelection?.(id);
-                      }
-                    }}
+                    onClick={handleAnchorClick}
                     onPointerDown={(event) => {
                       event.stopPropagation();
                     }}
@@ -276,14 +280,7 @@ export function SortableBookmarkCard({
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={(event) => {
-                      if (event.shiftKey && !selectionMode) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onEnterSelectionMode?.();
-                        onToggleSelection?.(id);
-                      }
-                    }}
+                    onClick={handleAnchorClick}
                     onPointerDown={(event) => {
                       event.stopPropagation();
                     }}
@@ -304,8 +301,9 @@ export function SortableBookmarkCard({
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="truncate max-w-[70%]">{metaLabel}</span>
               <div
+                role="presentation"
                 className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                onClick={(e) => e.stopPropagation()}
+                onClickCapture={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}

@@ -6,6 +6,7 @@ import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
 import { useGlobalKeydown } from "@/hooks/useGlobalKeydown";
 import { useGlobalEvent } from "@/hooks/useGlobalEvent";
 import { shouldIgnoreDashboardHotkey } from "@/lib/keyboard";
+import { recordBookmarkVisit } from "@/lib/bookmark-visits";
 
 interface UseFolderKeyboardNavOptions {
   bookmarkBuckets: Record<string, BookmarkRow[]>;
@@ -336,6 +337,7 @@ export function useFolderKeyboardNav({
           const bookmark = activeBookmarks[selectedBookmarkValue];
           if (!bookmark) return;
           if (e.metaKey || e.ctrlKey) {
+            recordBookmarkVisit(bookmark.id);
             window.open(bookmark.url, "_blank", "noopener,noreferrer");
           } else {
             navigator.clipboard.writeText(bookmark.url);

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import type { BookmarkRow } from "@/lib/supabase/queries";
 import { EXTENSION_DOWNLOAD_URL } from "@/lib/extension";
+import { recordBookmarkVisits } from "@/lib/bookmark-visits";
 
 type ExtensionResponsePayload = {
   ok: boolean;
@@ -110,6 +111,8 @@ export function useSelectionActions({
       .map((bookmark) => bookmark.url)
       .filter(Boolean);
     if (urls.length === 0) return;
+
+    recordBookmarkVisits(selectedBookmarks.map((bookmark) => bookmark.id));
 
     const requestId = crypto.randomUUID();
     const responsePromise = new Promise<ExtensionResponsePayload | null>(

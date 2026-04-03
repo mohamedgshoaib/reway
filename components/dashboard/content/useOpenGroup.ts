@@ -5,6 +5,12 @@ import { toast } from "sonner";
 import type { BookmarkRow } from "@/lib/supabase/queries";
 import { useGlobalEvent } from "@/hooks/useGlobalEvent";
 import { EXTENSION_DOWNLOAD_URL } from "@/lib/extension";
+import { recordBookmarkVisits } from "@/lib/bookmark-visits";
+import {
+  hasVisitedBookmark,
+  sortBookmarksByVisitRanking,
+} from "@/lib/bookmark-sorting";
+import { isAllBookmarksGroupId, isMostVisitedGroupId } from "@/lib/system-groups";
 
 interface UseOpenGroupOptions {
   bookmarks: BookmarkRow[];
@@ -37,7 +43,11 @@ export function useOpenGroup({
       const normalizedQuery = deferredSearchQuery.trim().toLowerCase();
       const targetBookmarks = bookmarks.filter((bookmark) => {
         const matchesGroup =
-          groupId === "all" ? true : bookmark.group_id === groupId;
+          isAllBookmarksGroupId(groupId)
+            ? true
+            : isMostVisitedGroupId(groupId)
+              ? hasVisitedBookmark(bookmark)
+              : bookmark.group_id === groupId;
         if (!matchesGroup) return false;
         if (!normalizedQuery) return true;
         const haystack = [bookmark.title, bookmark.url, bookmark.description]
@@ -48,7 +58,13 @@ export function useOpenGroup({
       });
 
       if (targetBookmarks.length === 0) return;
-      const urls = targetBookmarks
+      const orderedTargetBookmarks = isMostVisitedGroupId(groupId)
+        ? sortBookmarksByVisitRanking(targetBookmarks)
+        : targetBookmarks;
+
+      recordBookmarkVisits(orderedTargetBookmarks.map((bookmark) => bookmark.id));
+
+      const urls = orderedTargetBookmarks
         .map((bookmark) => bookmark.url)
         .filter(Boolean);
 
@@ -88,7 +104,7 @@ export function useOpenGroup({
 
       // Manual fallback or no extension detected
       // Open all tabs immediately to avoid popup blocker
-      targetBookmarks.forEach((bookmark) => {
+      orderedTargetBookmarks.forEach((bookmark) => {
         window.open(bookmark.url, "_blank", "noopener,noreferrer");
       });
 

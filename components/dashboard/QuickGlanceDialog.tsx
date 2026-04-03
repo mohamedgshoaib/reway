@@ -31,6 +31,7 @@ import { Favicon } from "./Favicon";
 import { getDomain } from "@/lib/utils";
 import { toast } from "sonner";
 import NextImage from "next/image";
+import { recordBookmarkVisit } from "@/lib/bookmark-visits";
 
 interface QuickGlanceDialogProps {
   bookmark: BookmarkRow | null;
@@ -83,6 +84,7 @@ export function QuickGlanceDialog({
   };
 
   const handleOpenUrl = () => {
+    recordBookmarkVisit(bookmark.id);
     window.open(bookmark.url, "_blank", "noopener,noreferrer");
   };
 

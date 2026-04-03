@@ -18,6 +18,7 @@ import {
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Favicon } from "./Favicon";
 import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu";
+import { recordBookmarkVisit } from "@/lib/bookmark-visits";
 
 interface SortableBookmarkIconProps {
   id: string;
@@ -35,6 +36,7 @@ interface SortableBookmarkIconProps {
   onEdit?: (id: string) => void;
   onPreview?: (id: string) => void;
   dragDimmed?: boolean;
+  dragDisabled?: boolean;
 }
 
 export function SortableBookmarkIcon({
@@ -53,6 +55,7 @@ export function SortableBookmarkIcon({
   onEdit,
   onPreview,
   dragDimmed = false,
+  dragDisabled = false,
 }: SortableBookmarkIconProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -63,7 +66,7 @@ export function SortableBookmarkIcon({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({ id, disabled: dragDisabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -74,7 +77,20 @@ export function SortableBookmarkIcon({
 
   const handleOpen = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    recordBookmarkVisit(id);
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleAnchorClick = (event: React.MouseEvent) => {
+    if (event.shiftKey && !selectionMode) {
+      event.preventDefault();
+      event.stopPropagation();
+      onEnterSelectionMode?.();
+      onToggleSelection?.(id);
+      return;
+    }
+
+    recordBookmarkVisit(id);
   };
 
   const handleCopy = async (e?: React.MouseEvent) => {
@@ -123,7 +139,9 @@ export function SortableBookmarkIcon({
             {...attributes}
             {...(selectionMode ? {} : listeners)}
             data-slot="bookmark-card"
-            className={`group relative flex flex-col items-center gap-3 rounded-2xl bg-muted/20 p-4 text-center ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden cursor-grab active:cursor-grabbing ${
+            className={`group relative flex flex-col items-center gap-3 rounded-2xl bg-muted/20 p-4 text-center ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden ${
+              dragDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing"
+            } ${
               isSelectionChecked || isSelected ? "ring-2 ring-primary/30" : ""
             } ${dragDimmed ? "opacity-40 saturate-0" : ""} ${
               isDragging ? "opacity-0" : ""
@@ -173,14 +191,7 @@ export function SortableBookmarkIcon({
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                onClick={(event) => {
-                  if (event.shiftKey) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onEnterSelectionMode?.();
-                    onToggleSelection?.(id);
-                  }
-                }}
+                onClick={handleAnchorClick}
                 onPointerDown={(event) => {
                   event.stopPropagation();
                 }}
@@ -207,14 +218,7 @@ export function SortableBookmarkIcon({
               href={url}
               target="_blank"
               rel="noreferrer"
-              onClick={(event) => {
-                if (event.shiftKey && !selectionMode) {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onEnterSelectionMode?.();
-                  onToggleSelection?.(id);
-                }
-              }}
+              onClick={handleAnchorClick}
               onPointerDown={(event) => {
                 event.stopPropagation();
               }}
