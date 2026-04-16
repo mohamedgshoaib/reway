@@ -16,6 +16,7 @@ export function TodosSection({
   onDeleteTodo,
   onDeleteTodos,
   onSetTodoCompleted,
+  onActionMenuOpenChange,
 }: {
   todos: TodoRowType[];
   onCreateTodo: (formData: {
@@ -30,6 +31,7 @@ export function TodosSection({
   onDeleteTodos: (ids: string[]) => Promise<void>;
   onSetTodoCompleted: (id: string, completed: boolean) => Promise<void>;
   onSetTodosCompleted: (ids: string[], completed: boolean) => Promise<void>;
+  onActionMenuOpenChange?: (open: boolean) => void;
 }) {
   const [expandedTodoId, setExpandedTodoId] = useState<string | null>(null);
 
@@ -161,6 +163,7 @@ export function TodosSection({
                 setTodoIdPendingDelete(todo.id);
                 setTodoDeleteDialogOpen(true);
               }}
+              onActionMenuOpenChange={onActionMenuOpenChange}
             />
           );
         })}

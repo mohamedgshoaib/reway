@@ -36,6 +36,7 @@ export function TodoRow({
   onDelete,
   showActions = true,
   variant = "app",
+  onActionMenuOpenChange,
 }: {
   todo: TodoRowType;
   expanded: boolean;
@@ -49,6 +50,7 @@ export function TodoRow({
   onDelete: () => void;
   showActions?: boolean;
   variant?: "demo" | "app";
+  onActionMenuOpenChange?: (open: boolean) => void;
 }) {
   const priority = normalizePriority(todo.priority);
   const pCfg = priorityConfig[priority];
@@ -121,13 +123,13 @@ export function TodoRow({
         <div className="flex items-start gap-3 min-w-0 flex-1 text-left">
           <div className={cn("flex gap-2 min-w-0 flex-1", "items-start")}>
             <div
-              onClick={(event) => event.stopPropagation()}
               onMouseEnter={() => setCheckboxHovered(true)}
               onMouseLeave={() => setCheckboxHovered(false)}
               className={cn(checkboxMarginTop, "cursor-pointer")}
             >
               <Checkbox
                 checked={todo.completed}
+                onClick={(event) => event.stopPropagation()}
                 onCheckedChange={onToggleCompleted}
               />
             </div>
@@ -154,7 +156,7 @@ export function TodoRow({
       )}
 
       {showActions ? (
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={onActionMenuOpenChange}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -218,7 +220,7 @@ export function TodoRow({
   }
 
   return (
-    <ContextMenu>
+    <ContextMenu onOpenChange={onActionMenuOpenChange}>
       <ContextMenuTrigger asChild>{Row}</ContextMenuTrigger>
 
       <ContextMenuContent className="w-44">

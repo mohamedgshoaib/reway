@@ -36,6 +36,7 @@ export function GroupRowItem({
   onEdit,
   onRequestDelete,
   onToggleHideFromAllBookmarks,
+  onActionMenuOpenChange,
 }: {
   group: GroupRow;
   active: boolean;
@@ -48,11 +49,12 @@ export function GroupRowItem({
   onEdit: () => void;
   onRequestDelete: () => void;
   onToggleHideFromAllBookmarks: (hide: boolean) => void;
+  onActionMenuOpenChange?: (open: boolean) => void;
 }) {
   const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon;
 
   return (
-    <ContextMenu>
+    <ContextMenu onOpenChange={onActionMenuOpenChange}>
       <ContextMenuTrigger asChild>
         <div
           role="button"
@@ -123,7 +125,7 @@ export function GroupRowItem({
             </div>
           )}
 
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={onActionMenuOpenChange}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"

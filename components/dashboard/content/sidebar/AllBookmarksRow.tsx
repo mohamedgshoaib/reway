@@ -27,6 +27,7 @@ export function AllBookmarksRow({
   label = "All Bookmarks",
   openLabel = "Open bookmarks",
   icon = Folder01Icon,
+  onActionMenuOpenChange,
 }: {
   active: boolean;
   selectionMode: boolean;
@@ -36,9 +37,10 @@ export function AllBookmarksRow({
   label?: string;
   openLabel?: string;
   icon?: IconSvgElement;
+  onActionMenuOpenChange?: (open: boolean) => void;
 }) {
   return (
-    <ContextMenu>
+    <ContextMenu onOpenChange={onActionMenuOpenChange}>
       <ContextMenuTrigger asChild>
         <div
           role="button"
@@ -83,7 +85,7 @@ export function AllBookmarksRow({
             </div>
           </div>
 
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={onActionMenuOpenChange}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"

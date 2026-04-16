@@ -57,6 +57,8 @@ export function DashboardNotesTodosSidebar({
   const [isPinnedOpen, setIsPinnedOpen] = useState(false);
   const [isHoverOpen, setIsHoverOpen] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
+  const pointerInsideRef = useRef(false);
+  const openActionMenuCountRef = useRef(0);
 
   useEffect(() => {
     const update = () => setViewportWidth(window.innerWidth);
@@ -76,6 +78,7 @@ export function DashboardNotesTodosSidebar({
   const scheduleClose = () => {
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = window.setTimeout(() => {
+      if (openActionMenuCountRef.current > 0) return;
       setIsHoverOpen(false);
     }, 250);
   };
@@ -83,6 +86,34 @@ export function DashboardNotesTodosSidebar({
   const cancelClose = () => {
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = null;
+  };
+
+  const handleSidebarMouseEnter = () => {
+    pointerInsideRef.current = true;
+    cancelClose();
+    setIsHoverOpen(true);
+  };
+
+  const handleSidebarMouseLeave = () => {
+    pointerInsideRef.current = false;
+    if (!isPinnedOpen) scheduleClose();
+  };
+
+  const handleActionMenuOpenChange = (open: boolean) => {
+    openActionMenuCountRef.current = Math.max(
+      0,
+      openActionMenuCountRef.current + (open ? 1 : -1),
+    );
+
+    if (open) {
+      cancelClose();
+      setIsHoverOpen(true);
+      return;
+    }
+
+    if (!isPinnedOpen && !pointerInsideRef.current) {
+      scheduleClose();
+    }
   };
 
   useEffect(() => {
@@ -143,6 +174,7 @@ export function DashboardNotesTodosSidebar({
           onUpdateNote={onUpdateNote}
           onDeleteNote={onDeleteNote}
           onDeleteNotes={onDeleteNotes}
+          onActionMenuOpenChange={handleActionMenuOpenChange}
         />
       ) : (
         <TodosSection
@@ -153,6 +185,7 @@ export function DashboardNotesTodosSidebar({
           onDeleteTodos={onDeleteTodos}
           onSetTodoCompleted={onSetTodoCompleted}
           onSetTodosCompleted={onSetTodosCompleted}
+          onActionMenuOpenChange={handleActionMenuOpenChange}
         />
       )}
     </>
@@ -182,11 +215,10 @@ export function DashboardNotesTodosSidebar({
                 setIsHoverOpen(true);
               }}
               onMouseEnter={() => {
-                cancelClose();
-                setIsHoverOpen(true);
+                handleSidebarMouseEnter();
               }}
               onMouseLeave={() => {
-                if (!isPinnedOpen) scheduleClose();
+                handleSidebarMouseLeave();
               }}
             >
               {/* Issue: single-letter handles are hard to discover.
@@ -204,11 +236,10 @@ export function DashboardNotesTodosSidebar({
                   : "translate-x-full"
               }`}
               onMouseEnter={() => {
-                cancelClose();
-                setIsHoverOpen(true);
+                handleSidebarMouseEnter();
               }}
               onMouseLeave={() => {
-                if (!isPinnedOpen) scheduleClose();
+                handleSidebarMouseLeave();
               }}
             >
               <div className="h-full rounded-l-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
@@ -244,11 +275,10 @@ export function DashboardNotesTodosSidebar({
               setIsHoverOpen(true);
             }}
             onMouseEnter={() => {
-              cancelClose();
-              setIsHoverOpen(true);
+              handleSidebarMouseEnter();
             }}
             onMouseLeave={() => {
-              if (!isPinnedOpen) scheduleClose();
+              handleSidebarMouseLeave();
             }}
           >
             <span className="[writing-mode:vertical-rl] whitespace-nowrap text-[9px] tracking-wide">
@@ -262,11 +292,10 @@ export function DashboardNotesTodosSidebar({
               isPinnedOpen || isHoverOpen ? "translate-x-0" : "translate-x-full"
             }`}
             onMouseEnter={() => {
-              cancelClose();
-              setIsHoverOpen(true);
+              handleSidebarMouseEnter();
             }}
             onMouseLeave={() => {
-              if (!isPinnedOpen) scheduleClose();
+              handleSidebarMouseLeave();
             }}
           >
             <div className="h-full rounded-l-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">

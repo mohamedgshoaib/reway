@@ -14,6 +14,7 @@ export function NotesSection({
   onUpdateNote,
   onDeleteNote,
   onDeleteNotes,
+  onActionMenuOpenChange,
 }: {
   notes: NoteRow[];
   onCreateNote: (formData: {
@@ -26,6 +27,7 @@ export function NotesSection({
   ) => Promise<void>;
   onDeleteNote: (id: string) => Promise<void>;
   onDeleteNotes: (ids: string[]) => Promise<void>;
+  onActionMenuOpenChange?: (open: boolean) => void;
 }) {
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
 
@@ -150,6 +152,7 @@ export function NotesSection({
                 setNoteIdPendingDelete(note.id);
                 setNoteDeleteDialogOpen(true);
               }}
+              onActionMenuOpenChange={onActionMenuOpenChange}
             />
           );
         })}

@@ -41,11 +41,14 @@ export function getVisibleGroups(options: {
     ];
   }
 
+  const groupsVisibleInAll = groups.filter(
+    (group) => !group.hide_from_all_bookmarks,
+  );
   const hasUngrouped = bookmarks.some((bookmark) => !bookmark.group_id);
-  if (!hasUngrouped) return groups;
+  if (!hasUngrouped) return groupsVisibleInAll;
 
   return [
-    ...groups,
+    ...groupsVisibleInAll,
     createNoGroupRow(),
   ];
 }

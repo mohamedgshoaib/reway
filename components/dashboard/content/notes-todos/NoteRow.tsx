@@ -34,6 +34,7 @@ export function NoteRow({
   onDelete,
   showActions = true,
   variant = "app",
+  onActionMenuOpenChange,
 }: {
   note: NoteRowType;
   expanded: boolean;
@@ -46,6 +47,7 @@ export function NoteRow({
   onDelete: () => void;
   showActions?: boolean;
   variant?: "demo" | "app";
+  onActionMenuOpenChange?: (open: boolean) => void;
 }) {
   const dotMarginTop = variant === "demo" ? "mt-1" : "mt-[7px]";
 
@@ -116,7 +118,7 @@ export function NoteRow({
       )}
 
       {showActions ? (
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={onActionMenuOpenChange}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -173,7 +175,7 @@ export function NoteRow({
   }
 
   return (
-    <ContextMenu>
+    <ContextMenu onOpenChange={onActionMenuOpenChange}>
       <ContextMenuTrigger asChild>{Row}</ContextMenuTrigger>
 
       <ContextMenuContent className="w-44">

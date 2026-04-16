@@ -1,22 +1,13 @@
 "use client";
 
-import React, {
-  memo,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from "react";
+import React, { memo, useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   DndContext,
   DragOverlay,
   defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
-import {
-  rectSortingStrategy,
-  SortableContext,
-} from "@dnd-kit/sortable";
+import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
 import { SortableBookmarkIcon } from "./SortableBookmarkIcon";
 import { getDisplayTitle, getDomain } from "@/lib/utils";
@@ -124,15 +115,11 @@ export const FolderBoard = memo(function FolderBoard({
     activeGroupId,
   });
 
-  const {
-    gridColumns,
-    folderGridColumns,
-    foldersGridRef,
-    activeGridRef,
-  } = useFolderGridColumns({
-    isExtendedFolderGrid: layoutDensity === "extended",
-    selectedFolderId,
-  });
+  const { gridColumns, folderGridColumns, foldersGridRef, activeGridRef } =
+    useFolderGridColumns({
+      isExtendedFolderGrid: layoutDensity === "extended",
+      selectedFolderId,
+    });
 
   const {
     sensors,
@@ -215,7 +202,12 @@ export const FolderBoard = memo(function FolderBoard({
     }
     // Issue: missing effect deps can call an outdated callback.
     // Fix: include `onKeyboardContextChange`.
-  }, [hasKeyboardFocus, onKeyboardContextChange, selectedFolderId, visibleGroups]);
+  }, [
+    hasKeyboardFocus,
+    onKeyboardContextChange,
+    selectedFolderId,
+    visibleGroups,
+  ]);
 
   useFolderKeyboardNav({
     bookmarkBuckets,
@@ -305,13 +297,15 @@ export const FolderBoard = memo(function FolderBoard({
                     />
 
                     <AccordionContent className="px-0">
-                      <div className="px-4 py-4 bg-background/60">
+                      <div className="px-3 py-3 bg-background/60">
                         {groupBookmarks.length === 0 ? (
                           <EmptyFolder />
                         ) : (
                           <SortableContext
                             id={group.id}
-                            items={groupBookmarks.map((bookmark) => bookmark.id)}
+                            items={groupBookmarks.map(
+                              (bookmark) => bookmark.id,
+                            )}
                             strategy={rectSortingStrategy}
                           >
                             <div
