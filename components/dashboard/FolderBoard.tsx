@@ -244,7 +244,7 @@ export const FolderBoard = memo(function FolderBoard({
           onValueChange={handleAccordionChange}
           className={
             isExtendedFolderGrid
-              ? "grid border-0 bg-transparent overflow-visible gap-6"
+              ? "grid border-0 bg-transparent overflow-visible gap-5"
               : "flex flex-col gap-6 border-0 bg-transparent overflow-visible"
           }
           data-slot="folder-board"
