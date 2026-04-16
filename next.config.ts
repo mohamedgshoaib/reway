@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
+  turbopack: {
+    root: process.cwd(),
+  },
   logging: {
     fetches: {
       fullUrl: true,
