@@ -61,6 +61,12 @@
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
       "computedHash": "2da1d23b8f53cfe67f2e0b68924ab9f4ec400bb6480de097007eeaeb517d1722"
     },
+    "make-interfaces-feel-better": {
+      "source": "jakubkrehel/make-interfaces-feel-better",
+      "sourceType": "github",
+      "skillPath": "skills/make-interfaces-feel-better/SKILL.md",
+      "computedHash": "2c3576e63d8c39d75ed327f1dcf6aab7aec0edf293a55f6cb3f7b8571974a01c"
+    },
     "motion": {
       "source": "hairyf/skills",
       "sourceType": "github",
