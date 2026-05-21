@@ -37,7 +37,7 @@ export default function AboutPage() {
           </Link>
 
           <header className="mt-10 mb-12 space-y-4 text-center">
-            <h1 className="text-4xl font-bold text-foreground sm:text-5xl">About Reway</h1>
+            <h1 className="text-4xl font-semibold text-foreground sm:text-5xl">About Reway</h1>
             <p className="mx-auto max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">
               Reway is an engineering-led workspace built for people who save a lot of links and
               need them to stay useful.

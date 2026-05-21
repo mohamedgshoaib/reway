@@ -157,7 +157,7 @@ export function TodoRow({
               onClick={(e) => e.stopPropagation()}
               suppressHydrationWarning
               className={cn(
-                "text-muted-foreground/50 transition-all duration-200 h-6 w-6 rounded-md flex items-center justify-center cursor-pointer self-start mt-0",
+                "text-muted-foreground/50 transition-all duration-200 size-6 rounded-md flex items-center justify-center cursor-pointer self-start mt-0",
                 selectionMode
                   ? "opacity-0 pointer-events-none"
                   : "opacity-100 hover:text-primary/90 hover:bg-muted/50 md:opacity-0 md:group-hover:opacity-100",

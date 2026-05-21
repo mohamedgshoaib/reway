@@ -13,7 +13,7 @@ const passwordMeetsRequirements = (password: string) => {
 }
 
 export async function updatePasswordAction(
-  prevState: any,
+  _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
   const password = formData.get("password") as string

@@ -73,13 +73,13 @@ export function ViewModesDemo() {
                   className="rounded-2xl bg-muted/30 p-3 ring-1 ring-foreground/8"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-background">
+                    <div className="flex size-9 items-center justify-center rounded-2xl bg-background">
                       <Image
                         src={item.favicon}
                         alt={`${item.title} favicon`}
                         width={16}
                         height={16}
-                        className="h-4 w-4"
+                        className="size-4"
                         loading="lazy"
                         referrerPolicy="no-referrer"
                       />
@@ -94,21 +94,21 @@ export function ViewModesDemo() {
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-background/60 transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                        className="flex size-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-background/60 transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
                         aria-label="Copy link"
                       >
                         <HugeiconsIcon icon={Copy01Icon} size={10} />
                       </button>
                       <button
                         type="button"
-                        className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-background/60 transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                        className="flex size-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-background/60 transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
                         aria-label="Open link"
                       >
                         <HugeiconsIcon icon={ArrowUpRight03Icon} size={10} />
                       </button>
                       <button
                         type="button"
-                        className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-background/60 text-destructive transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                        className="flex size-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg bg-background/60 text-destructive transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
                         aria-label="Delete link"
                       >
                         <HugeiconsIcon icon={Delete02Icon} size={10} />
@@ -139,7 +139,7 @@ export function ViewModesDemo() {
                       alt={`${item.title} favicon`}
                       width={16}
                       height={16}
-                      className="h-4 w-4"
+                      className="size-4"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                     />
@@ -188,7 +188,7 @@ export function ViewModesDemo() {
                           alt={`${item.title} favicon`}
                           width={16}
                           height={16}
-                          className="h-4 w-4 shrink-0"
+                          className="size-4 shrink-0"
                           loading="lazy"
                           referrerPolicy="no-referrer"
                         />

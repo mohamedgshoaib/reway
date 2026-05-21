@@ -115,7 +115,7 @@ export function GroupRow({
             <button
               type="button"
               suppressHydrationWarning
-              className="h-11 w-11 md:h-7 md:w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 cursor-pointer text-muted-foreground/90 hover:text-primary/90 transition-colors duration-200"
+              className="size-11 md:h-7 md:w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 cursor-pointer text-muted-foreground/90 hover:text-primary/90 transition-colors duration-200"
               onClick={(e) => e.stopPropagation()}
               aria-label={`${group.name} options`}
               disabled={selectionMode}

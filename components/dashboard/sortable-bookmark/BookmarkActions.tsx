@@ -37,7 +37,7 @@ export function BookmarkActions({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+        className="size-9 rounded-xl hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
         onClick={onEdit}
         aria-label="Edit bookmark"
       >
@@ -47,7 +47,7 @@ export function BookmarkActions({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+        className="size-9 rounded-xl hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
         onClick={onCopyLink}
         aria-label={isCopied ? "URL copied" : "Copy link"}
       >
@@ -66,7 +66,7 @@ export function BookmarkActions({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+        className="size-9 rounded-xl hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
         onClick={onOpen}
         aria-label="Open link in new tab"
       >
@@ -76,7 +76,7 @@ export function BookmarkActions({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-xl transition-transform duration-150 ease-out cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-[0.97] motion-reduce:transition-none"
+        className="size-9 rounded-xl transition-transform duration-150 ease-out cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-[0.97] motion-reduce:transition-none"
         onClick={onDelete}
         aria-label="Delete bookmark"
       >

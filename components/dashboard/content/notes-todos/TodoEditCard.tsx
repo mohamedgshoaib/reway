@@ -33,7 +33,7 @@ export function TodoEditCard({
           onChange={(e) => setEditText(e.target.value)}
           placeholder="Todo"
           className="h-8 text-sm rounded-xl"
-          autoFocus
+         
           disabled={isUpdating}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !isUpdating) {

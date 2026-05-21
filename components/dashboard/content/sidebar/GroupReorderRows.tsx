@@ -37,17 +37,17 @@ export function SortableGroupRow({ group }: { group: GroupRow }) {
       <button
         type="button"
         ref={setActivatorNodeRef}
-        className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-primary/90 hover:bg-muted/50 cursor-grab active:cursor-grabbing"
+        className="size-6 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-primary/90 hover:bg-muted/50 cursor-grab active:cursor-grabbing"
         aria-label={`Reorder ${group.name}`}
         {...listeners}
       >
         <span className="grid grid-cols-2 gap-0.5">
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
         </span>
       </button>
       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -68,14 +68,14 @@ export function GroupDragOverlayRow({ group }: { group: GroupRow }) {
   const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon
   return (
     <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl ring-1 ring-primary/20 bg-background shadow-sm">
-      <div className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground/60">
+      <div className="size-6 rounded-md flex items-center justify-center text-muted-foreground/60">
         <span className="grid grid-cols-2 gap-0.5">
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
-          <span className="h-1 w-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
+          <span className="size-1 rounded-full bg-current" />
         </span>
       </div>
       <div className="flex items-center gap-2 min-w-0 flex-1">

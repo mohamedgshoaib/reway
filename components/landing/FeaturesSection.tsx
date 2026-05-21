@@ -1,7 +1,9 @@
 "use client"
 
-import { motion, useReducedMotion, type Variants } from "motion/react"
+import * as m from "motion/react-m"
+import { useReducedMotion, type Variants } from "motion/react"
 import { useEffect, useState } from "react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { features } from "./features/demo-data"
 import { ExtractDemo } from "./features/ExtractDemo"
 import { GroupsDemo } from "./features/GroupsDemo"
@@ -29,8 +31,9 @@ export function FeaturesSection() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <section id="features" className="border-b border-foreground/8 bg-muted/20">
-      <motion.div
+    <RewayLazyMotion>
+      <section id="features" className="border-b border-foreground/8 bg-muted/20">
+        <m.div
         className="mx-auto flex w-full max-w-350 flex-col gap-10 px-4 py-16 sm:px-6 lg:py-20"
         initial={enableMotion ? "hidden" : false}
         whileInView={enableMotion ? "visible" : undefined}
@@ -90,7 +93,8 @@ export function FeaturesSection() {
             .
           </p>
         </div>
-      </motion.div>
-    </section>
+        </m.div>
+      </section>
+    </RewayLazyMotion>
   )
 }

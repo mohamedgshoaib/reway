@@ -1,8 +1,10 @@
 "use client"
 
-import { motion, useReducedMotion } from "motion/react"
+import * as m from "motion/react-m"
+import { useReducedMotion } from "motion/react"
 import { useActionState } from "react"
 import { ActionResponse } from "@/app/login/actions"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,19 +21,20 @@ export function ResetPasswordForm() {
   const [state, formAction, isPending] = useActionState(updatePasswordAction, initialState)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, transform: "translateY(10px)" }}
-      animate={{ opacity: 1, transform: "translateY(0px)" }}
-      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: "easeOut" }}
-      suppressHydrationWarning
-      className="space-y-8"
-    >
-      <div className="flex flex-col items-center text-center space-y-2">
-        <h1 className="text-3xl font-bold">Reset Password</h1>
-        <p className="text-muted-foreground">
-          Enter your new password below to update your account.
-        </p>
-      </div>
+    <RewayLazyMotion>
+      <m.div
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0px)" }}
+        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: "easeOut" }}
+        suppressHydrationWarning
+        className="space-y-8"
+      >
+        <div className="flex flex-col items-center text-center gap-2">
+          <h1 className="text-3xl font-semibold">Reset Password</h1>
+          <p className="text-muted-foreground">
+            Enter your new password below to update your account.
+          </p>
+        </div>
 
       <form action={formAction} className="space-y-4">
         {state?.error && (
@@ -75,9 +78,10 @@ export function ResetPasswordForm() {
           className="w-full rounded-3xl cursor-pointer bg-primary text-primary-foreground hover:bg-primary/95"
           disabled={isPending}
         >
-          {isPending ? "Updating password..." : "Update password"}
+          {isPending ? "Updating password…" : "Update password"}
         </Button>
       </form>
-    </motion.div>
+      </m.div>
+    </RewayLazyMotion>
   )
 }

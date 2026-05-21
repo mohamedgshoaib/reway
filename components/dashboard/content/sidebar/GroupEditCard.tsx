@@ -44,7 +44,7 @@ export function GroupEditCard({
         >
           <button
             type="button"
-            className="flex items-center justify-center h-8 w-8 rounded-xl bg-primary/10 hover:bg-primary/20 cursor-pointer"
+            className="flex items-center justify-center size-8 rounded-xl bg-primary/10 hover:bg-primary/20 cursor-pointer"
             aria-label="Select group icon"
           >
             <HugeiconsIcon
@@ -62,7 +62,7 @@ export function GroupEditCard({
           }}
           placeholder="Group name"
           className="h-8 flex-1 text-sm rounded-xl"
-          autoFocus
+         
           maxLength={MAX_GROUP_NAME_LENGTH}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

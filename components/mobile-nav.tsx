@@ -1,7 +1,9 @@
-import { motion, useReducedMotion } from "motion/react"
+import * as m from "motion/react-m"
+import { useReducedMotion } from "motion/react"
 import Link from "next/link"
 import React from "react"
 import { navLinks } from "@/components/header"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Portal, PortalBackdrop } from "@/components/ui/portal"
@@ -84,7 +86,7 @@ export function MobileNav({ user, initials = "U" }: MobileNavProps) {
               {user ? (
                 <div className="mb-6 rounded-4xl ring-1 ring-foreground/8 bg-muted/20 px-1.5 py-1.5 shadow-none isolate after:absolute after:inset-0 after:rounded-4xl after:ring-1 after:ring-white/5 after:pointer-events-none relative">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
+                    <Avatar className="size-9">
                       <AvatarImage src={user.avatar_url} alt={user.name} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
@@ -153,69 +155,71 @@ function MenuMorphIcon({ isOpen, reduceMotion }: { isOpen: boolean; reduceMotion
     : { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const }
 
   return (
-    <motion.svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-5"
-      initial={false}
-      animate={isOpen ? "open" : "closed"}
-    >
-      <motion.path
-        d="M5 7h14"
-        fill="transparent"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        variants={{
-          closed: {
-            transform: "translateY(0px) rotate(0deg)",
-            opacity: 1,
-            originX: 0.5,
-            originY: 0.5,
-          },
-          open: {
-            transform: "translateY(5px) rotate(45deg)",
-            opacity: 1,
-            originX: 0.5,
-            originY: 0.5,
-          },
-        }}
-        transition={transition}
-      />
-      <motion.path
-        d="M5 12h14"
-        fill="transparent"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        variants={{
-          closed: { opacity: 1 },
-          open: { opacity: 0 },
-        }}
-        transition={transition}
-      />
-      <motion.path
-        d="M5 17h14"
-        fill="transparent"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        variants={{
-          closed: {
-            transform: "translateY(0px) rotate(0deg)",
-            opacity: 1,
-            originX: 0.5,
-            originY: 0.5,
-          },
-          open: {
-            transform: "translateY(-5px) rotate(-45deg)",
-            opacity: 1,
-            originX: 0.5,
-            originY: 0.5,
-          },
-        }}
-        transition={transition}
-      />
-    </motion.svg>
+    <RewayLazyMotion>
+      <m.svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="size-5"
+        initial={false}
+        animate={isOpen ? "open" : "closed"}
+      >
+        <m.path
+          d="M5 7h14"
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          variants={{
+            closed: {
+              transform: "translateY(0px) rotate(0deg)",
+              opacity: 1,
+              originX: 0.5,
+              originY: 0.5,
+            },
+            open: {
+              transform: "translateY(5px) rotate(45deg)",
+              opacity: 1,
+              originX: 0.5,
+              originY: 0.5,
+            },
+          }}
+          transition={transition}
+        />
+        <m.path
+          d="M5 12h14"
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          variants={{
+            closed: { opacity: 1 },
+            open: { opacity: 0 },
+          }}
+          transition={transition}
+        />
+        <m.path
+          d="M5 17h14"
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          variants={{
+            closed: {
+              transform: "translateY(0px) rotate(0deg)",
+              opacity: 1,
+              originX: 0.5,
+              originY: 0.5,
+            },
+            open: {
+              transform: "translateY(-5px) rotate(-45deg)",
+              opacity: 1,
+              originX: 0.5,
+              originY: 0.5,
+            },
+          }}
+          transition={transition}
+        />
+      </m.svg>
+    </RewayLazyMotion>
   )
 }

@@ -120,9 +120,9 @@ export function UserMenu({
             variant="ghost"
             data-onboarding="user-menu"
             suppressHydrationWarning
-            className="h-8 w-8 rounded-full p-0 flex shrink-0 hover:bg-muted/50 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+            className="size-8 rounded-full p-0 flex shrink-0 hover:bg-muted/50 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
           >
-            <Avatar className="h-8 w-8 transition-transform">
+            <Avatar className="size-8 transition-transform">
               <AvatarImage src={user.avatar_url} alt={user.name} />
               <AvatarFallback className="bg-linear-to-br from-pink-500 to-rose-500 text-white font-semibold text-xs transition-transform">
                 {initials}

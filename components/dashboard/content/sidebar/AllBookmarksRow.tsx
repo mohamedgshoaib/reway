@@ -87,7 +87,7 @@ export function AllBookmarksRow({
                 type="button"
                 onClick={(e) => e.stopPropagation()}
                 suppressHydrationWarning
-                className={`text-muted-foreground/50 transition-all duration-200 h-6 w-6 rounded-md flex items-center justify-center cursor-pointer ${
+                className={`text-muted-foreground/50 transition-all duration-200 size-6 rounded-md flex items-center justify-center cursor-pointer ${
                   selectionMode
                     ? "opacity-0 pointer-events-none"
                     : "opacity-0 group-hover:opacity-100 hover:text-primary/90 hover:bg-muted/50"

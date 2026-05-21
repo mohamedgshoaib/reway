@@ -2,13 +2,15 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, useReducedMotion, type Variants } from "motion/react"
+import * as m from "motion/react-m"
+import { useReducedMotion, type Variants } from "motion/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import ChromeWebStoreIcon from "@/components/chrome-store-logo"
 import { ExtensionInstallDialog } from "@/components/extension-install-dialog"
 import type { DashboardHref } from "@/components/landing/types"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 
@@ -63,8 +65,9 @@ export function CallToAction() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <section className="bg-background py-16 lg:py-20">
-      <motion.div
+    <RewayLazyMotion>
+      <section className="bg-background py-16 lg:py-20">
+        <m.div
         className="mx-auto w-full max-w-350 px-4 sm:px-6"
         initial={enableMotion ? "hidden" : false}
         whileInView={enableMotion ? "visible" : undefined}
@@ -73,8 +76,8 @@ export function CallToAction() {
       >
         <div className="relative overflow-hidden rounded-[3rem] ring-1 ring-foreground/12 bg-muted/25 px-6 py-16 shadow-none isolate sm:px-12 sm:py-24">
           <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-8 text-center">
-            <motion.div className="space-y-4" variants={enableMotion ? itemVariants : undefined}>
-              <h2 className="text-balance text-4xl font-bold text-foreground sm:text-5xl lg:text-6xl">
+            <m.div className="space-y-4" variants={enableMotion ? itemVariants : undefined}>
+              <h2 className="text-balance text-4xl font-semibold text-foreground sm:text-5xl lg:text-6xl">
                 Organize Your Knowledge
               </h2>
               <p className="mx-auto max-w-xl text-pretty text-base text-foreground/70 sm:text-lg">
@@ -82,14 +85,14 @@ export function CallToAction() {
                 organize, and retrieve your research at the speed of thought. Join Reway and never
                 lose a link again.
               </p>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               className="flex flex-col items-center gap-4"
               variants={enableMotion ? itemVariants : undefined}
             >
               <div className="flex flex-col items-center gap-3 sm:flex-row">
-                <motion.div
+                <m.div
                   whileTap={enableMotion ? { scale: 0.97 } : undefined}
                   transition={enableMotion ? { duration: 0.16, ease: "easeOut" } : undefined}
                 >
@@ -104,7 +107,7 @@ export function CallToAction() {
                       }}
                       disabled={isPrimaryNavLoading}
                     >
-                      {isPrimaryNavLoading ? "Loading..." : "Dashboard"}
+                      {isPrimaryNavLoading ? "Loading…" : "Dashboard"}
                       {!isPrimaryNavLoading ? (
                         <HugeiconsIcon icon={ArrowRight01Icon} size={20} className="ml-2" />
                       ) : null}
@@ -117,7 +120,7 @@ export function CallToAction() {
                       </Link>
                     </Button>
                   )}
-                </motion.div>
+                </m.div>
 
                 <ExtensionInstallDialog>
                   <Button variant="outline" size="lg" className="rounded-full px-8 cursor-pointer">
@@ -131,10 +134,11 @@ export function CallToAction() {
                 </ExtensionInstallDialog>
               </div>
               <p className="text-xs font-medium text-foreground/60">Free to use. No hidden fees.</p>
-            </motion.div>
+            </m.div>
           </div>
         </div>
-      </motion.div>
-    </section>
+        </m.div>
+      </section>
+    </RewayLazyMotion>
   )
 }

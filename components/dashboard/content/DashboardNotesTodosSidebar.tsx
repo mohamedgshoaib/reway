@@ -108,13 +108,21 @@ export function DashboardNotesTodosSidebar({
   }, [])
 
   useEffect(() => {
-    window.addEventListener("reway:open-sidebar-notes", () => {
+    const handleOpen = () => {
       cancelClose()
       setIsHoverOpen(true)
-    })
-    window.addEventListener("reway:close-sidebar-notes", () => {
+    }
+    const handleClose = () => {
       setIsHoverOpen(false)
-    })
+    }
+
+    window.addEventListener("reway:open-sidebar-notes", handleOpen)
+    window.addEventListener("reway:close-sidebar-notes", handleClose)
+
+    return () => {
+      window.removeEventListener("reway:open-sidebar-notes", handleOpen)
+      window.removeEventListener("reway:close-sidebar-notes", handleClose)
+    }
   }, [])
 
   const [activeSection, setActiveSection] = useState<"notes" | "todos">("notes")

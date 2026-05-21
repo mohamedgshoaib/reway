@@ -139,6 +139,7 @@ export function DashboardContent({
   })
 
   const inflightEnrichmentRef = useRef<Set<string>>(new Set())
+  const enrichmentTimeoutsRef = useRef<Set<number>>(new Set())
   const { bookmarks, setBookmarks } = dashboard
 
   const bookmarksRef = useRef(bookmarks)
@@ -192,9 +193,14 @@ export function DashboardContent({
                 )
               }
 
+              let timeoutId: number | null = null
               try {
                 const timeoutPromise = new Promise<never>((_, reject) => {
-                  setTimeout(() => reject(new Error("Enrichment timeout")), 45000)
+                  timeoutId = window.setTimeout(
+                    () => reject(new Error("Enrichment timeout")),
+                    45000,
+                  )
+                  enrichmentTimeoutsRef.current.add(timeoutId)
                 })
                 const enrichmentPromise = enrichCreatedBookmark(current.id, current.url)
                 const enrichment = (await Promise.race([
@@ -225,6 +231,10 @@ export function DashboardContent({
                 }
               } finally {
                 inflightEnrichmentRef.current.delete(current.id)
+                if (timeoutId) {
+                  window.clearTimeout(timeoutId)
+                  enrichmentTimeoutsRef.current.delete(timeoutId)
+                }
               }
             }
           }
@@ -240,6 +250,10 @@ export function DashboardContent({
 
     return () => {
       cancelled = true
+      enrichmentTimeoutsRef.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId)
+      })
+      enrichmentTimeoutsRef.current.clear()
     }
   }, [applyEnrichment, bookmarks, setBookmarks])
 

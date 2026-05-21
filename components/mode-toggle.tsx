@@ -13,7 +13,7 @@ export function ModeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      className="rounded-xl h-9 w-9 text-muted-foreground/85 hover:text-foreground transition-colors"
+      className="rounded-xl size-9 text-muted-foreground/85 hover:text-foreground transition-colors"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
       <HugeiconsIcon

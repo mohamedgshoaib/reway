@@ -26,7 +26,7 @@ export function HeroNoteRow({
     >
       <div className="flex gap-2 min-w-0 flex-1 items-start">
         <span
-          className="h-2 w-2 rounded-full mt-1 shrink-0"
+          className="size-2 rounded-full mt-1 shrink-0"
           style={{ backgroundColor: note.color ?? NOTE_COLORS[5] }}
         />
         <span

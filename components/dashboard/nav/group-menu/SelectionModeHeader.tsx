@@ -23,7 +23,7 @@ export function SelectionModeHeader({
             <UIButton
               size="sm"
               variant="secondary"
-              className="h-7 w-7 p-0 rounded-4xl font-bold cursor-pointer"
+              className="size-7 p-0 rounded-4xl font-bold cursor-pointer"
               onClick={onCancel}
               aria-label="Cancel selection"
             >
@@ -32,7 +32,7 @@ export function SelectionModeHeader({
             <UIButton
               size="sm"
               variant="destructive"
-              className="h-7 w-7 p-0 rounded-4xl cursor-pointer"
+              className="size-7 p-0 rounded-4xl cursor-pointer"
               onClick={onDelete}
               disabled={disableDelete}
               aria-label="Delete selected groups"

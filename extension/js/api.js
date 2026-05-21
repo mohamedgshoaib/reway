@@ -1,13 +1,53 @@
 export const DEFAULT_BASE_URL = "https://www.reway.page"
 
+function isLocalhostBaseUrl(baseUrl) {
+  try {
+    const url = new URL(baseUrl)
+    return url.hostname === "localhost" || url.hostname === "127.0.0.1"
+  } catch {
+    return false
+  }
+}
+
+async function isReachable(baseUrl) {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 1200)
+    const response = await fetch(`${baseUrl}/`, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    // Any HTTP response means the host is reachable.
+    return response && typeof response.status === "number"
+  } catch {
+    return false
+  }
+}
+
 export async function getSettings() {
   const { rewayBaseUrl, rewayGroups } = await chrome.storage.local.get([
     "rewayBaseUrl",
     "rewayGroups",
   ])
 
+  const configuredBaseUrl = rewayBaseUrl || DEFAULT_BASE_URL
+
+  if (rewayBaseUrl && isLocalhostBaseUrl(configuredBaseUrl)) {
+    const reachable = await isReachable(configuredBaseUrl)
+    if (!reachable) {
+      await chrome.storage.local.remove("rewayBaseUrl")
+      return {
+        baseUrl: DEFAULT_BASE_URL,
+        groups: Array.isArray(rewayGroups) ? rewayGroups : [],
+      }
+    }
+  }
+
   return {
-    baseUrl: rewayBaseUrl || DEFAULT_BASE_URL,
+    baseUrl: configuredBaseUrl,
     groups: Array.isArray(rewayGroups) ? rewayGroups : [],
   }
 }

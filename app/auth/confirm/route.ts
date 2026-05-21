@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
           "[Confirm] Cookies set on confirm response:",
           response.cookies.getAll().map((c) => c.name),
         )
+        console.log("[Confirm] Cookie adapter setAll called:", cookiesWereSet)
       }
       return response
     }

@@ -182,7 +182,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                     e.stopPropagation()
                     onToggleSelection?.(id)
                   }}
-                  className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
+                  className="size-9 shrink-0 flex items-center justify-center rounded-xl border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
                   aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
                 >
                   <div
@@ -234,7 +234,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                     domain={domain}
                     title={title}
                     isEnriching={status === "pending" && isEnriching}
-                    className="h-10 w-10"
+                    className="size-10"
                   />
                 </a>
               )}

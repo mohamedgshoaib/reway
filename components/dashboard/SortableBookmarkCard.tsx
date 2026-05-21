@@ -237,7 +237,7 @@ export function SortableBookmarkCard({
                     domain={domain}
                     title={title}
                     isEnriching={isEnriching}
-                    className="h-9 w-9"
+                    className="size-9"
                   />
                 </a>
               )}
@@ -301,7 +301,7 @@ export function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-7 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleEdit}
                   aria-label="Edit bookmark"
                 >
@@ -310,7 +310,7 @@ export function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-7 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleCopy}
                   aria-label={isCopied ? "URL copied" : "Copy link"}
                 >
@@ -328,7 +328,7 @@ export function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-7 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleOpen}
                   aria-label="Open link"
                 >
@@ -337,7 +337,7 @@ export function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg transition-transform duration-150 ease-out cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-7 rounded-lg transition-transform duration-150 ease-out cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleDeleteRequest}
                   aria-label="Delete bookmark"
                 >

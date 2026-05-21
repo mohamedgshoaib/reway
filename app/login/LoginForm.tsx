@@ -2,12 +2,14 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ViewIcon, ViewOffSlashIcon, SecurityWarningIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, useReducedMotion, AnimatePresence } from "motion/react"
+import * as m from "motion/react-m"
+import { AnimatePresence, useReducedMotion } from "motion/react"
 import { useSearchParams } from "next/navigation"
-import { useActionState, useState, useEffect, Suspense, useMemo } from "react"
+import { startTransition, useActionState, useState, useEffect, Suspense, useMemo } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import * as z from "zod"
 import { Google } from "@/components/google-logo"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -204,7 +206,7 @@ function LoginFormContent() {
           title: "Welcome back",
           subtitle: "Sign in to your account to manage your bookmarks",
           submitText: "Sign In",
-          submitPendingText: "Signing in...",
+          submitPendingText: "Signing in…",
         }
       case "signup":
         return {
@@ -214,7 +216,7 @@ function LoginFormContent() {
           title: "Create an account",
           subtitle: "Get started with Reway to save and organize bookmarks",
           submitText: "Create Account",
-          submitPendingText: "Creating account...",
+          submitPendingText: "Creating account…",
         }
       case "magiclink":
         return {
@@ -224,7 +226,7 @@ function LoginFormContent() {
           title: "Sign in with Magic Link",
           subtitle: "We'll send a secure passwordless login link to your inbox",
           submitText: "Send Magic Link",
-          submitPendingText: "Sending link...",
+          submitPendingText: "Sending link…",
         }
       case "forgotpassword":
         return {
@@ -234,7 +236,7 @@ function LoginFormContent() {
           title: "Reset Password",
           subtitle: "Enter your email to receive a password reset link",
           submitText: "Send Reset Link",
-          submitPendingText: "Sending link...",
+          submitPendingText: "Sending link…",
         }
     }
   }
@@ -358,19 +360,22 @@ function LoginFormContent() {
       }
     }
 
-    void action(formData)
+    startTransition(() => {
+      void action(formData)
+    })
   })
 
   return (
-    <motion.div
+    <RewayLazyMotion>
+      <m.div
       initial={{ opacity: 0, transform: "translateY(10px)" }}
       animate={{ opacity: 1, transform: "translateY(0px)" }}
       transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: "easeOut" }}
       suppressHydrationWarning
       className="space-y-6"
     >
-      <div className="flex flex-col items-center text-center space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+      <div className="flex flex-col items-center text-center gap-1">
+        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
 
@@ -406,7 +411,7 @@ function LoginFormContent() {
         <div>
           <AnimatePresence initial={false}>
             {mode === "signup" && (
-              <motion.div
+              <m.div
                 initial={{ height: 0, opacity: 0, marginBottom: 0 }}
                 animate={{ height: "auto", opacity: 1, marginBottom: 16 }}
                 exit={{ height: 0, opacity: 0, marginBottom: 0 }}
@@ -441,7 +446,7 @@ function LoginFormContent() {
                     </Field>
                   )}
                 />
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -474,7 +479,7 @@ function LoginFormContent() {
 
           <AnimatePresence initial={false}>
             {(mode === "signin" || mode === "signup") && (
-              <motion.div
+              <m.div
                 initial={{ height: 0, opacity: 0, marginTop: 0 }}
                 animate={{ height: "auto", opacity: 1, marginTop: 16 }}
                 exit={{ height: 0, opacity: 0, marginTop: 0 }}
@@ -555,7 +560,7 @@ function LoginFormContent() {
                             {/* Compact hover popover showing missing requirements with red dots */}
                             <AnimatePresence>
                               {isIconHovered && (password !== "" || isPasswordFocused) && (
-                                <motion.div
+                                <m.div
                                   initial={{ opacity: 0, scale: 0.95, y: -4 }}
                                   animate={{ opacity: 1, scale: 1, y: 0 }}
                                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
@@ -598,7 +603,7 @@ function LoginFormContent() {
                                       <span>Special character</span>
                                     </div>
                                   </div>
-                                </motion.div>
+                                </m.div>
                               )}
                             </AnimatePresence>
                           </div>
@@ -623,13 +628,13 @@ function LoginFormContent() {
                     </Field>
                   )}
                 />
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
           <AnimatePresence initial={false}>
             {mode === "signup" && (
-              <motion.div
+              <m.div
                 initial={{ height: 0, opacity: 0, marginTop: 0 }}
                 animate={{ height: "auto", opacity: 1, marginTop: 16 }}
                 exit={{ height: 0, opacity: 0, marginTop: 0 }}
@@ -680,7 +685,7 @@ function LoginFormContent() {
                     </Field>
                   )}
                 />
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -803,13 +808,14 @@ function LoginFormContent() {
                 {!googlePending && (
                   <Google className="mr-2 size-5" aria-hidden="true" focusable="false" />
                 )}
-                {googlePending ? "Redirecting..." : "Google Account"}
+                {googlePending ? "Redirecting…" : "Google Account"}
               </Button>
             </form>
           </div>
         </div>
       )}
-    </motion.div>
+      </m.div>
+    </RewayLazyMotion>
   )
 }
 
@@ -819,7 +825,7 @@ export function LoginForm() {
       fallback={
         <div className="flex flex-col items-center justify-center space-y-4 min-h-[300px]">
           <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading login interface...</p>
+          <p className="text-sm text-muted-foreground">Loading login interface…</p>
         </div>
       }
     >

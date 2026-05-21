@@ -21,7 +21,7 @@ export const GroupMenuTrigger = React.forwardRef<
       }`}
       {...props}
     >
-      <div className="flex items-center justify-center h-7 w-7">
+      <div className="flex items-center justify-center size-7">
         {ActiveIcon ? (
           <HugeiconsIcon
             icon={ActiveIcon ?? Folder01Icon}

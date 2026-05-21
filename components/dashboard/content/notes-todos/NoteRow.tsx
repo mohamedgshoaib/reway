@@ -85,7 +85,7 @@ export function NoteRow({
               />
             </span>
             <span
-              className={cn("h-2 w-2 rounded-full", "mt-1")}
+              className={cn("size-2 rounded-full", "mt-1")}
               style={{ backgroundColor: note.color ?? NOTE_COLORS[5] }}
             />
             <span
@@ -102,7 +102,7 @@ export function NoteRow({
         <div className="flex items-start gap-3 min-w-0 flex-1 text-left">
           <div className={cn("flex gap-2 min-w-0 flex-1", "items-start")}>
             <span
-              className={cn("h-2 w-2 rounded-full", dotMarginTop)}
+              className={cn("size-2 rounded-full", dotMarginTop)}
               style={{ backgroundColor: note.color ?? NOTE_COLORS[5] }}
             />
             <span
@@ -125,7 +125,7 @@ export function NoteRow({
               onClick={(e) => e.stopPropagation()}
               suppressHydrationWarning
               className={cn(
-                "text-muted-foreground/50 transition-all duration-200 h-6 w-6 rounded-md flex items-center justify-center cursor-pointer self-start mt-0",
+                "text-muted-foreground/50 transition-all duration-200 size-6 rounded-md flex items-center justify-center cursor-pointer self-start mt-0",
                 selectionMode
                   ? "opacity-0 pointer-events-none"
                   : "opacity-100 hover:text-primary/90 hover:bg-muted/50 md:opacity-0 md:group-hover:opacity-100",

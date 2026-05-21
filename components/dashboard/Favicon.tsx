@@ -136,7 +136,7 @@ function FaviconInner({
   return (
     <div
       className={cn(
-        "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-transform overflow-hidden",
+        "flex size-8 shrink-0 items-center justify-center rounded-xl border transition-transform overflow-hidden",
         isEnriching
           ? "animate-pulse bg-muted/30 border-muted/50"
           : fallbackLevel === "letter"
@@ -155,7 +155,7 @@ function FaviconInner({
           alt=""
           width={24}
           height={24}
-          className="h-6 w-6 rounded-sm object-contain"
+          className="size-6 rounded-sm object-contain"
           onError={handleImageError}
           onLoad={handleImageLoad}
           loading="lazy"

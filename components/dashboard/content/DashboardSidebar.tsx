@@ -33,7 +33,7 @@ import { useGroupSelection } from "./sidebar/useGroupSelection"
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
   {
-    loading: () => <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/10" />,
+    loading: () => <div className="size-8 animate-pulse rounded-lg bg-primary/10" />,
     ssr: false,
   },
 )
@@ -168,13 +168,21 @@ export function DashboardSidebar({
   }, [])
 
   useEffect(() => {
-    window.addEventListener("reway:open-sidebar-groups", () => {
+    const handleOpen = () => {
       cancelClose()
       setIsHoverOpen(true)
-    })
-    window.addEventListener("reway:close-sidebar-groups", () => {
+    }
+    const handleClose = () => {
       setIsHoverOpen(false)
-    })
+    }
+
+    window.addEventListener("reway:open-sidebar-groups", handleOpen)
+    window.addEventListener("reway:close-sidebar-groups", handleClose)
+
+    return () => {
+      window.removeEventListener("reway:open-sidebar-groups", handleOpen)
+      window.removeEventListener("reway:close-sidebar-groups", handleClose)
+    }
   }, [])
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)

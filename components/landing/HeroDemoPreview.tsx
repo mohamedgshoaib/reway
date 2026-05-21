@@ -134,7 +134,7 @@ export function HeroDemoPreview() {
         type="button"
         variant={hasHydrated ? (!isDark ? "default" : "outline") : "outline"}
         size="icon"
-        className="h-6 w-6 rounded-lg cursor-pointer"
+        className="size-6 rounded-lg cursor-pointer"
         onClick={() => setTheme("light")}
         aria-label="Light"
         title="Light"
@@ -146,7 +146,7 @@ export function HeroDemoPreview() {
         type="button"
         variant={hasHydrated ? (isDark ? "default" : "outline") : "outline"}
         size="icon"
-        className="h-6 w-6 rounded-lg cursor-pointer"
+        className="size-6 rounded-lg cursor-pointer"
         onClick={() => setTheme("dark")}
         aria-label="Dark"
         title="Dark"
@@ -202,7 +202,7 @@ export function HeroDemoPreview() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <Avatar className="h-7 w-7">
+                    <Avatar className="size-7">
                       <AvatarImage src="https://api.dicebear.com/9.x/thumbs/svg?seed=Reway" />
                       <AvatarFallback className="bg-secondary text-[10px] text-secondary-foreground">
                         RW

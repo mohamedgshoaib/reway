@@ -2,14 +2,15 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  motion,
-  useReducedMotion,
   AnimatePresence,
   useMotionValue,
+  useReducedMotion,
   useTransform,
   type Variants,
 } from "motion/react"
+import * as m from "motion/react-m"
 import { useEffect, useRef, useState } from "react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { cn } from "@/lib/utils"
 import { demoVideos } from "./features/demo-data"
 import { DemoVideo } from "./features/DemoVideo"
@@ -54,8 +55,9 @@ export function DemoVideosSection() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <section id="extension" className="border-b border-foreground/8 bg-muted/20 overflow-hidden">
-      <motion.div
+    <RewayLazyMotion>
+      <section id="extension" className="border-b border-foreground/8 bg-muted/20 overflow-hidden">
+        <m.div
         className="mx-auto flex w-full max-w-350 flex-col gap-12 px-4 py-16 sm:px-6 lg:py-20"
         initial={enableMotion ? "hidden" : false}
         whileInView={enableMotion ? "visible" : undefined}
@@ -81,7 +83,7 @@ export function DemoVideosSection() {
           >
             <div className="relative aspect-4/3 w-full overflow-hidden rounded-4xl ring-1 ring-foreground/8 bg-black/5 isolate">
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={activeIndex}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -105,7 +107,7 @@ export function DemoVideosSection() {
                     }}
                     isHovered={isHovered}
                   />
-                </motion.div>
+                </m.div>
               </AnimatePresence>
             </div>
           </div>
@@ -164,7 +166,7 @@ export function DemoVideosSection() {
 
                     <AnimatePresence initial={false}>
                       {isActive && (
-                        <motion.div
+                        <m.div
                           initial={{ height: 0, opacity: 0, marginTop: 0 }}
                           animate={{
                             height: "auto",
@@ -200,12 +202,12 @@ export function DemoVideosSection() {
 
                           {/* Progress bar container */}
                           <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted/40">
-                            <motion.div
+                            <m.div
                               className="absolute inset-y-0 left-0 w-full bg-foreground origin-left"
                               style={{ scaleX }}
                             />
                           </div>
-                        </motion.div>
+                        </m.div>
                       )}
                     </AnimatePresence>
                   </div>
@@ -214,7 +216,8 @@ export function DemoVideosSection() {
             </div>
           </div>
         </div>
-      </motion.div>
-    </section>
+        </m.div>
+      </section>
+    </RewayLazyMotion>
   )
 }

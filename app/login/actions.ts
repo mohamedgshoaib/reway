@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { after } from "next/server"
 import { seedNewUser } from "@/lib/supabase/seed"
 import { createClient } from "@/lib/supabase/server"
 
@@ -10,8 +11,27 @@ export type ActionResponse = {
   error?: string
 }
 
+const normalizeSiteUrl = (raw: string) => {
+  const trimmed = raw.trim().replace(/\/+$/, "")
+  if (!trimmed) return "http://localhost:3000"
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
+  return `https://${trimmed}`
+}
+
 const getSiteUrl = () => {
-  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  const fromPublic = process.env.NEXT_PUBLIC_SITE_URL
+  if (fromPublic?.trim()) return normalizeSiteUrl(fromPublic)
+
+  const fromVercel = process.env.VERCEL_URL
+  if (fromVercel?.trim()) return normalizeSiteUrl(fromVercel)
+
+  return "http://localhost:3000"
+}
+
+const logDev = (...args: unknown[]) => {
+  if (process.env.NODE_ENV !== "production") {
+    after(() => console.log(...args))
+  }
 }
 
 const passwordMeetsRequirements = (password: string) => {
@@ -25,6 +45,7 @@ const passwordMeetsRequirements = (password: string) => {
 export async function signInWithGoogle(): Promise<void> {
   const supabase = await createClient()
   const siteUrl = getSiteUrl()
+  logDev("[Auth] signInWithGoogle redirectTo:", `${siteUrl}/auth/callback`)
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -44,7 +65,7 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 export async function signInWithPasswordAction(
-  prevState: any,
+  _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
   const emailInput = formData.get("email") as string
@@ -79,7 +100,7 @@ export async function signInWithPasswordAction(
 }
 
 export async function signUpWithPasswordAction(
-  prevState: any,
+  _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
   const fullName = formData.get("fullName") as string
@@ -110,6 +131,7 @@ export async function signUpWithPasswordAction(
 
   const supabase = await createClient()
   const siteUrl = getSiteUrl()
+  logDev("[Auth] signUpWithPassword emailRedirectTo:", `${siteUrl}/auth/confirm?next=/dashboard`)
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -128,25 +150,29 @@ export async function signUpWithPasswordAction(
       friendlyError =
         "Password is too weak. It must contain at least one lowercase letter, one uppercase letter, one number, and one special character."
     }
+    logDev("[Auth] signUpWithPassword error:", friendlyError)
     return { success: false, error: friendlyError }
   }
 
   // If a session exists, the user was auto-confirmed (common in local dev / custom configs)
   if (data.session) {
+    logDev("[Auth] signUpWithPassword auto-confirmed session present")
     if (data.user) {
       await seedNewUser(supabase, data.user)
     }
     redirect("/dashboard")
   }
 
+  logDev("[Auth] signUpWithPassword email confirmation required (no session)")
   return {
     success: true,
-    message: "Account created successfully! Please check your email to verify your account.",
+    message:
+      "Account created. Check your inbox (and spam) to verify your email. If you don’t receive it, try again in a minute.",
   }
 }
 
 export async function signInWithMagicLinkAction(
-  prevState: any,
+  _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
   const emailInput = formData.get("email") as string
@@ -158,6 +184,7 @@ export async function signInWithMagicLinkAction(
 
   const supabase = await createClient()
   const siteUrl = getSiteUrl()
+  logDev("[Auth] magicLink emailRedirectTo:", `${siteUrl}/auth/confirm?next=/dashboard`)
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
@@ -178,7 +205,7 @@ export async function signInWithMagicLinkAction(
 }
 
 export async function sendResetPasswordEmailAction(
-  prevState: any,
+  _prevState: ActionResponse,
   formData: FormData,
 ): Promise<ActionResponse> {
   const emailInput = formData.get("email") as string
@@ -190,6 +217,7 @@ export async function sendResetPasswordEmailAction(
 
   const supabase = await createClient()
   const siteUrl = getSiteUrl()
+  logDev("[Auth] resetPassword redirectTo:", `${siteUrl}/auth/confirm?next=/reset-password`)
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/auth/confirm?next=/reset-password`,

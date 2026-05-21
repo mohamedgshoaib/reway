@@ -56,13 +56,13 @@ function DefaultErrorFallback({ error, reset }: { error?: Error; reset: () => vo
     <div className="min-h-dvh flex items-center justify-center p-4 bg-background">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-destructive/10">
             <HugeiconsIcon icon={Alert02Icon} size={32} className="text-destructive" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl font-bold text-foreground">Something went wrong</h1>
+          <h1 className="text-xl font-semibold text-foreground">Something went wrong</h1>
           <p className="text-sm text-muted-foreground">
             {error?.message || "An unexpected error occurred while loading this page."}
           </p>

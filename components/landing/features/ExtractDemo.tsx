@@ -2,9 +2,11 @@
 
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import * as m from "motion/react-m"
+import { AnimatePresence, useReducedMotion } from "motion/react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Kbd } from "@/components/ui/kbd"
 import TextShimmer from "@/components/ui/text-shimmer"
 import { demoLinks } from "./demo-data"
@@ -78,7 +80,8 @@ export function ExtractDemo() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <div className="w-full">
+    <RewayLazyMotion>
+      <div className="w-full">
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3 rounded-2xl ring-1 ring-foreground/8 bg-background px-3 py-2 text-xs text-muted-foreground">
           <span className="flex size-7 items-center justify-center rounded-xl ring-1 ring-foreground/8 bg-muted/40 text-foreground">
@@ -96,7 +99,7 @@ export function ExtractDemo() {
         <div className="relative h-27">
           <AnimatePresence mode="wait">
             {phase === 0 ? (
-              <motion.div
+              <m.div
                 key="adding"
                 className="grid gap-1.5"
                 initial={enableMotion ? { opacity: 0, y: 8 } : false}
@@ -110,10 +113,10 @@ export function ExtractDemo() {
                     className="flex h-8 items-center justify-between rounded-xl ring-1 ring-dashed ring-foreground/8 px-3 text-[11px] opacity-40"
                   />
                 ))}
-              </motion.div>
+              </m.div>
             ) : null}
             {phase === 1 ? (
-              <motion.div
+              <m.div
                 key="fetching"
                 className="grid gap-1.5"
                 initial={enableMotion ? { opacity: 0, y: 8 } : false}
@@ -154,10 +157,10 @@ export function ExtractDemo() {
                     </TextShimmer>
                   </div>
                 ))}
-              </motion.div>
+              </m.div>
             ) : null}
             {phase === 2 ? (
-              <motion.div
+              <m.div
                 key="results"
                 className="grid gap-1.5"
                 initial={enableMotion ? { opacity: 0, y: 8 } : false}
@@ -176,7 +179,7 @@ export function ExtractDemo() {
                         alt={`${item.title} favicon`}
                         width={16}
                         height={16}
-                        className="h-4 w-4"
+                        className="size-4"
                         loading="lazy"
                         referrerPolicy="no-referrer"
                       />
@@ -185,11 +188,12 @@ export function ExtractDemo() {
                     <span className="text-[10px] text-muted-foreground">{item.group}</span>
                   </div>
                 ))}
-              </motion.div>
+              </m.div>
             ) : null}
           </AnimatePresence>
         </div>
       </div>
-    </div>
+      </div>
+    </RewayLazyMotion>
   )
 }

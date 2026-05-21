@@ -63,7 +63,7 @@ export function HeroNoteCreateCard({
                 onChange={(e) => setText(e.target.value)}
                 placeholder="New note"
                 className="h-8 text-sm rounded-xl"
-                autoFocus
+               
                 disabled={isCreating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isCreating) {

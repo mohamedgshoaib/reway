@@ -38,7 +38,7 @@ export function ColorPicker({
         <Button
           {...props}
           size={size}
-          className={cn("h-8 w-8 rounded-xl border", className)}
+          className={cn("size-8 rounded-xl border", className)}
           style={{ backgroundColor: parsedValue }}
           type="button"
           onClick={() => setOpen(true)}
@@ -57,7 +57,7 @@ export function ColorPicker({
             type="button"
             size="icon"
             variant="secondary"
-            className="h-9 w-9 rounded-xl cursor-pointer"
+            className="size-9 rounded-xl cursor-pointer"
             aria-label="Save color"
             onClick={() => setOpen(false)}
           >

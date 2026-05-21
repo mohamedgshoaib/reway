@@ -51,7 +51,7 @@ export function GroupEditRow({
         >
           <button
             type="button"
-            className="flex items-center justify-center h-8 w-8 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer"
+            className="flex items-center justify-center size-8 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer"
             aria-label="Select group icon"
           >
             <HugeiconsIcon
@@ -71,7 +71,7 @@ export function GroupEditRow({
           placeholder="Group name"
           className="h-8 flex-1 text-sm rounded-lg"
           maxLength={MAX_GROUP_NAME_LENGTH}
-          autoFocus
+         
           onKeyDown={(e) => {
             e.stopPropagation()
             if (e.key === "Enter") {

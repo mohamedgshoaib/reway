@@ -138,6 +138,8 @@ export function useDashboardRealtime({
       .subscribe()
 
     return () => {
+      void bookmarksChannel.unsubscribe()
+      void groupsChannel.unsubscribe()
       supabase.removeChannel(bookmarksChannel)
       supabase.removeChannel(groupsChannel)
     }

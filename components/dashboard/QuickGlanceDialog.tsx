@@ -97,7 +97,7 @@ export function QuickGlanceDialog({
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="px-5 py-4 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground/90">Quick glance</h2>
+              <h2 className="text-sm font-semibold text-foreground/90">Quick glance</h2>
               <button
                 onClick={() => onOpenChange(false)}
                 className="text-muted-foreground/40 hover:text-primary/90 p-1"
@@ -115,10 +115,10 @@ export function QuickGlanceDialog({
                     url={bookmark.favicon_url || ""}
                     domain={domain}
                     title={bookmark.title}
-                    className="h-10 w-10 rounded-lg border-border/50 shrink-0 mt-1"
+                    className="size-10 rounded-lg border-border/50 shrink-0 mt-1"
                   />
                   <div className="flex flex-col min-w-0 gap-1.5">
-                    <h3 className="text-lg font-bold text-foreground leading-snug wrap-break-word">
+                    <h3 className="text-lg font-semibold text-foreground leading-snug wrap-break-word">
                       {bookmark.title}
                     </h3>
 
@@ -129,12 +129,12 @@ export function QuickGlanceDialog({
                       {group && (
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 border border-border/50">
                           <div
-                            className="h-2 w-2 rounded-full"
+                            className="size-2 rounded-full"
                             style={{
                               backgroundColor: group.color || "#6366f1",
                             }}
                           />
-                          <span className="text-[11px] font-bold text-foreground/70">
+                          <span className="text-[11px] font-semibold text-foreground/70">
                             {group.name}
                           </span>
                         </div>
@@ -187,7 +187,7 @@ export function QuickGlanceDialog({
                       url={bookmark.favicon_url || ""}
                       domain={domain}
                       title={bookmark.title}
-                      className="h-12 w-12 border-0 shadow-none bg-transparent opacity-20"
+                      className="size-12 border-0 shadow-none bg-transparent opacity-20"
                     />
                   </div>
                 )}
@@ -207,7 +207,7 @@ export function QuickGlanceDialog({
               <div className="flex items-center justify-end gap-2 pt-1">
                 <Button
                   variant="secondary"
-                  className="h-9 px-4 rounded-xl text-[13px] font-bold gap-2"
+                  className="h-9 px-4 rounded-xl text-[13px] font-semibold gap-2"
                   onClick={handleCopyUrl}
                 >
                   <HugeiconsIcon icon={Copy01Icon} size={16} />
@@ -215,7 +215,7 @@ export function QuickGlanceDialog({
                 </Button>
                 <Button
                   variant="default"
-                  className="h-9 px-6 rounded-xl text-[13px] font-bold gap-2"
+                  className="h-9 px-6 rounded-xl text-[13px] font-semibold gap-2"
                   onClick={handleOpenUrl}
                 >
                   <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} />

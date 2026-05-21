@@ -14,7 +14,7 @@ export function EmptyState({ isMac }: EmptyStateProps) {
       <div className="flex size-20 items-center justify-center rounded-3xl bg-muted/30 mb-6">
         <HugeiconsIcon icon={Bookmark01Icon} size={40} className="text-muted-foreground/40" />
       </div>
-      <h3 className="text-xl font-bold text-foreground text-balance">No bookmarks yet</h3>
+      <h3 className="text-xl font-semibold text-foreground text-balance">No bookmarks yet</h3>
       <div className="flex flex-wrap items-center justify-center gap-1.5 text-muted-foreground mt-2 max-w-70 text-pretty">
         <span className="hidden md:inline">Press</span>
         <Kbd className="hidden md:inline-flex">{isMac ? "⌘K" : "Ctrl K"}</Kbd>

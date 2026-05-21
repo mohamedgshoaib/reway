@@ -276,7 +276,7 @@ export function GroupsDemo() {
                 alt=""
                 width={16}
                 height={16}
-                className="h-4 w-4 shrink-0 rounded-full object-cover"
+                className="size-4 shrink-0 rounded-full object-cover"
                 unoptimized
               />
               <span className="text-[10px] font-medium text-foreground whitespace-nowrap truncate">

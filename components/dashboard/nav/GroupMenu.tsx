@@ -31,7 +31,7 @@ import { SelectionModeHeader } from "./group-menu/SelectionModeHeader"
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
   {
-    loading: () => <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/10" />,
+    loading: () => <div className="size-8 animate-pulse rounded-lg bg-primary/10" />,
     ssr: false,
   },
 )

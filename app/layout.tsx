@@ -68,28 +68,25 @@ export default function RootLayout({
           data-host-url="/metrics"
           strategy="lazyOnload"
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify([
-              {
-                "@context": "https://schema.org",
-                "@type": "WebSite",
-                name: "Reway",
-                url: SITE_URL,
-                description: "Reway turns noisy links into a structured library.",
-              },
-              {
-                "@context": "https://schema.org",
-                "@type": "SoftwareApplication",
-                name: "Reway",
-                applicationCategory: "ProductivityApplication",
-                operatingSystem: "Web",
-                url: SITE_URL,
-              },
-            ]),
-          }}
-        />
+        <Script id="reway-jsonld" type="application/ld+json">
+          {JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Reway",
+              url: SITE_URL,
+              description: "Reway turns noisy links into a structured library.",
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "Reway",
+              applicationCategory: "ProductivityApplication",
+              operatingSystem: "Web",
+              url: SITE_URL,
+            },
+          ])}
+        </Script>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

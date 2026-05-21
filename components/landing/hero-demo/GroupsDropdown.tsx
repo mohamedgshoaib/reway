@@ -197,7 +197,7 @@ export function GroupsDropdown({
                   onChange={(e) => setDropdownNewGroupName(e.target.value)}
                   placeholder="New group"
                   className="h-8 text-sm rounded-xl"
-                  autoFocus
+                 
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault()

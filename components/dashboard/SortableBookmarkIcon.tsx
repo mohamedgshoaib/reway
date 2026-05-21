@@ -198,7 +198,7 @@ export function SortableBookmarkIcon({
                   domain={domain}
                   title={title}
                   isEnriching={isEnriching}
-                  className="h-12 w-12"
+                  className="size-12"
                 />
               </a>
             )}

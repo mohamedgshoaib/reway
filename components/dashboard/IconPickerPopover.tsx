@@ -54,7 +54,7 @@ export function IconPickerPopover({
           <div className="p-3 space-y-4">
             {onColorChange ? (
               <div className="space-y-2">
-                <h5 className="text-[10px] font-bold uppercase text-muted-foreground/50 px-1">
+                <h5 className="text-[10px] font-semibold uppercase text-muted-foreground/50 px-1">
                   Color Picker
                 </h5>
                 <div className="flex items-center gap-3 px-1">
@@ -62,14 +62,14 @@ export function IconPickerPopover({
                     value={color || "#6366f1"}
                     onChange={onColorChange}
                     aria-label="Pick group color"
-                    className="h-7 w-7 rounded-full"
+                    className="size-7 rounded-full"
                   />
                 </div>
               </div>
             ) : null}
             {ICON_CATEGORIES.map((category) => (
               <div key={category.name} className="space-y-2">
-                <h5 className="text-[10px] font-bold uppercase text-muted-foreground/50 px-1">
+                <h5 className="text-[10px] font-semibold uppercase text-muted-foreground/50 px-1">
                   {category.name}
                 </h5>
                 <div className="grid grid-cols-7 gap-1.5">
@@ -79,7 +79,7 @@ export function IconPickerPopover({
                       type="button"
                       onClick={() => handleIconSelect(iconName)}
                       title={iconName}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-150 cursor-pointer ${
+                      className={`flex size-9 items-center justify-center rounded-lg transition-transform duration-150 cursor-pointer ${
                         selectedIcon === iconName
                           ? "bg-primary text-primary-foreground scale-105"
                           : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-primary/90 hover:scale-105"

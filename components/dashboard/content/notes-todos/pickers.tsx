@@ -16,7 +16,7 @@ export function ColorPicker({
           key={c}
           type="button"
           className={cn(
-            "h-4 w-4 rounded-full ring-1 ring-border/60 cursor-pointer",
+            "size-4 rounded-full ring-1 ring-border/60 cursor-pointer",
             value === c ? "ring-2 ring-foreground/40" : "opacity-80",
           )}
           style={{ backgroundColor: c }}

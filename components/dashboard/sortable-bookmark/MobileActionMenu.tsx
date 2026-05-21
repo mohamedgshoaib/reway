@@ -48,7 +48,7 @@ export function MobileActionMenu({
             size="icon"
             // Issue: `suppressHydrationWarning` should only be used when a mismatch is expected.
             // Fix: remove it here; the trigger is deterministic and should hydrate consistently.
-            className="h-9 w-9 -mr-3 rounded-xl hover:bg-muted/50 cursor-pointer"
+            className="size-9 -mr-3 rounded-xl hover:bg-muted/50 cursor-pointer"
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}

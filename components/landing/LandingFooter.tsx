@@ -107,7 +107,7 @@ export function LandingFooter() {
 
           {/* Column 2: Product (2/12 columns) */}
           <div className="lg:col-span-2">
-            <h2 className="text-xs font-bold uppercase text-foreground">Product</h2>
+            <h2 className="text-xs font-semibold uppercase text-foreground">Product</h2>
             <ul className="mt-4 space-y-2 text-sm text-foreground/60">
               <li>
                 <Link href="/#features" className="hover:text-foreground transition-colors">
@@ -155,7 +155,7 @@ export function LandingFooter() {
 
           {/* Column 3: Legal (2/12 columns) */}
           <div className="lg:col-span-2">
-            <h2 className="text-xs font-bold uppercase text-foreground">Legal</h2>
+            <h2 className="text-xs font-semibold uppercase text-foreground">Legal</h2>
             <ul className="mt-4 space-y-2 text-sm text-foreground/60">
               <li>
                 <Link
@@ -178,7 +178,7 @@ export function LandingFooter() {
 
           {/* Column 4: Connect (2/12 columns) */}
           <div className="lg:col-span-2">
-            <h2 className="text-xs font-bold uppercase text-foreground">Connect</h2>
+            <h2 className="text-xs font-semibold uppercase text-foreground">Connect</h2>
             <ul className="mt-4 space-y-3">
               {socialLinks.map((social) => (
                 <li key={social.label}>
@@ -200,7 +200,7 @@ export function LandingFooter() {
 
           {/* Column 5: Appearance (2/12 columns) */}
           <div className="lg:col-span-2">
-            <h2 className="text-xs font-bold uppercase text-foreground">Appearance</h2>
+            <h2 className="text-xs font-semibold uppercase text-foreground">Appearance</h2>
             <div className="mt-4">
               <ThemeSwitcher />
               <p className="mt-3 text-xs text-foreground/60 leading-relaxed">

@@ -37,7 +37,7 @@ export default async function TermsPage() {
           </Link>
 
           <div className="space-y-4 text-center mb-16">
-            <h1 className="text-4xl font-bold text-foreground sm:text-5xl">Terms of Service</h1>
+            <h1 className="text-4xl font-semibold text-foreground sm:text-5xl">Terms of Service</h1>
             <p className="text-muted-foreground">Last updated: February 20, 2026</p>
           </div>
 
