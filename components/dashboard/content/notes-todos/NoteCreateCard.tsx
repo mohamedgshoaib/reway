@@ -1,15 +1,11 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { NOTE_COLORS } from "./config";
-import { ColorPicker } from "./pickers";
-import { useState } from "react";
+import { Add01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { NOTE_COLORS } from "./config"
+import { ColorPicker } from "./pickers"
 
 export function NoteCreateCard({
   creating,
@@ -21,16 +17,16 @@ export function NoteCreateCard({
   isCreating,
   onCreate,
 }: {
-  creating: boolean;
-  setCreating: (v: boolean) => void;
-  text: string;
-  setText: (v: string) => void;
-  color: string | null;
-  setColor: (v: string) => void;
-  isCreating: boolean;
-  onCreate: () => void;
+  creating: boolean
+  setCreating: (v: boolean) => void
+  text: string
+  setText: (v: string) => void
+  color: string | null
+  setColor: (v: string) => void
+  isCreating: boolean
+  onCreate: () => void
 }) {
-  const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
+  const [colorPopoverOpen, setColorPopoverOpen] = useState(false)
 
   return (
     <div className="pt-3 mt-2 border-t border-border/40">
@@ -38,10 +34,7 @@ export function NoteCreateCard({
         <div className="relative mt-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Popover
-                open={colorPopoverOpen}
-                onOpenChange={setColorPopoverOpen}
-              >
+              <Popover open={colorPopoverOpen} onOpenChange={setColorPopoverOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -58,8 +51,8 @@ export function NoteCreateCard({
                   <ColorPicker
                     value={color}
                     onChange={(next) => {
-                      setColor(next);
-                      setColorPopoverOpen(false);
+                      setColor(next)
+                      setColorPopoverOpen(false)
                     }}
                   />
                 </PopoverContent>
@@ -74,11 +67,11 @@ export function NoteCreateCard({
                 disabled={isCreating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isCreating) {
-                    onCreate();
+                    onCreate()
                   } else if (e.key === "Escape") {
-                    setCreating(false);
-                    setText("");
-                    setColor(NOTE_COLORS[5]);
+                    setCreating(false)
+                    setText("")
+                    setColor(NOTE_COLORS[5])
                   }
                 }}
               />
@@ -90,9 +83,9 @@ export function NoteCreateCard({
               variant="secondary"
               className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
               onClick={() => {
-                setCreating(false);
-                setText("");
-                setColor(NOTE_COLORS[5]);
+                setCreating(false)
+                setText("")
+                setColor(NOTE_COLORS[5])
               }}
               disabled={isCreating}
             >
@@ -119,5 +112,5 @@ export function NoteCreateCard({
         </button>
       )}
     </div>
-  );
+  )
 }

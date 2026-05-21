@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowUpRight03Icon,
   CheckmarkSquare02Icon,
@@ -7,22 +6,23 @@ import {
   MoreVerticalIcon,
   PencilEdit01Icon,
   ViewOffIcon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+} from "@/components/ui/context-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ALL_ICONS_MAP } from "@/lib/hugeicons-list";
-import type { GroupRow } from "@/lib/supabase/queries";
+} from "@/components/ui/dropdown-menu"
+import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
+import type { GroupRow } from "@/lib/supabase/queries"
 
 export function GroupRowItem({
   group,
@@ -38,20 +38,20 @@ export function GroupRowItem({
   onToggleHideFromAllBookmarks,
   onActionMenuOpenChange,
 }: {
-  group: GroupRow;
-  active: boolean;
-  selectionMode: boolean;
-  isSelected: boolean;
-  onToggleSelected: () => void;
-  onSelectGroup: () => void;
-  onEnterSelectionMode: () => void;
-  onOpenGroup: () => void;
-  onEdit: () => void;
-  onRequestDelete: () => void;
-  onToggleHideFromAllBookmarks: (hide: boolean) => void;
-  onActionMenuOpenChange?: (open: boolean) => void;
+  group: GroupRow
+  active: boolean
+  selectionMode: boolean
+  isSelected: boolean
+  onToggleSelected: () => void
+  onSelectGroup: () => void
+  onEnterSelectionMode: () => void
+  onOpenGroup: () => void
+  onEdit: () => void
+  onRequestDelete: () => void
+  onToggleHideFromAllBookmarks: (hide: boolean) => void
+  onActionMenuOpenChange?: (open: boolean) => void
 }) {
-  const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon;
+  const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon
 
   return (
     <ContextMenu onOpenChange={onActionMenuOpenChange}>
@@ -61,27 +61,23 @@ export function GroupRowItem({
           tabIndex={0}
           onClick={() => {
             if (selectionMode) {
-              onToggleSelected();
+              onToggleSelected()
             } else {
-              onSelectGroup();
+              onSelectGroup()
             }
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
+              event.preventDefault()
               if (selectionMode) {
-                onToggleSelected();
+                onToggleSelected()
               } else {
-                onSelectGroup();
+                onSelectGroup()
               }
             }
           }}
           className={`group flex items-center gap-3 px-2 py-1.5 transition-all duration-200 cursor-pointer active:scale-[0.97] outline-none ${
-            active
-              ? "text-primary font-semibold"
-              : selectionMode
-                ? ""
-                : "hover:text-primary"
+            active ? "text-primary font-semibold" : selectionMode ? "" : "hover:text-primary"
           }`}
         >
           {selectionMode ? (
@@ -145,10 +141,10 @@ export function GroupRowItem({
               <DropdownMenuItem
                 onSelect={() => {
                   if (selectionMode) {
-                    onToggleSelected();
+                    onToggleSelected()
                   } else {
-                    onEnterSelectionMode();
-                    onToggleSelected();
+                    onEnterSelectionMode()
+                    onToggleSelected()
                   }
                 }}
                 className="gap-2 text-xs cursor-pointer"
@@ -156,17 +152,11 @@ export function GroupRowItem({
                 <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
                 {selectionMode ? "Toggle selection" : "Select groups"}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onOpenGroup}
-                className="gap-2 text-xs cursor-pointer"
-              >
+              <DropdownMenuItem onClick={onOpenGroup} className="gap-2 text-xs cursor-pointer">
                 <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
                 Open group
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onEdit}
-                className="gap-2 text-xs cursor-pointer"
-              >
+              <DropdownMenuItem onClick={onEdit} className="gap-2 text-xs cursor-pointer">
                 <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
                 Edit group
               </DropdownMenuItem>
@@ -180,15 +170,13 @@ export function GroupRowItem({
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleHideFromAllBookmarks(!group.hide_from_all_bookmarks);
+                  e.stopPropagation()
+                  onToggleHideFromAllBookmarks(!group.hide_from_all_bookmarks)
                 }}
                 className="gap-2 text-xs cursor-pointer"
               >
                 <HugeiconsIcon icon={ViewOffIcon} size={14} />
-                {group.hide_from_all_bookmarks
-                  ? "Show in All"
-                  : "Hide from All"}
+                {group.hide_from_all_bookmarks ? "Show in All" : "Hide from All"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -199,10 +187,10 @@ export function GroupRowItem({
         <ContextMenuItem
           onSelect={() => {
             if (selectionMode) {
-              onToggleSelected();
+              onToggleSelected()
             } else {
-              onEnterSelectionMode();
-              onToggleSelected();
+              onEnterSelectionMode()
+              onToggleSelected()
             }
           }}
           className="gap-2 text-xs cursor-pointer"
@@ -210,17 +198,11 @@ export function GroupRowItem({
           <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
           {selectionMode ? "Toggle selection" : "Select groups"}
         </ContextMenuItem>
-        <ContextMenuItem
-          onClick={onOpenGroup}
-          className="gap-2 text-xs cursor-pointer"
-        >
+        <ContextMenuItem onClick={onOpenGroup} className="gap-2 text-xs cursor-pointer">
           <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
           Open group
         </ContextMenuItem>
-        <ContextMenuItem
-          onClick={onEdit}
-          className="gap-2 text-xs cursor-pointer"
-        >
+        <ContextMenuItem onClick={onEdit} className="gap-2 text-xs cursor-pointer">
           <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
           Edit group
         </ContextMenuItem>
@@ -234,7 +216,7 @@ export function GroupRowItem({
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() => {
-            onToggleHideFromAllBookmarks(!group.hide_from_all_bookmarks);
+            onToggleHideFromAllBookmarks(!group.hide_from_all_bookmarks)
           }}
           className="gap-2 text-xs cursor-pointer"
         >
@@ -243,5 +225,5 @@ export function GroupRowItem({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  );
+  )
 }

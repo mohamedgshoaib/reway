@@ -7,30 +7,26 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 
 export function NoteDeleteDialog({
   open,
   onOpenChange,
   onConfirm,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
           <AlertDialogTitle>Delete note?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -41,5 +37,5 @@ export function NoteDeleteDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

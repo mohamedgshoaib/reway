@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import Script from "next/script";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import "./globals.css";
+import { GeistMono } from "geist/font/mono"
+import { GeistSans } from "geist/font/sans"
+import type { Metadata } from "next"
+import Script from "next/script"
+import "./globals.css"
 
-const SITE_URL = "https://reway.page";
+const SITE_URL = "https://reway.page"
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -44,16 +44,16 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-icon.png",
   },
-};
+}
 
-import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "sonner";
+import { Toaster } from "sonner"
+import { ThemeProvider } from "@/components/theme-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html
@@ -77,8 +77,7 @@ export default function RootLayout({
                 "@type": "WebSite",
                 name: "Reway",
                 url: SITE_URL,
-                description:
-                  "Reway turns noisy links into a structured library.",
+                description: "Reway turns noisy links into a structured library.",
               },
               {
                 "@context": "https://schema.org",
@@ -104,5 +103,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

@@ -1,20 +1,16 @@
-"use client";
-import { useActionState, useState, useEffect, Suspense, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import { motion, useReducedMotion, AnimatePresence } from "motion/react";
-import { Controller, useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Google } from "@/components/google-logo";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ViewIcon,
-  ViewOffSlashIcon,
-  SecurityWarningIcon,
-} from "@hugeicons/core-free-icons";
+"use client"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ViewIcon, ViewOffSlashIcon, SecurityWarningIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, useReducedMotion, AnimatePresence } from "motion/react"
+import { useSearchParams } from "next/navigation"
+import { useActionState, useState, useEffect, Suspense, useMemo } from "react"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import * as z from "zod"
+import { Google } from "@/components/google-logo"
+import { Button } from "@/components/ui/button"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   signInWithGoogle,
   signInWithPasswordAction,
@@ -22,27 +18,27 @@ import {
   signInWithMagicLinkAction,
   sendResetPasswordEmailAction,
   ActionResponse,
-} from "./actions";
+} from "./actions"
 
-type AuthMode = "signin" | "signup" | "magiclink" | "forgotpassword";
+type AuthMode = "signin" | "signup" | "magiclink" | "forgotpassword"
 
 type LoginFormValues = {
-  fullName?: string;
-  email: string;
-  password?: string;
-  confirmPassword?: string;
-};
+  fullName?: string
+  email: string
+  password?: string
+  confirmPassword?: string
+}
 
 const initialState: ActionResponse = {
   success: false,
   error: undefined,
   message: undefined,
-};
+}
 
 const emailSchema = z
   .string()
   .min(1, { message: "Email address is required." })
-  .email({ message: "Enter a valid email address." });
+  .email({ message: "Enter a valid email address." })
 
 const passwordSchema = z
   .string()
@@ -58,21 +54,19 @@ const passwordSchema = z
   })
   .refine((value) => /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(value), {
     message: "Password must include a symbol.",
-  });
+  })
 
 const signInSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, { message: "Password is required." }),
-});
+})
 
 const signUpSchema = z
   .object({
     fullName: z.string().min(1, { message: "Full name is required." }),
     email: emailSchema,
     password: passwordSchema,
-    confirmPassword: z
-      .string()
-      .min(1, { message: "Please confirm your password." }),
+    confirmPassword: z.string().min(1, { message: "Please confirm your password." }),
   })
   .superRefine((values, ctx) => {
     if (values.password !== values.confirmPassword) {
@@ -80,72 +74,74 @@ const signUpSchema = z
         code: "custom",
         message: "Passwords do not match.",
         path: ["confirmPassword"],
-      });
+      })
     }
-  });
+  })
 
 const magicLinkSchema = z.object({
   email: emailSchema,
-});
+})
 
 const forgotPasswordSchema = z.object({
   email: emailSchema,
-});
+})
 
 function LoginFormContent() {
-  const searchParams = useSearchParams();
-  const shouldReduceMotion = useReducedMotion();
+  const searchParams = useSearchParams()
+  const shouldReduceMotion = useReducedMotion()
 
   // Mode state
-  const [mode, setMode] = useState<AuthMode>("signin");
+  const [mode, setMode] = useState<AuthMode>("signin")
 
   // Password visibility states
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // Validation icon hover state
-  const [isIconHovered, setIsIconHovered] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isIconHovered, setIsIconHovered] = useState(false)
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   // Form states and actions
   const [signInState, signInAction, signInPending] = useActionState(
     signInWithPasswordAction,
     initialState,
-  );
+  )
   const [signUpState, signUpAction, signUpPending] = useActionState(
     signUpWithPasswordAction,
     initialState,
-  );
+  )
   const [magicLinkState, magicLinkAction, magicLinkPending] = useActionState(
     signInWithMagicLinkAction,
     initialState,
-  );
-  const [forgotPasswordState, forgotPasswordAction, forgotPasswordPending] =
-    useActionState(sendResetPasswordEmailAction, initialState);
+  )
+  const [forgotPasswordState, forgotPasswordAction, forgotPasswordPending] = useActionState(
+    sendResetPasswordEmailAction,
+    initialState,
+  )
 
-  const [googlePending, setGooglePending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false)
 
   // Read URL query errors (like verification expiry)
-  const urlError = searchParams.get("error");
-  const [activeUrlError, setActiveUrlError] = useState<string | null>(urlError);
+  const urlError = searchParams.get("error")
+  const [activeUrlError, setActiveUrlError] = useState<string | null>(urlError)
 
   // Track animation state to disable overflow-hidden once password field is fully animated
-  const [pwdAnimDone, setPwdAnimDone] = useState(false);
+  const [pwdAnimDone, setPwdAnimDone] = useState(false)
 
   const schema = useMemo(() => {
     switch (mode) {
       case "signup":
-        return signUpSchema;
+        return signUpSchema
       case "magiclink":
-        return magicLinkSchema;
+        return magicLinkSchema
       case "forgotpassword":
-        return forgotPasswordSchema;
+        return forgotPasswordSchema
       case "signin":
       default:
-        return signInSchema;
+        return signInSchema
     }
-  }, [mode]);
+  }, [mode])
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(schema),
@@ -157,50 +153,45 @@ function LoginFormContent() {
       password: "",
       confirmPassword: "",
     },
-  });
+  })
 
-  const password = useWatch({ control: form.control, name: "password" }) ?? "";
-  const confirmPassword =
-    useWatch({ control: form.control, name: "confirmPassword" }) ?? "";
+  const password = useWatch({ control: form.control, name: "password" }) ?? ""
+  const confirmPassword = useWatch({ control: form.control, name: "confirmPassword" }) ?? ""
 
   // Clear errors/messages/password visibilities on mode switch
   useEffect(() => {
-    setActiveUrlError(null);
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-    setIsIconHovered(false);
-    setIsPasswordFocused(false);
-    setShowSuccessMessage(false);
-    setPwdAnimDone(false);
-    const existingEmail = form.getValues("email") || "";
+    setActiveUrlError(null)
+    setShowPassword(false)
+    setShowConfirmPassword(false)
+    setIsIconHovered(false)
+    setIsPasswordFocused(false)
+    setShowSuccessMessage(false)
+    setPwdAnimDone(false)
+    const existingEmail = form.getValues("email") || ""
     form.reset({
       fullName: "",
       email: existingEmail,
       password: "",
       confirmPassword: "",
-    });
-    form.clearErrors();
-  }, [mode, form]);
+    })
+    form.clearErrors()
+  }, [mode, form])
 
   // Close popover on click outside (extremely useful for mobile tap-to-open)
   useEffect(() => {
-    if (!isIconHovered) return;
+    if (!isIconHovered) return
     const handleOutsideClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target as HTMLElement
       if (!target.closest("[data-password-validation]")) {
-        setIsIconHovered(false);
+        setIsIconHovered(false)
       }
-    };
-    document.addEventListener("click", handleOutsideClick);
-    return () => document.removeEventListener("click", handleOutsideClick);
-  }, [isIconHovered]);
+    }
+    document.addEventListener("click", handleOutsideClick)
+    return () => document.removeEventListener("click", handleOutsideClick)
+  }, [isIconHovered])
 
   const isAnyPending =
-    signInPending ||
-    signUpPending ||
-    magicLinkPending ||
-    forgotPasswordPending ||
-    googlePending;
+    signInPending || signUpPending || magicLinkPending || forgotPasswordPending || googlePending
 
   // Determine active form action, state, and pending status based on mode
   const getActiveFormConfig = () => {
@@ -214,7 +205,7 @@ function LoginFormContent() {
           subtitle: "Sign in to your account to manage your bookmarks",
           submitText: "Sign In",
           submitPendingText: "Signing in...",
-        };
+        }
       case "signup":
         return {
           action: signUpAction,
@@ -224,7 +215,7 @@ function LoginFormContent() {
           subtitle: "Get started with Reway to save and organize bookmarks",
           submitText: "Create Account",
           submitPendingText: "Creating account...",
-        };
+        }
       case "magiclink":
         return {
           action: magicLinkAction,
@@ -234,7 +225,7 @@ function LoginFormContent() {
           subtitle: "We'll send a secure passwordless login link to your inbox",
           submitText: "Send Magic Link",
           submitPendingText: "Sending link...",
-        };
+        }
       case "forgotpassword":
         return {
           action: forgotPasswordAction,
@@ -244,25 +235,18 @@ function LoginFormContent() {
           subtitle: "Enter your email to receive a password reset link",
           submitText: "Send Reset Link",
           submitPendingText: "Sending link...",
-        };
+        }
     }
-  };
+  }
 
-  const {
-    action,
-    state,
-    pending,
-    title,
-    subtitle,
-    submitText,
-    submitPendingText,
-  } = getActiveFormConfig();
+  const { action, state, pending, title, subtitle, submitText, submitPendingText } =
+    getActiveFormConfig()
 
   useEffect(() => {
     if (state?.message) {
-      setShowSuccessMessage(true);
+      setShowSuccessMessage(true)
     }
-  }, [state?.message]);
+  }, [state?.message])
 
   // Password strength checker using Red / Yellow / Green colors
   const getPasswordStrength = (pwd: string) => {
@@ -277,43 +261,43 @@ function LoginFormContent() {
         hasNumber: false,
         hasSpecial: false,
         isLongEnough: false,
-      };
+      }
     }
 
-    let score = 0;
-    const hasLowercase = /[a-z]/.test(pwd);
-    const hasUppercase = /[A-Z]/.test(pwd);
-    const hasNumber = /[0-9]/.test(pwd);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(pwd);
+    let score = 0
+    const hasLowercase = /[a-z]/.test(pwd)
+    const hasUppercase = /[A-Z]/.test(pwd)
+    const hasNumber = /[0-9]/.test(pwd)
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(pwd)
 
-    if (hasLowercase) score++;
-    if (hasUppercase) score++;
-    if (hasNumber) score++;
-    if (hasSpecial) score++;
+    if (hasLowercase) score++
+    if (hasUppercase) score++
+    if (hasNumber) score++
+    if (hasSpecial) score++
 
-    const isLongEnough = pwd.length >= 8;
+    const isLongEnough = pwd.length >= 8
 
-    let text = "Weak";
-    let color = "bg-red-500";
-    let textColor = "text-red-500";
+    let text = "Weak"
+    let color = "bg-red-500"
+    let textColor = "text-red-500"
 
     if (score <= 2) {
-      text = "Weak";
-      color = "bg-red-500";
-      textColor = "text-red-500";
+      text = "Weak"
+      color = "bg-red-500"
+      textColor = "text-red-500"
     } else if (score === 3) {
-      text = "Medium";
-      color = "bg-yellow-500";
-      textColor = "text-yellow-500";
+      text = "Medium"
+      color = "bg-yellow-500"
+      textColor = "text-yellow-500"
     } else if (score === 4) {
       if (isLongEnough) {
-        text = "Strong";
-        color = "bg-green-500";
-        textColor = "text-green-500";
+        text = "Strong"
+        color = "bg-green-500"
+        textColor = "text-green-500"
       } else {
-        text = "Medium (Needs 8+ characters)";
-        color = "bg-yellow-500";
-        textColor = "text-yellow-500";
+        text = "Medium (Needs 8+ characters)"
+        color = "bg-yellow-500"
+        textColor = "text-yellow-500"
       }
     }
 
@@ -327,13 +311,13 @@ function LoginFormContent() {
       hasNumber,
       hasSpecial,
       isLongEnough,
-    };
-  };
+    }
+  }
 
-  const strength = getPasswordStrength(password);
+  const strength = getPasswordStrength(password)
 
   // Real-time button disabling validation
-  const isValidationPassing = strength.score === 4 && strength.isLongEnough;
+  const isValidationPassing = strength.score === 4 && strength.isLongEnough
 
   // Validation icon color state
   const iconColorClass =
@@ -341,53 +325,47 @@ function LoginFormContent() {
       ? "text-muted-foreground hover:text-foreground"
       : isValidationPassing
         ? "text-green-500"
-        : "text-red-500";
+        : "text-red-500"
 
   // Helper to determine the dot indicator color in the requirements popover
   const getDotColorClass = (isMet: boolean) => {
-    if (password === "") return "bg-muted-foreground/30";
-    return isMet ? "bg-green-500" : "bg-red-500";
-  };
+    if (password === "") return "bg-muted-foreground/30"
+    return isMet ? "bg-green-500" : "bg-red-500"
+  }
 
   const isSubmitDisabled =
-    isAnyPending ||
-    (mode === "signup" &&
-      (!isValidationPassing || password !== confirmPassword));
+    isAnyPending || (mode === "signup" && (!isValidationPassing || password !== confirmPassword))
 
   const handleSubmit = form.handleSubmit((values) => {
-    const formData = new FormData();
-    const trimmedEmail = values.email?.trim() ?? "";
+    const formData = new FormData()
+    const trimmedEmail = values.email?.trim() ?? ""
     if (trimmedEmail) {
-      formData.set("email", trimmedEmail);
+      formData.set("email", trimmedEmail)
     }
 
     if (mode === "signin" || mode === "signup") {
       if (values.password) {
-        formData.set("password", values.password);
+        formData.set("password", values.password)
       }
     }
 
     if (mode === "signup") {
       if (values.fullName) {
-        formData.set("fullName", values.fullName.trim());
+        formData.set("fullName", values.fullName.trim())
       }
       if (values.confirmPassword) {
-        formData.set("confirmPassword", values.confirmPassword);
+        formData.set("confirmPassword", values.confirmPassword)
       }
     }
 
-    void action(formData);
-  });
+    void action(formData)
+  })
 
   return (
     <motion.div
       initial={{ opacity: 0, transform: "translateY(10px)" }}
       animate={{ opacity: 1, transform: "translateY(0px)" }}
-      transition={
-        shouldReduceMotion
-          ? { duration: 0 }
-          : { duration: 0.26, ease: "easeOut" }
-      }
+      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: "easeOut" }}
       suppressHydrationWarning
       className="space-y-6"
     >
@@ -459,9 +437,7 @@ function LoginFormContent() {
                         className="rounded-3xl"
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.error && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.error && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -490,9 +466,7 @@ function LoginFormContent() {
                     className="rounded-3xl"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.error && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.error && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -511,7 +485,7 @@ function LoginFormContent() {
                 }
                 onAnimationComplete={() => {
                   if (mode === "signin" || mode === "signup") {
-                    setPwdAnimDone(true);
+                    setPwdAnimDone(true)
                   }
                 }}
                 className={`px-2 -mx-2 py-1 -my-1 space-y-1.5 relative z-30 ${pwdAnimDone || isIconHovered ? "overflow-visible" : "overflow-hidden"}`}
@@ -540,13 +514,10 @@ function LoginFormContent() {
                           aria-invalid={fieldState.invalid}
                           onFocus={() => setIsPasswordFocused(true)}
                           onBlur={(event) => {
-                            const nextTarget =
-                              event.relatedTarget as HTMLElement | null;
-                            if (
-                              !nextTarget?.closest("[data-password-validation]")
-                            ) {
-                              setIsPasswordFocused(false);
-                              setIsIconHovered(false);
+                            const nextTarget = event.relatedTarget as HTMLElement | null
+                            if (!nextTarget?.closest("[data-password-validation]")) {
+                              setIsPasswordFocused(false)
+                              setIsIconHovered(false)
                             }
                           }}
                         />
@@ -562,77 +533,73 @@ function LoginFormContent() {
                               onMouseEnter={() => setIsIconHovered(true)}
                               onMouseLeave={() => setIsIconHovered(false)}
                               onFocus={() => {
-                                setIsPasswordFocused(true);
-                                setIsIconHovered(true);
+                                setIsPasswordFocused(true)
+                                setIsIconHovered(true)
                               }}
                               onBlur={() => {
-                                setIsPasswordFocused(false);
-                                setIsIconHovered(false);
+                                setIsPasswordFocused(false)
+                                setIsIconHovered(false)
                               }}
                               onClick={(e) => {
-                                e.preventDefault();
-                                setIsIconHovered((prev) => !prev);
+                                e.preventDefault()
+                                setIsIconHovered((prev) => !prev)
                               }}
                               className={`focus:outline-none transition-colors cursor-pointer ${iconColorClass}`}
                               aria-label="Password requirements"
                               aria-expanded={isIconHovered}
                               aria-controls="password-requirements"
                             >
-                              <HugeiconsIcon
-                                icon={SecurityWarningIcon}
-                                size={18}
-                              />
+                              <HugeiconsIcon icon={SecurityWarningIcon} size={18} />
                             </button>
 
                             {/* Compact hover popover showing missing requirements with red dots */}
                             <AnimatePresence>
-                              {isIconHovered &&
-                                (password !== "" || isPasswordFocused) && (
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                                    transition={{
-                                      duration: 0.12,
-                                      ease: "easeOut",
-                                    }}
-                                    id="password-requirements"
-                                    className="absolute right-0 bottom-[calc(100%+8px)] z-[60] w-36 p-2 bg-card border border-border rounded-lg shadow-xl space-y-1 backdrop-blur-md"
-                                  >
-                                    <div className="space-y-1 text-[10px] text-foreground">
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.isLongEnough)}`}
-                                        />
-                                        <span>Min 8 characters</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasUppercase)}`}
-                                        />
-                                        <span>Uppercase letter</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasLowercase)}`}
-                                        />
-                                        <span>Lowercase letter</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasNumber)}`}
-                                        />
-                                        <span>Number</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasSpecial)}`}
-                                        />
-                                        <span>Special character</span>
-                                      </div>
+                              {isIconHovered && (password !== "" || isPasswordFocused) && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                                  transition={{
+                                    duration: 0.12,
+                                    ease: "easeOut",
+                                  }}
+                                  id="password-requirements"
+                                  className="absolute right-0 bottom-[calc(100%+8px)] z-[60] w-36 p-2 bg-card border border-border rounded-lg shadow-xl space-y-1 backdrop-blur-md"
+                                >
+                                  <div className="space-y-1 text-[10px] text-foreground">
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`size-1.5 rounded-full ${getDotColorClass(strength.isLongEnough)}`}
+                                      />
+                                      <span>Min 8 characters</span>
                                     </div>
-                                  </motion.div>
-                                )}
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`size-1.5 rounded-full ${getDotColorClass(strength.hasUppercase)}`}
+                                      />
+                                      <span>Uppercase letter</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`size-1.5 rounded-full ${getDotColorClass(strength.hasLowercase)}`}
+                                      />
+                                      <span>Lowercase letter</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`size-1.5 rounded-full ${getDotColorClass(strength.hasNumber)}`}
+                                      />
+                                      <span>Number</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`size-1.5 rounded-full ${getDotColorClass(strength.hasSpecial)}`}
+                                      />
+                                      <span>Special character</span>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
                             </AnimatePresence>
                           </div>
                         )}
@@ -652,9 +619,7 @@ function LoginFormContent() {
                         </button>
                       </div>
 
-                      {fieldState.error && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.error && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -684,9 +649,7 @@ function LoginFormContent() {
                       data-disabled={isAnyPending}
                       className="gap-1.5"
                     >
-                      <FieldLabel htmlFor="confirmPassword">
-                        Confirm Password
-                      </FieldLabel>
+                      <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
                       <div className="relative">
                         <Input
                           {...field}
@@ -700,26 +663,20 @@ function LoginFormContent() {
                         />
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           onMouseDown={(e) => e.preventDefault()}
                           className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground hover:text-foreground focus:outline-none transition-colors cursor-pointer"
                           tabIndex={-1}
                         >
                           <HugeiconsIcon
-                            icon={
-                              showConfirmPassword ? ViewOffSlashIcon : ViewIcon
-                            }
+                            icon={showConfirmPassword ? ViewOffSlashIcon : ViewIcon}
                             size={18}
                             className="transition-transform duration-200 active:scale-95"
                           />
                         </button>
                       </div>
 
-                      {fieldState.error && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.error && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -800,9 +757,7 @@ function LoginFormContent() {
         <div className="space-y-4 pt-2">
           <div className="relative flex py-1 items-center">
             <div className="flex-grow border-t border-border"></div>
-            <span className="flex-shrink mx-4 text-xs text-muted-foreground">
-              Or continue with
-            </span>
+            <span className="flex-shrink mx-4 text-xs text-muted-foreground">Or continue with</span>
             <div className="flex-grow border-t border-border"></div>
           </div>
 
@@ -846,11 +801,7 @@ function LoginFormContent() {
                 disabled={isAnyPending}
               >
                 {!googlePending && (
-                  <Google
-                    className="mr-2 size-5"
-                    aria-hidden="true"
-                    focusable="false"
-                  />
+                  <Google className="mr-2 size-5" aria-hidden="true" focusable="false" />
                 )}
                 {googlePending ? "Redirecting..." : "Google Account"}
               </Button>
@@ -859,7 +810,7 @@ function LoginFormContent() {
         </div>
       )}
     </motion.div>
-  );
+  )
 }
 
 export function LoginForm() {
@@ -868,13 +819,11 @@ export function LoginForm() {
       fallback={
         <div className="flex flex-col items-center justify-center space-y-4 min-h-[300px]">
           <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">
-            Loading login interface...
-          </p>
+          <p className="text-sm text-muted-foreground">Loading login interface...</p>
         </div>
       }
     >
       <LoginFormContent />
     </Suspense>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import * as React from "react";
+import * as React from "react"
 
-type RewayLogoProps = React.ComponentPropsWithoutRef<"svg">;
+type RewayLogoProps = React.ComponentPropsWithoutRef<"svg">
 
 const RewayLogo = ({ className, ...props }: RewayLogoProps) => (
   <svg
@@ -18,6 +18,6 @@ const RewayLogo = ({ className, ...props }: RewayLogoProps) => (
       />
     </g>
   </svg>
-);
+)
 
-export default RewayLogo;
+export default RewayLogo

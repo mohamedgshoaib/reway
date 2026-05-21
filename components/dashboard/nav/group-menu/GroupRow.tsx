@@ -1,21 +1,21 @@
-import React from "react";
-import type { IconSvgElement } from "@hugeicons/react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowUpRight03Icon,
   CheckmarkSquare02Icon,
   Delete02Icon,
   MoreVerticalIcon,
   PencilEdit01Icon,
-} from "@hugeicons/core-free-icons";
-import type { GroupRow } from "@/lib/supabase/queries";
+} from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import React from "react"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/components/ui/dropdown-menu"
+import type { GroupRow } from "@/lib/supabase/queries"
 
 export function GroupRow({
   group,
@@ -31,18 +31,18 @@ export function GroupRow({
   onEditGroup,
   onDeleteGroup,
 }: {
-  group: GroupRow;
-  GroupIcon: IconSvgElement;
-  selectionMode: boolean;
-  active: boolean;
-  selected: boolean;
-  onToggleSelected: () => void;
-  onSelectGroup: () => void;
-  onOpenGroup?: () => void;
-  onEnterSelectionModeAndToggle: () => void;
-  onToggleInSelectionMode: () => void;
-  onEditGroup: () => void;
-  onDeleteGroup: () => void;
+  group: GroupRow
+  GroupIcon: IconSvgElement
+  selectionMode: boolean
+  active: boolean
+  selected: boolean
+  onToggleSelected: () => void
+  onSelectGroup: () => void
+  onOpenGroup?: () => void
+  onEnterSelectionModeAndToggle: () => void
+  onToggleInSelectionMode: () => void
+  onEditGroup: () => void
+  onDeleteGroup: () => void
 }) {
   return (
     <div className="group/menu-row relative flex items-center gap-3 rounded-xl">
@@ -52,8 +52,8 @@ export function GroupRow({
           active ? "bg-muted text-foreground font-bold" : "text-muted-foreground"
         }`}
         onSelect={(event) => {
-          if (!selectionMode) return;
-          event.preventDefault();
+          if (!selectionMode) return
+          event.preventDefault()
         }}
       >
         {selectionMode ? (
@@ -61,15 +61,15 @@ export function GroupRow({
             role="button"
             tabIndex={0}
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onToggleSelected();
+              e.preventDefault()
+              e.stopPropagation()
+              onToggleSelected()
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                event.stopPropagation();
-                onToggleSelected();
+                event.preventDefault()
+                event.stopPropagation()
+                onToggleSelected()
               }
             }}
             className="flex w-full items-center justify-between gap-3 px-3 text-left transition-transform duration-200 ease-out group-hover:translate-x-0.5"
@@ -79,7 +79,7 @@ export function GroupRow({
                 checked={selected}
                 onClick={(event) => event.stopPropagation()}
                 onCheckedChange={() => {
-                  onToggleSelected();
+                  onToggleSelected()
                 }}
               />
               <span className="truncate">{group.name}</span>
@@ -89,9 +89,9 @@ export function GroupRow({
           <button
             type="button"
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelectGroup();
+              e.preventDefault()
+              e.stopPropagation()
+              onSelectGroup()
             }}
             className="flex w-full items-center justify-between gap-3 px-3 text-left transition-transform duration-200 ease-out group-hover:translate-x-0.5"
           >
@@ -127,9 +127,9 @@ export function GroupRow({
             <DropdownMenuItem
               onSelect={() => {
                 if (!selectionMode) {
-                  onEnterSelectionModeAndToggle();
+                  onEnterSelectionModeAndToggle()
                 } else {
-                  onToggleInSelectionMode();
+                  onToggleInSelectionMode()
                 }
               }}
               className="gap-2 text-xs rounded-xl cursor-pointer"
@@ -163,5 +163,5 @@ export function GroupRow({
         </DropdownMenu>
       </div>
     </div>
-  );
+  )
 }

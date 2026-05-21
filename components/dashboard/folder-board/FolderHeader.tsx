@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { Folder01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { AccordionTrigger } from "@/components/ui/accordion";
-import type { GroupRow } from "@/lib/supabase/queries";
-import { useMemo } from "react";
-import { ALL_ICONS_MAP } from "@/lib/hugeicons-list";
+import { Folder01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useMemo } from "react"
+import { AccordionTrigger } from "@/components/ui/accordion"
+import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
+import type { GroupRow } from "@/lib/supabase/queries"
 
 interface FolderHeaderProps {
-  group: GroupRow;
-  count: number;
-  tintLevel?: "off" | "low" | "medium" | "high";
-  isSelected: boolean;
-  onSelect: () => void;
+  group: GroupRow
+  count: number
+  tintLevel?: "off" | "low" | "medium" | "high"
+  isSelected: boolean
+  onSelect: () => void
 }
 
 export function FolderHeader({
@@ -22,44 +22,42 @@ export function FolderHeader({
   isSelected,
   onSelect,
 }: FolderHeaderProps) {
-  const Icon = group.icon
-    ? (ALL_ICONS_MAP[group.icon] ?? Folder01Icon)
-    : Folder01Icon;
+  const Icon = group.icon ? (ALL_ICONS_MAP[group.icon] ?? Folder01Icon) : Folder01Icon
 
   const tintRgb = useMemo(() => {
-    const value = group.color?.trim();
-    if (!value) return null;
-    if (!value.startsWith("#")) return null;
+    const value = group.color?.trim()
+    if (!value) return null
+    if (!value.startsWith("#")) return null
 
-    const hex = value.slice(1);
+    const hex = value.slice(1)
     const normalized =
       hex.length === 3
         ? hex
             .split("")
             .map((c) => c + c)
             .join("")
-        : hex;
-    if (normalized.length !== 6) return null;
+        : hex
+    if (normalized.length !== 6) return null
 
-    const int = Number.parseInt(normalized, 16);
-    if (Number.isNaN(int)) return null;
+    const int = Number.parseInt(normalized, 16)
+    if (Number.isNaN(int)) return null
 
-    const r = (int >> 16) & 255;
-    const g = (int >> 8) & 255;
-    const b = int & 255;
-    return `${r} ${g} ${b}`;
-  }, [group.color]);
+    const r = (int >> 16) & 255
+    const g = (int >> 8) & 255
+    const b = int & 255
+    return `${r} ${g} ${b}`
+  }, [group.color])
 
   const tintAlpha = useMemo(() => {
-    if (tintLevel === "off") return null;
+    if (tintLevel === "off") return null
     if (tintLevel === "low") {
-      return { base: 0.08, hover: 0.12, darkBase: 0.06, darkHover: 0.08 };
+      return { base: 0.08, hover: 0.12, darkBase: 0.06, darkHover: 0.08 }
     }
     if (tintLevel === "high") {
-      return { base: 0.14, hover: 0.2, darkBase: 0.1, darkHover: 0.12 };
+      return { base: 0.14, hover: 0.2, darkBase: 0.1, darkHover: 0.12 }
     }
-    return { base: 0.11, hover: 0.16, darkBase: 0.08, darkHover: 0.1 };
-  }, [tintLevel]);
+    return { base: 0.11, hover: 0.16, darkBase: 0.08, darkHover: 0.1 }
+  }, [tintLevel])
 
   return (
     <AccordionTrigger
@@ -90,9 +88,7 @@ export function FolderHeader({
                 ["--folder-tint-a" as string]: String(tintAlpha.base),
                 ["--folder-tint-a-hover" as string]: String(tintAlpha.hover),
                 ["--folder-tint-a-dark" as string]: String(tintAlpha.darkBase),
-                ["--folder-tint-a-dark-hover" as string]: String(
-                  tintAlpha.darkHover,
-                ),
+                ["--folder-tint-a-dark-hover" as string]: String(tintAlpha.darkHover),
               } as React.CSSProperties)
             : undefined
         }
@@ -108,16 +104,12 @@ export function FolderHeader({
           />
           <div className="min-w-0">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate">
-                {group.name}
-              </span>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {count}
-              </span>
+              <span className="text-sm font-semibold text-foreground truncate">{group.name}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
             </div>
           </div>
         </div>
       </div>
     </AccordionTrigger>
-  );
+  )
 }

@@ -1,41 +1,29 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
-import type { NoteRow, TodoRow } from "@/lib/supabase/queries";
-import type { TodoPriority } from "./notes-todos/types";
-import { NotesSection } from "./notes-todos/NotesSection";
-import { TodosSection } from "./notes-todos/TodosSection";
+import { useEffect, useMemo, useRef, useState } from "react"
+import type { NoteRow, TodoRow } from "@/lib/supabase/queries"
+import { cn } from "@/lib/utils"
+import { NotesSection } from "./notes-todos/NotesSection"
+import { TodosSection } from "./notes-todos/TodosSection"
+import type { TodoPriority } from "./notes-todos/types"
 
 interface DashboardNotesTodosSidebarProps {
-  notes: NoteRow[];
-  todos: TodoRow[];
+  notes: NoteRow[]
+  todos: TodoRow[]
 
-  onCreateNote: (formData: {
-    text: string;
-    color?: string | null;
-  }) => Promise<string>;
-  onUpdateNote: (
-    id: string,
-    formData: { text: string; color?: string | null },
-  ) => Promise<void>;
-  onDeleteNote: (id: string) => Promise<void>;
-  onDeleteNotes: (ids: string[]) => Promise<void>;
+  onCreateNote: (formData: { text: string; color?: string | null }) => Promise<string>
+  onUpdateNote: (id: string, formData: { text: string; color?: string | null }) => Promise<void>
+  onDeleteNote: (id: string) => Promise<void>
+  onDeleteNotes: (ids: string[]) => Promise<void>
 
-  onCreateTodo: (formData: {
-    text: string;
-    priority: TodoPriority;
-  }) => Promise<string>;
-  onUpdateTodo: (
-    id: string,
-    formData: { text: string; priority: TodoPriority },
-  ) => Promise<void>;
-  onDeleteTodo: (id: string) => Promise<void>;
-  onDeleteTodos: (ids: string[]) => Promise<void>;
-  onSetTodoCompleted: (id: string, completed: boolean) => Promise<void>;
-  onSetTodosCompleted: (ids: string[], completed: boolean) => Promise<void>;
+  onCreateTodo: (formData: { text: string; priority: TodoPriority }) => Promise<string>
+  onUpdateTodo: (id: string, formData: { text: string; priority: TodoPriority }) => Promise<void>
+  onDeleteTodo: (id: string) => Promise<void>
+  onDeleteTodos: (ids: string[]) => Promise<void>
+  onSetTodoCompleted: (id: string, completed: boolean) => Promise<void>
+  onSetTodosCompleted: (ids: string[], completed: boolean) => Promise<void>
 
-  layoutDensity?: "compact" | "extended";
+  layoutDensity?: "compact" | "extended"
 }
 
 export function DashboardNotesTodosSidebar({
@@ -53,88 +41,83 @@ export function DashboardNotesTodosSidebar({
   onSetTodosCompleted,
   layoutDensity = "compact",
 }: DashboardNotesTodosSidebarProps) {
-  const [viewportWidth, setViewportWidth] = useState<number>(0);
-  const [isPinnedOpen, setIsPinnedOpen] = useState(false);
-  const [isHoverOpen, setIsHoverOpen] = useState(false);
-  const closeTimerRef = useRef<number | null>(null);
-  const pointerInsideRef = useRef(false);
-  const openActionMenuCountRef = useRef(0);
+  const [viewportWidth, setViewportWidth] = useState<number>(0)
+  const [isPinnedOpen, setIsPinnedOpen] = useState(false)
+  const [isHoverOpen, setIsHoverOpen] = useState(false)
+  const closeTimerRef = useRef<number | null>(null)
+  const pointerInsideRef = useRef(false)
+  const openActionMenuCountRef = useRef(0)
 
   useEffect(() => {
-    const update = () => setViewportWidth(window.innerWidth);
-    update();
-    window.addEventListener("resize", update, { passive: true });
-    return () => window.removeEventListener("resize", update);
-  }, []);
+    const update = () => setViewportWidth(window.innerWidth)
+    update()
+    window.addEventListener("resize", update, { passive: true })
+    return () => window.removeEventListener("resize", update)
+  }, [])
 
   const canPin = useMemo(() => {
-    const mainMaxWidth = layoutDensity === "extended" ? 1600 : 768;
-    const sidebarWidth = 240;
-    const gutters = 24 + 24;
-    const required = mainMaxWidth + sidebarWidth * 2 + gutters;
-    return viewportWidth >= required;
-  }, [layoutDensity, viewportWidth]);
+    const mainMaxWidth = layoutDensity === "extended" ? 1600 : 768
+    const sidebarWidth = 240
+    const gutters = 24 + 24
+    const required = mainMaxWidth + sidebarWidth * 2 + gutters
+    return viewportWidth >= required
+  }, [layoutDensity, viewportWidth])
 
   const scheduleClose = () => {
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
     closeTimerRef.current = window.setTimeout(() => {
-      if (openActionMenuCountRef.current > 0) return;
-      setIsHoverOpen(false);
-    }, 250);
-  };
+      if (openActionMenuCountRef.current > 0) return
+      setIsHoverOpen(false)
+    }, 250)
+  }
 
   const cancelClose = () => {
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = null;
-  };
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = null
+  }
 
   const handleSidebarMouseEnter = () => {
-    pointerInsideRef.current = true;
-    cancelClose();
-    setIsHoverOpen(true);
-  };
+    pointerInsideRef.current = true
+    cancelClose()
+    setIsHoverOpen(true)
+  }
 
   const handleSidebarMouseLeave = () => {
-    pointerInsideRef.current = false;
-    if (!isPinnedOpen) scheduleClose();
-  };
+    pointerInsideRef.current = false
+    if (!isPinnedOpen) scheduleClose()
+  }
 
   const handleActionMenuOpenChange = (open: boolean) => {
-    openActionMenuCountRef.current = Math.max(
-      0,
-      openActionMenuCountRef.current + (open ? 1 : -1),
-    );
+    openActionMenuCountRef.current = Math.max(0, openActionMenuCountRef.current + (open ? 1 : -1))
 
     if (open) {
-      cancelClose();
-      setIsHoverOpen(true);
-      return;
+      cancelClose()
+      setIsHoverOpen(true)
+      return
     }
 
     if (!isPinnedOpen && !pointerInsideRef.current) {
-      scheduleClose();
+      scheduleClose()
     }
-  };
+  }
 
   useEffect(() => {
     return () => {
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    };
-  }, []);
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     window.addEventListener("reway:open-sidebar-notes", () => {
-      cancelClose();
-      setIsHoverOpen(true);
-    });
+      cancelClose()
+      setIsHoverOpen(true)
+    })
     window.addEventListener("reway:close-sidebar-notes", () => {
-      setIsHoverOpen(false);
-    });
-  }, []);
+      setIsHoverOpen(false)
+    })
+  }, [])
 
-  const [activeSection, setActiveSection] = useState<"notes" | "todos">(
-    "notes",
-  );
+  const [activeSection, setActiveSection] = useState<"notes" | "todos">("notes")
 
   const sidebarBody = (
     <>
@@ -189,10 +172,10 @@ export function DashboardNotesTodosSidebar({
         />
       )}
     </>
-  );
+  )
 
   if (layoutDensity !== "extended") {
-    const canReveal = viewportWidth >= 900;
+    const canReveal = viewportWidth >= 900
 
     return (
       <>
@@ -211,14 +194,14 @@ export function DashboardNotesTodosSidebar({
               className="fixed right-0 top-1/2 -translate-y-1/2 z-50 h-18 w-6 items-center justify-center rounded-l-2xl bg-muted/20 ring-1 ring-inset ring-foreground/10 text-muted-foreground text-[11px] hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               aria-label="Toggle notes and todos sidebar"
               onClick={() => {
-                setIsPinnedOpen((p) => !p);
-                setIsHoverOpen(true);
+                setIsPinnedOpen((p) => !p)
+                setIsHoverOpen(true)
               }}
               onMouseEnter={() => {
-                handleSidebarMouseEnter();
+                handleSidebarMouseEnter()
               }}
               onMouseLeave={() => {
-                handleSidebarMouseLeave();
+                handleSidebarMouseLeave()
               }}
             >
               {/* Issue: single-letter handles are hard to discover.
@@ -231,15 +214,13 @@ export function DashboardNotesTodosSidebar({
             <aside
               data-onboarding="notes-todos-desktop"
               className={`fixed right-0 top-43 bottom-6 z-50 w-60 transition-transform duration-180 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
-                isPinnedOpen || isHoverOpen
-                  ? "translate-x-0"
-                  : "translate-x-full"
+                isPinnedOpen || isHoverOpen ? "translate-x-0" : "translate-x-full"
               }`}
               onMouseEnter={() => {
-                handleSidebarMouseEnter();
+                handleSidebarMouseEnter()
               }}
               onMouseLeave={() => {
-                handleSidebarMouseLeave();
+                handleSidebarMouseLeave()
               }}
             >
               <div className="h-full rounded-l-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
@@ -249,7 +230,7 @@ export function DashboardNotesTodosSidebar({
           </>
         ) : null}
       </>
-    );
+    )
   }
 
   return (
@@ -271,14 +252,14 @@ export function DashboardNotesTodosSidebar({
             className="hidden min-[1200px]:flex fixed right-0 top-1/2 -translate-y-1/2 z-50 h-24 w-5 items-center justify-center rounded-l-2xl bg-muted/20 ring-1 ring-inset ring-foreground/10 text-muted-foreground text-[11px] hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Toggle notes and todos sidebar"
             onClick={() => {
-              setIsPinnedOpen((p) => !p);
-              setIsHoverOpen(true);
+              setIsPinnedOpen((p) => !p)
+              setIsHoverOpen(true)
             }}
             onMouseEnter={() => {
-              handleSidebarMouseEnter();
+              handleSidebarMouseEnter()
             }}
             onMouseLeave={() => {
-              handleSidebarMouseLeave();
+              handleSidebarMouseLeave()
             }}
           >
             <span className="[writing-mode:vertical-rl] whitespace-nowrap text-[9px] tracking-wide">
@@ -292,10 +273,10 @@ export function DashboardNotesTodosSidebar({
               isPinnedOpen || isHoverOpen ? "translate-x-0" : "translate-x-full"
             }`}
             onMouseEnter={() => {
-              handleSidebarMouseEnter();
+              handleSidebarMouseEnter()
             }}
             onMouseLeave={() => {
-              handleSidebarMouseLeave();
+              handleSidebarMouseLeave()
             }}
           >
             <div className="h-full rounded-l-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
@@ -305,5 +286,5 @@ export function DashboardNotesTodosSidebar({
         </>
       ) : null}
     </>
-  );
+  )
 }

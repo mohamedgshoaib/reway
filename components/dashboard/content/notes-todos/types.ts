@@ -1,1 +1,1 @@
-export type TodoPriority = "high" | "medium" | "low";
+export type TodoPriority = "high" | "medium" | "low"

@@ -1,40 +1,36 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  FileUploadIcon,
-  FileDownloadIcon,
-  CheckmarkCircle02Icon,
-} from "@hugeicons/core-free-icons";
+import { FileUploadIcon, FileDownloadIcon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import { useEffect, useState } from "react"
 
 export function ImportExportDemo() {
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-  const [phase, setPhase] = useState(0);
+  const shouldReduceMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
+  const [phase, setPhase] = useState(0)
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
-    if (!mounted) return;
-    if (!shouldReduceMotion) return;
-    const timer = setTimeout(() => setPhase(2), 0);
-    return () => clearTimeout(timer);
-  }, [mounted, shouldReduceMotion]);
+    if (!mounted) return
+    if (!shouldReduceMotion) return
+    const timer = setTimeout(() => setPhase(2), 0)
+    return () => clearTimeout(timer)
+  }, [mounted, shouldReduceMotion])
 
   useEffect(() => {
-    if (!mounted || shouldReduceMotion) return undefined;
+    if (!mounted || shouldReduceMotion) return undefined
     const timer = setInterval(() => {
-      setPhase((prev) => (prev + 1) % 3);
-    }, 2200);
-    return () => clearInterval(timer);
-  }, [mounted, shouldReduceMotion]);
+      setPhase((prev) => (prev + 1) % 3)
+    }, 2200)
+    return () => clearInterval(timer)
+  }, [mounted, shouldReduceMotion])
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
     <div className="w-full">
@@ -45,12 +41,8 @@ export function ImportExportDemo() {
               <HugeiconsIcon icon={FileUploadIcon} size={14} />
             </span>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-foreground">
-                Import bookmarks
-              </div>
-              <div className="text-[10px] text-muted-foreground">
-                Chrome HTML
-              </div>
+              <div className="text-xs font-semibold text-foreground">Import bookmarks</div>
+              <div className="text-[10px] text-muted-foreground">Chrome HTML</div>
             </div>
           </div>
           <AnimatePresence mode="wait">
@@ -88,12 +80,8 @@ export function ImportExportDemo() {
               <HugeiconsIcon icon={FileDownloadIcon} size={14} />
             </span>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-foreground">
-                Export group
-              </div>
-              <div className="text-[10px] text-muted-foreground">
-                Chrome HTML
-              </div>
+              <div className="text-xs font-semibold text-foreground">Export group</div>
+              <div className="text-[10px] text-muted-foreground">Chrome HTML</div>
             </div>
           </div>
           <AnimatePresence mode="wait">
@@ -126,5 +114,5 @@ export function ImportExportDemo() {
         </div>
       </div>
     </div>
-  );
+  )
 }

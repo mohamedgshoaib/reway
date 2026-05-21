@@ -1,17 +1,13 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import type { TodoPriority } from "./types";
-import { priorityConfig } from "./config";
-import { PriorityPicker } from "./pickers";
-import { useState } from "react";
+import { Add01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { priorityConfig } from "./config"
+import { PriorityPicker } from "./pickers"
+import type { TodoPriority } from "./types"
 
 export function TodoCreateCard({
   creating,
@@ -23,17 +19,17 @@ export function TodoCreateCard({
   isCreating,
   onCreate,
 }: {
-  creating: boolean;
-  setCreating: (v: boolean) => void;
-  text: string;
-  setText: (v: string) => void;
-  priority: TodoPriority;
-  setPriority: (v: TodoPriority) => void;
-  isCreating: boolean;
-  onCreate: () => void;
+  creating: boolean
+  setCreating: (v: boolean) => void
+  text: string
+  setText: (v: string) => void
+  priority: TodoPriority
+  setPriority: (v: TodoPriority) => void
+  isCreating: boolean
+  onCreate: () => void
 }) {
-  const priorityLabel = priorityConfig[priority];
-  const [priorityPopoverOpen, setPriorityPopoverOpen] = useState(false);
+  const priorityLabel = priorityConfig[priority]
+  const [priorityPopoverOpen, setPriorityPopoverOpen] = useState(false)
 
   return (
     <div className="pt-3 mt-2 border-t border-border/40">
@@ -41,10 +37,7 @@ export function TodoCreateCard({
         <div className="relative mt-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Popover
-                open={priorityPopoverOpen}
-                onOpenChange={setPriorityPopoverOpen}
-              >
+              <Popover open={priorityPopoverOpen} onOpenChange={setPriorityPopoverOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -52,12 +45,7 @@ export function TodoCreateCard({
                     aria-label="Pick priority"
                     disabled={isCreating}
                   >
-                    <span
-                      className={cn(
-                        "text-[11px] font-semibold",
-                        priorityLabel.colorClass,
-                      )}
-                    >
+                    <span className={cn("text-[11px] font-semibold", priorityLabel.colorClass)}>
                       {priorityLabel.letter}
                     </span>
                   </button>
@@ -66,8 +54,8 @@ export function TodoCreateCard({
                   <PriorityPicker
                     value={priority}
                     onChange={(next) => {
-                      setPriority(next);
-                      setPriorityPopoverOpen(false);
+                      setPriority(next)
+                      setPriorityPopoverOpen(false)
                     }}
                   />
                 </PopoverContent>
@@ -82,11 +70,11 @@ export function TodoCreateCard({
                 disabled={isCreating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isCreating) {
-                    onCreate();
+                    onCreate()
                   } else if (e.key === "Escape") {
-                    setCreating(false);
-                    setText("");
-                    setPriority("medium");
+                    setCreating(false)
+                    setText("")
+                    setPriority("medium")
                   }
                 }}
               />
@@ -98,9 +86,9 @@ export function TodoCreateCard({
               variant="secondary"
               className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
               onClick={() => {
-                setCreating(false);
-                setText("");
-                setPriority("medium");
+                setCreating(false)
+                setText("")
+                setPriority("medium")
               }}
               disabled={isCreating}
             >
@@ -127,5 +115,5 @@ export function TodoCreateCard({
         </button>
       )}
     </div>
-  );
+  )
 }

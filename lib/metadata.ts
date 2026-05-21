@@ -1,35 +1,35 @@
-import { parse } from "node-html-parser";
+import { parse } from "node-html-parser"
 
 export interface MetadataResult {
-  title: string;
-  description: string;
-  favicon: string;
-  ogImage: string;
-  domain: string;
-  url: string;
+  title: string
+  description: string
+  favicon: string
+  ogImage: string
+  domain: string
+  url: string
 }
 
 export function normalizeUrl(url: string): string {
-  let normalized = url.trim();
+  let normalized = url.trim()
   if (!normalized.startsWith("http")) {
-    normalized = `https://${normalized}`;
+    normalized = `https://${normalized}`
   }
   try {
-    const parsed = new URL(normalized);
+    const parsed = new URL(normalized)
     // Remove trailing slash except for root
     if (parsed.pathname === "/") {
-      return parsed.origin;
+      return parsed.origin
     }
-    return parsed.href.replace(/\/$/, "");
+    return parsed.href.replace(/\/$/, "")
   } catch {
-    return normalized;
+    return normalized
   }
 }
 
 export function isPrivateIp(url: string): boolean {
   try {
-    const parsed = new URL(url);
-    const hostname = parsed.hostname;
+    const parsed = new URL(url)
+    const hostname = parsed.hostname
     // Basic SSRF protection: block localhost and private IP ranges
     const privatePatterns = [
       /^localhost$/i,
@@ -40,18 +40,18 @@ export function isPrivateIp(url: string): boolean {
       /^169\.254\./,
       /^::1$/,
       /^fe80:/i,
-    ];
-    return privatePatterns.some((pattern) => pattern.test(hostname));
+    ]
+    return privatePatterns.some((pattern) => pattern.test(hostname))
   } catch {
-    return true; // If we can't parse it, treat as unsafe
+    return true // If we can't parse it, treat as unsafe
   }
 }
 
 export async function fetchMetadata(url: string): Promise<MetadataResult> {
-  const targetUrl = normalizeUrl(url);
+  const targetUrl = normalizeUrl(url)
 
   if (isPrivateIp(targetUrl)) {
-    throw new Error("Access to private IP addresses is prohibited");
+    throw new Error("Access to private IP addresses is prohibited")
   }
 
   const response = await fetch(targetUrl, {
@@ -62,69 +62,63 @@ export async function fetchMetadata(url: string): Promise<MetadataResult> {
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     },
     signal: AbortSignal.timeout(8000), // 8s timeout
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch: ${response.statusText}`);
+    throw new Error(`Failed to fetch: ${response.statusText}`)
   }
 
-  const html = await response.text();
-  const root = parse(html);
+  const html = await response.text()
+  const root = parse(html)
 
   // 1. Extract Title
   const title =
     root.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
     root.querySelector('meta[name="twitter:title"]')?.getAttribute("content") ||
     root.querySelector("title")?.text ||
-    "";
+    ""
 
   // 2. Extract Description
   const description =
-    root
-      .querySelector('meta[property="og:description"]')
-      ?.getAttribute("content") ||
-    root
-      .querySelector('meta[name="twitter:description"]')
-      ?.getAttribute("content") ||
+    root.querySelector('meta[property="og:description"]')?.getAttribute("content") ||
+    root.querySelector('meta[name="twitter:description"]')?.getAttribute("content") ||
     root.querySelector('meta[name="description"]')?.getAttribute("content") ||
-    "";
+    ""
 
   // 3. Extract Favicon
-  let favicon = "";
+  let favicon = ""
   const faviconSelectors = [
     'link[rel="apple-touch-icon"]',
     'link[rel="shortcut icon"]',
     'link[rel="icon"]',
     'link[rel="alternate icon"]',
-  ];
+  ]
 
   for (const selector of faviconSelectors) {
-    const element = root.querySelector(selector);
+    const element = root.querySelector(selector)
     if (element) {
-      favicon = element.getAttribute("href") || "";
-      if (favicon) break;
+      favicon = element.getAttribute("href") || ""
+      if (favicon) break
     }
   }
 
-  const baseUrl = new URL(targetUrl);
+  const baseUrl = new URL(targetUrl)
   if (favicon && !favicon.startsWith("http")) {
-    favicon = new URL(favicon, baseUrl.origin).toString();
+    favicon = new URL(favicon, baseUrl.origin).toString()
   } else if (!favicon) {
-    favicon = `${baseUrl.origin}/favicon.ico`;
+    favicon = `${baseUrl.origin}/favicon.ico`
   }
 
   // 4. Extract OG Image
   let ogImage =
     root.querySelector('meta[property="og:image"]')?.getAttribute("content") ||
-    root
-      .querySelector('meta[property="og:image:secure_url"]')
-      ?.getAttribute("content") ||
+    root.querySelector('meta[property="og:image:secure_url"]')?.getAttribute("content") ||
     root.querySelector('meta[name="twitter:image"]')?.getAttribute("content") ||
     root.querySelector('link[rel="image_src"]')?.getAttribute("href") ||
-    "";
+    ""
 
   if (ogImage && !ogImage.startsWith("http")) {
-    ogImage = new URL(ogImage, baseUrl.origin).toString();
+    ogImage = new URL(ogImage, baseUrl.origin).toString()
   }
 
   return {
@@ -134,5 +128,5 @@ export async function fetchMetadata(url: string): Promise<MetadataResult> {
     ogImage,
     domain: baseUrl.hostname.replace("www.", ""),
     url: targetUrl,
-  };
+  }
 }

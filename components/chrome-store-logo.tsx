@@ -145,11 +145,7 @@ const ChromeWebStoreIcon = (props: SVGProps<SVGSVGElement>) => (
       fill="#1a73e8"
       d="M76 94.96a26.66 26.67 0 0 0-26.66 26.67A26.66 26.67 0 0 0 51.486 132h49.028a26.66 26.67 0 0 0 2.146-10.37A26.66 26.67 0 0 0 76 94.96Z"
     />
-    <path
-      fill="#bdc1c6"
-      d="M0 66.35h152v.86H0zM0 65.48h152v.86H0z"
-      opacity={0.1}
-    />
+    <path fill="#bdc1c6" d="M0 66.35h152v.86H0zM0 65.48h152v.86H0z" opacity={0.1} />
   </svg>
 )
 export default ChromeWebStoreIcon

@@ -1,43 +1,41 @@
-import { useCallback, useMemo, useState } from "react";
-import type { GroupRow } from "@/lib/supabase/queries";
+import { useCallback, useMemo, useState } from "react"
+import type { GroupRow } from "@/lib/supabase/queries"
 
 export function useGroupSelection({ groups }: { groups: GroupRow[] }) {
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(() => new Set())
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
-  const selectedCount = selectedGroupIds.size;
+  const selectedCount = selectedGroupIds.size
 
   const selectedGroups = useMemo(
     () => groups.filter((g) => selectedGroupIds.has(g.id)),
     [groups, selectedGroupIds],
-  );
+  )
 
   const enterSelectionMode = useCallback(() => {
-    setSelectionMode(true);
-    setSelectedGroupIds(new Set());
-  }, []);
+    setSelectionMode(true)
+    setSelectedGroupIds(new Set())
+  }, [])
 
   const exitSelectionMode = useCallback(() => {
-    setSelectionMode(false);
-    setSelectedGroupIds(new Set());
-  }, []);
+    setSelectionMode(false)
+    setSelectedGroupIds(new Set())
+  }, [])
 
   const toggleSelected = useCallback((groupId: string) => {
     setSelectedGroupIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupId)) next.delete(groupId);
-      else next.add(groupId);
-      return next;
-    });
-  }, []);
+      const next = new Set(prev)
+      if (next.has(groupId)) next.delete(groupId)
+      else next.add(groupId)
+      return next
+    })
+  }, [])
 
   const requestBulkDelete = useCallback(() => {
-    if (selectedGroups.length === 0) return;
-    setBulkDeleteDialogOpen(true);
-  }, [selectedGroups.length]);
+    if (selectedGroups.length === 0) return
+    setBulkDeleteDialogOpen(true)
+  }, [selectedGroups.length])
 
   return {
     selectionMode,
@@ -52,5 +50,5 @@ export function useGroupSelection({ groups }: { groups: GroupRow[] }) {
     exitSelectionMode,
     toggleSelected,
     requestBulkDelete,
-  };
+  }
 }

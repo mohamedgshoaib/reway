@@ -1,10 +1,9 @@
-"use client";
+"use client"
 
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  CheckmarkCircle02Icon,
-  FileExportIcon,
-} from "@hugeicons/core-free-icons";
+import { CheckmarkCircle02Icon, FileExportIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Sheet,
   SheetContent,
@@ -14,22 +13,20 @@ import {
   SheetSection,
   SheetFooter,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/components/ui/sheet"
 
 interface ExportSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  exportGroupOptions: string[];
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  exportGroupOptions: string[]
   exportProgress: {
-    processed: number;
-    total: number;
-    status: "idle" | "exporting" | "done" | "error";
-  };
-  selectedExportGroups: string[];
-  onToggleExportGroup: (name: string) => void;
-  onExportBookmarks: (groups: string[]) => void;
+    processed: number
+    total: number
+    status: "idle" | "exporting" | "done" | "error"
+  }
+  selectedExportGroups: string[]
+  onToggleExportGroup: (name: string) => void
+  onExportBookmarks: (groups: string[]) => void
 }
 
 export function ExportSheet({
@@ -41,31 +38,26 @@ export function ExportSheet({
   onToggleExportGroup,
   onExportBookmarks,
 }: ExportSheetProps) {
-  const isExporting = exportProgress.status === "exporting";
-  const isDone = exportProgress.status === "done";
+  const isExporting = exportProgress.status === "exporting"
+  const isDone = exportProgress.status === "done"
 
   const handleSelectAll = () => {
     exportGroupOptions.forEach((name) => {
       if (!selectedExportGroups.includes(name)) {
-        onToggleExportGroup(name);
+        onToggleExportGroup(name)
       }
-    });
-  };
+    })
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col sm:max-w-md p-0"
-      >
+      <SheetContent side="right" className="flex w-full flex-col sm:max-w-md p-0">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-lg">
             <HugeiconsIcon icon={FileExportIcon} size={18} />
             Export Bookmarks
           </SheetTitle>
-          <SheetDescription>
-            Select which groups to export to HTML.
-          </SheetDescription>
+          <SheetDescription>Select which groups to export to HTML.</SheetDescription>
         </SheetHeader>
 
         <SheetBody className="space-y-5">
@@ -91,9 +83,7 @@ export function ExportSheet({
                   <span>{exportGroupOptions.length} groups</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">
-                    Choose groups to export
-                  </span>
+                  <span className="text-xs text-muted-foreground">Choose groups to export</span>
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
@@ -193,5 +183,5 @@ export function ExportSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

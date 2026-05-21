@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import type { NoteRow, TodoRow } from "@/lib/supabase/queries";
-import type { TodoPriority } from "@/components/dashboard/content/notes-todos/types";
-import { NOTE_COLORS } from "@/components/dashboard/content/notes-todos/config";
-import { HeroNoteCreateCard as NoteCreateCard } from "./HeroNoteCreateCard";
-import { HeroTodoCreateCard as TodoCreateCard } from "./HeroTodoCreateCard";
+import { useState } from "react"
+import { NOTE_COLORS } from "@/components/dashboard/content/notes-todos/config"
+import type { TodoPriority } from "@/components/dashboard/content/notes-todos/types"
+import type { NoteRow, TodoRow } from "@/lib/supabase/queries"
+import { HeroNoteCreateCard as NoteCreateCard } from "./HeroNoteCreateCard"
+import { HeroTodoCreateCard as TodoCreateCard } from "./HeroTodoCreateCard"
 
 export function NotesTodosSidebar({
   activeNotesTodosSection,
@@ -17,62 +17,53 @@ export function NotesTodosSidebar({
   onCreateNote,
   onCreateTodo,
 }: {
-  activeNotesTodosSection: "notes" | "todos";
-  setActiveNotesTodosSection: (v: "notes" | "todos") => void;
-  notes: NoteRow[];
-  todos: TodoRow[];
-  NotesSectionPreview: React.ComponentType<{ notes: NoteRow[] }>;
-  TodosSectionPreview: React.ComponentType<{ todos: TodoRow[] }>;
-  onCreateNote: (formData: {
-    text: string;
-    color?: string | null;
-  }) => Promise<string>;
-  onCreateTodo: (formData: {
-    text: string;
-    priority: TodoPriority;
-  }) => Promise<string>;
+  activeNotesTodosSection: "notes" | "todos"
+  setActiveNotesTodosSection: (v: "notes" | "todos") => void
+  notes: NoteRow[]
+  todos: TodoRow[]
+  NotesSectionPreview: React.ComponentType<{ notes: NoteRow[] }>
+  TodosSectionPreview: React.ComponentType<{ todos: TodoRow[] }>
+  onCreateNote: (formData: { text: string; color?: string | null }) => Promise<string>
+  onCreateTodo: (formData: { text: string; priority: TodoPriority }) => Promise<string>
 }) {
-  const [creatingNote, setCreatingNote] = useState(false);
-  const [newNoteText, setNewNoteText] = useState("");
-  const [newNoteColor, setNewNoteColor] = useState<string | null>(
-    NOTE_COLORS[5],
-  );
-  const [isCreatingNote, setIsCreatingNote] = useState(false);
+  const [creatingNote, setCreatingNote] = useState(false)
+  const [newNoteText, setNewNoteText] = useState("")
+  const [newNoteColor, setNewNoteColor] = useState<string | null>(NOTE_COLORS[5])
+  const [isCreatingNote, setIsCreatingNote] = useState(false)
 
-  const [creatingTodo, setCreatingTodo] = useState(false);
-  const [newTodoText, setNewTodoText] = useState("");
-  const [newTodoPriority, setNewTodoPriority] =
-    useState<TodoPriority>("medium");
-  const [isCreatingTodo, setIsCreatingTodo] = useState(false);
+  const [creatingTodo, setCreatingTodo] = useState(false)
+  const [newTodoText, setNewTodoText] = useState("")
+  const [newTodoPriority, setNewTodoPriority] = useState<TodoPriority>("medium")
+  const [isCreatingTodo, setIsCreatingTodo] = useState(false)
 
   const handleCreateNote = async () => {
-    if (!newNoteText.trim()) return;
-    setIsCreatingNote(true);
+    if (!newNoteText.trim()) return
+    setIsCreatingNote(true)
     try {
-      await onCreateNote({ text: newNoteText.trim(), color: newNoteColor });
-      setCreatingNote(false);
-      setNewNoteText("");
-      setNewNoteColor(NOTE_COLORS[5]);
+      await onCreateNote({ text: newNoteText.trim(), color: newNoteColor })
+      setCreatingNote(false)
+      setNewNoteText("")
+      setNewNoteColor(NOTE_COLORS[5])
     } finally {
-      setIsCreatingNote(false);
+      setIsCreatingNote(false)
     }
-  };
+  }
 
   const handleCreateTodo = async () => {
-    if (!newTodoText.trim()) return;
-    setIsCreatingTodo(true);
+    if (!newTodoText.trim()) return
+    setIsCreatingTodo(true)
     try {
       await onCreateTodo({
         text: newTodoText.trim(),
         priority: newTodoPriority,
-      });
-      setCreatingTodo(false);
-      setNewTodoText("");
-      setNewTodoPriority("medium");
+      })
+      setCreatingTodo(false)
+      setNewTodoText("")
+      setNewTodoPriority("medium")
     } finally {
-      setIsCreatingTodo(false);
+      setIsCreatingTodo(false)
     }
-  };
+  }
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col gap-2 px-4 pb-4 pt-18.5 text-xs text-muted-foreground min-[1200px]:flex overflow-hidden">
@@ -141,5 +132,5 @@ export function NotesTodosSidebar({
         </>
       )}
     </aside>
-  );
+  )
 }

@@ -1,25 +1,21 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
   BulbIcon,
   Folder01Icon,
   Search01Icon,
   ToolsIcon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type React from "react"
+import { useState } from "react"
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-import type { HeroGroupId, HeroGroup } from "./types";
+import type { HeroGroupId, HeroGroup } from "./types"
 
 export function GroupsSidebar({
   activeGroup,
@@ -36,44 +32,32 @@ export function GroupsSidebar({
   onCancelCreate,
   onCreate,
 }: {
-  activeGroup: HeroGroupId;
-  heroGroups: HeroGroup[];
-  creatingGroup: boolean;
-  newGroupName: string;
-  newGroupIcon:
-    | typeof Search01Icon
-    | typeof BulbIcon
-    | typeof ToolsIcon
-    | typeof Folder01Icon;
-  newGroupColor: string | null;
-  setNewGroupName: (v: string) => void;
+  activeGroup: HeroGroupId
+  heroGroups: HeroGroup[]
+  creatingGroup: boolean
+  newGroupName: string
+  newGroupIcon: typeof Search01Icon | typeof BulbIcon | typeof ToolsIcon | typeof Folder01Icon
+  newGroupColor: string | null
+  setNewGroupName: (v: string) => void
   setNewGroupIcon: (
-    v:
-      | typeof Search01Icon
-      | typeof BulbIcon
-      | typeof ToolsIcon
-      | typeof Folder01Icon,
-  ) => void;
-  setNewGroupColor: (v: string | null) => void;
-  onSelectGroup: (id: HeroGroupId) => void;
-  onOpenCreate: () => void;
-  onCancelCreate: () => void;
-  onCreate: () => void;
+    v: typeof Search01Icon | typeof BulbIcon | typeof ToolsIcon | typeof Folder01Icon,
+  ) => void
+  setNewGroupColor: (v: string | null) => void
+  onSelectGroup: (id: HeroGroupId) => void
+  onOpenCreate: () => void
+  onCancelCreate: () => void
+  onCreate: () => void
 }) {
-  const heroIcon = (
-    icon: HeroGroup["icon"],
-  ): React.ComponentProps<typeof HugeiconsIcon>["icon"] =>
-    icon as React.ComponentProps<typeof HugeiconsIcon>["icon"];
+  const heroIcon = (icon: HeroGroup["icon"]): React.ComponentProps<typeof HugeiconsIcon>["icon"] =>
+    icon as React.ComponentProps<typeof HugeiconsIcon>["icon"]
 
-  const [createIconPopoverOpen, setCreateIconPopoverOpen] = useState(false);
+  const [createIconPopoverOpen, setCreateIconPopoverOpen] = useState(false)
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col gap-2 px-4 pb-4 pt-19 text-xs text-muted-foreground min-[855px]:flex overflow-hidden">
       <div className="flex flex-1 flex-col gap-1 overflow-hidden cursor-default">
         {heroGroups.map((item) => {
-          const isActive =
-            item.id === activeGroup ||
-            (item.id === "all" && activeGroup === "all");
+          const isActive = item.id === activeGroup || (item.id === "all" && activeGroup === "all")
 
           return (
             <div
@@ -82,8 +66,8 @@ export function GroupsSidebar({
               tabIndex={0}
               onClick={() => {
                 if (item.id === "all") {
-                  onSelectGroup("all");
-                  return;
+                  onSelectGroup("all")
+                  return
                 }
                 if (
                   item.id === "Research" ||
@@ -91,15 +75,15 @@ export function GroupsSidebar({
                   item.id === "Build" ||
                   item.id === "Learn"
                 ) {
-                  onSelectGroup(item.id);
+                  onSelectGroup(item.id)
                 }
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
+                  event.preventDefault()
                   if (item.id === "all") {
-                    onSelectGroup("all");
-                    return;
+                    onSelectGroup("all")
+                    return
                   }
                   if (
                     item.id === "Research" ||
@@ -107,14 +91,12 @@ export function GroupsSidebar({
                     item.id === "Build" ||
                     item.id === "Learn"
                   ) {
-                    onSelectGroup(item.id);
+                    onSelectGroup(item.id)
                   }
                 }
               }}
               className={`group flex items-center gap-3 px-2 py-1.5 transition-all duration-200 cursor-pointer active:scale-[0.97] outline-none ${
-                isActive
-                  ? "text-primary font-semibold"
-                  : "text-muted-foreground hover:text-primary"
+                isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-primary"
               }`}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer">
@@ -137,7 +119,7 @@ export function GroupsSidebar({
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
@@ -146,10 +128,7 @@ export function GroupsSidebar({
           <div className="relative mt-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Popover
-                  open={createIconPopoverOpen}
-                  onOpenChange={setCreateIconPopoverOpen}
-                >
+                <Popover open={createIconPopoverOpen} onOpenChange={setCreateIconPopoverOpen}>
                   <PopoverTrigger asChild>
                     <button
                       type="button"
@@ -172,14 +151,12 @@ export function GroupsSidebar({
                       <button
                         type="button"
                         onClick={() => {
-                          setNewGroupIcon(Search01Icon);
-                          setNewGroupColor("#3b82f6");
-                          setCreateIconPopoverOpen(false);
+                          setNewGroupIcon(Search01Icon)
+                          setNewGroupColor("#3b82f6")
+                          setCreateIconPopoverOpen(false)
                         }}
                         className={`flex size-8 shrink-0 aspect-square items-center justify-center rounded-full bg-muted/20 ring-1 ring-foreground/8 hover:bg-muted/30 cursor-pointer p-0 ${
-                          newGroupIcon === Search01Icon
-                            ? "ring-2 ring-foreground/40"
-                            : ""
+                          newGroupIcon === Search01Icon ? "ring-2 ring-foreground/40" : ""
                         }`}
                         aria-label="Use Research icon"
                       >
@@ -193,14 +170,12 @@ export function GroupsSidebar({
                       <button
                         type="button"
                         onClick={() => {
-                          setNewGroupIcon(BulbIcon);
-                          setNewGroupColor("#f59e0b");
-                          setCreateIconPopoverOpen(false);
+                          setNewGroupIcon(BulbIcon)
+                          setNewGroupColor("#f59e0b")
+                          setCreateIconPopoverOpen(false)
                         }}
                         className={`flex size-8 shrink-0 aspect-square items-center justify-center rounded-full bg-muted/20 ring-1 ring-foreground/8 hover:bg-muted/30 cursor-pointer p-0 ${
-                          newGroupIcon === BulbIcon
-                            ? "ring-2 ring-foreground/40"
-                            : ""
+                          newGroupIcon === BulbIcon ? "ring-2 ring-foreground/40" : ""
                         }`}
                         aria-label="Use Inspiration icon"
                       >
@@ -214,14 +189,12 @@ export function GroupsSidebar({
                       <button
                         type="button"
                         onClick={() => {
-                          setNewGroupIcon(ToolsIcon);
-                          setNewGroupColor("#10b981");
-                          setCreateIconPopoverOpen(false);
+                          setNewGroupIcon(ToolsIcon)
+                          setNewGroupColor("#10b981")
+                          setCreateIconPopoverOpen(false)
                         }}
                         className={`flex size-8 shrink-0 aspect-square items-center justify-center rounded-full bg-muted/20 ring-1 ring-foreground/8 hover:bg-muted/30 cursor-pointer p-0 ${
-                          newGroupIcon === ToolsIcon
-                            ? "ring-2 ring-foreground/40"
-                            : ""
+                          newGroupIcon === ToolsIcon ? "ring-2 ring-foreground/40" : ""
                         }`}
                         aria-label="Use Build icon"
                       >
@@ -244,10 +217,10 @@ export function GroupsSidebar({
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault();
-                      onCreate();
+                      e.preventDefault()
+                      onCreate()
                     } else if (e.key === "Escape") {
-                      onCancelCreate();
+                      onCancelCreate()
                     }
                   }}
                 />
@@ -285,5 +258,5 @@ export function GroupsSidebar({
         )}
       </div>
     </aside>
-  );
+  )
 }

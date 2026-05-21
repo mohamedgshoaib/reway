@@ -1,31 +1,23 @@
-"use client";
+"use client"
 
-import { Layout01Icon, Layout02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Layout01Icon, Layout02Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface LayoutControlsProps {
-  layoutDensity: "compact" | "extended";
-  setLayoutDensity: (value: "compact" | "extended") => void;
+  layoutDensity: "compact" | "extended"
+  setLayoutDensity: (value: "compact" | "extended") => void
 }
 
-export function LayoutControls({
-  layoutDensity,
-  setLayoutDensity,
-}: LayoutControlsProps) {
-  const activeIcon = layoutDensity === "extended" ? Layout02Icon : Layout01Icon;
+export function LayoutControls({ layoutDensity, setLayoutDensity }: LayoutControlsProps) {
+  const activeIcon = layoutDensity === "extended" ? Layout02Icon : Layout01Icon
 
   return (
     <TooltipProvider>
@@ -55,9 +47,7 @@ export function LayoutControls({
         >
           <DropdownMenuItem
             className={`rounded-lg flex items-center gap-2 cursor-pointer ${
-              layoutDensity === "compact"
-                ? "bg-muted text-foreground font-medium"
-                : ""
+              layoutDensity === "compact" ? "bg-muted text-foreground font-medium" : ""
             }`}
             onClick={() => setLayoutDensity("compact")}
           >
@@ -66,9 +56,7 @@ export function LayoutControls({
           </DropdownMenuItem>
           <DropdownMenuItem
             className={`rounded-lg flex items-center gap-2 cursor-pointer ${
-              layoutDensity === "extended"
-                ? "bg-muted text-foreground font-medium"
-                : ""
+              layoutDensity === "extended" ? "bg-muted text-foreground font-medium" : ""
             }`}
             onClick={() => setLayoutDensity("extended")}
           >
@@ -78,5 +66,5 @@ export function LayoutControls({
         </DropdownMenuContent>
       </DropdownMenu>
     </TooltipProvider>
-  );
+  )
 }

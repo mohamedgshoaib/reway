@@ -24,19 +24,16 @@ export const selectors = {
   pageUrl: "#page-url",
   title: "#title",
   description: "#description",
-};
+}
 
 export const elements = Object.fromEntries(
-  Object.entries(selectors).map(([key, selector]) => [
-    key,
-    document.querySelector(selector),
-  ]),
-);
+  Object.entries(selectors).map(([key, selector]) => [key, document.querySelector(selector)]),
+)
 
 export function setStatus(text, tone = "", target = elements.status) {
-  if (!target) return;
-  target.textContent = text;
-  target.dataset.tone = tone;
+  if (!target) return
+  target.textContent = text
+  target.dataset.tone = tone
 }
 
 /**
@@ -46,47 +43,47 @@ export function setStatus(text, tone = "", target = elements.status) {
  * @param {string} originalText
  */
 export function setLoading(button, isLoading, loadingText = "") {
-  if (!button) return;
+  if (!button) return
   if (isLoading) {
     if (!button.dataset.originalText) {
-      button.dataset.originalText = button.textContent;
+      button.dataset.originalText = button.textContent
     }
-    button.disabled = true;
-    button.classList.add("loading");
+    button.disabled = true
+    button.classList.add("loading")
     if (loadingText) {
-      button.textContent = loadingText;
+      button.textContent = loadingText
     }
   } else {
-    button.disabled = false;
-    button.classList.remove("loading");
+    button.disabled = false
+    button.classList.remove("loading")
     if (loadingText || button.dataset.originalText) {
-      button.textContent = loadingText || button.dataset.originalText;
-      delete button.dataset.originalText;
+      button.textContent = loadingText || button.dataset.originalText
+      delete button.dataset.originalText
     }
   }
 }
 
 export function switchTab(tabId) {
-  const buttons = document.querySelectorAll(selectors.tabButtons);
-  const contents = document.querySelectorAll(selectors.tabContents);
+  const buttons = document.querySelectorAll(selectors.tabButtons)
+  const contents = document.querySelectorAll(selectors.tabContents)
 
   buttons.forEach((btn) => {
-    const isActive = btn.dataset.tab === tabId;
-    btn.classList.toggle("active", isActive);
-    btn.setAttribute("aria-selected", isActive);
-  });
+    const isActive = btn.dataset.tab === tabId
+    btn.classList.toggle("active", isActive)
+    btn.setAttribute("aria-selected", isActive)
+  })
 
   contents.forEach((content) => {
-    const isActive = content.id === `tab-${tabId}`;
-    content.classList.toggle("active", isActive);
-  });
+    const isActive = content.id === `tab-${tabId}`
+    content.classList.toggle("active", isActive)
+  })
 }
 
 export function showSection(sectionId) {
-  const sections = [elements.authSection, elements.mainSection];
+  const sections = [elements.authSection, elements.mainSection]
   sections.forEach((sec) => {
     if (sec) {
-      sec.classList.toggle("hidden", sec.id !== sectionId);
+      sec.classList.toggle("hidden", sec.id !== sectionId)
     }
-  });
+  })
 }

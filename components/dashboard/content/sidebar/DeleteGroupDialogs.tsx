@@ -1,4 +1,3 @@
-import type { GroupRow } from "@/lib/supabase/queries";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,7 +7,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
+import type { GroupRow } from "@/lib/supabase/queries"
 
 export function DeleteGroupDialog({
   open,
@@ -16,16 +16,16 @@ export function DeleteGroupDialog({
   target,
   onConfirm,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  target: GroupRow | null;
-  onConfirm: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  target: GroupRow | null
+  onConfirm: () => void
 }) {
   return (
     <AlertDialog
       open={open}
       onOpenChange={(nextOpen) => {
-        onOpenChange(nextOpen);
+        onOpenChange(nextOpen)
       }}
     >
       <AlertDialogContent size="sm">
@@ -38,9 +38,7 @@ export function DeleteGroupDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -51,7 +49,7 @@ export function DeleteGroupDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }
 
 export function BulkDeleteGroupsDialog({
@@ -60,10 +58,10 @@ export function BulkDeleteGroupsDialog({
   selectedCount,
   onConfirm,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedCount: number;
-  onConfirm: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedCount: number
+  onConfirm: () => void
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -71,13 +69,12 @@ export function BulkDeleteGroupsDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete selected groups?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will delete {selectedCount} group{selectedCount === 1 ? "" : "s"} and their bookmarks.
+            This will delete {selectedCount} group{selectedCount === 1 ? "" : "s"} and their
+            bookmarks.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -88,5 +85,5 @@ export function BulkDeleteGroupsDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

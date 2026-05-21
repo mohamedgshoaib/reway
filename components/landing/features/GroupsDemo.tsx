@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import Image from "next/image";
+import Image from "next/image"
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, BulbIcon, ToolsIcon } from "@hugeicons/core-free-icons";
+import { Search01Icon, BulbIcon, ToolsIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, useReducedMotion } from "motion/react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 type LinkItem = {
-  id: string;
-  label: string;
-  group: "Research" | "Inspiration" | "Build";
-  favicon: string;
-};
+  id: string
+  label: string
+  group: "Research" | "Inspiration" | "Build"
+  favicon: string
+}
 
 const LINKS: LinkItem[] = [
   {
@@ -51,36 +51,36 @@ const LINKS: LinkItem[] = [
     group: "Build",
     favicon: "https://www.google.com/s2/favicons?domain=github.com&sz=64",
   },
-];
+]
 
 export function GroupsDemo() {
-  const shouldReduceMotion = useReducedMotion();
-  const [phase, setPhase] = useState(shouldReduceMotion ? 1 : 0);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const shouldReduceMotion = useReducedMotion()
+  const [phase, setPhase] = useState(shouldReduceMotion ? 1 : 0)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
 
   // Mobile breakpoint
-  const isMobile = containerWidth > 0 && containerWidth < 480;
+  const isMobile = containerWidth > 0 && containerWidth < 480
 
   useEffect(() => {
-    if (shouldReduceMotion) return undefined;
+    if (shouldReduceMotion) return undefined
     const timer = setInterval(() => {
-      setPhase((prev) => (prev === 0 ? 1 : 0));
-    }, 3400);
-    return () => clearInterval(timer);
-  }, [shouldReduceMotion]);
+      setPhase((prev) => (prev === 0 ? 1 : 0))
+    }, 3400)
+    return () => clearInterval(timer)
+  }, [shouldReduceMotion])
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return undefined;
+    const el = containerRef.current
+    if (!el) return undefined
 
     const ro = new ResizeObserver((entries) => {
-      const next = Math.round(entries[0]?.contentRect?.width ?? 0);
-      if (next > 0) setContainerWidth(next);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+      const next = Math.round(entries[0]?.contentRect?.width ?? 0)
+      if (next > 0) setContainerWidth(next)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // Columns Layout Logic
   const layout = useMemo(() => {
@@ -89,20 +89,18 @@ export function GroupsDemo() {
     // Mobile: Research (Left) | Inspiration + Build (Right/merged)
 
     // Position config
-    const safeWidth = containerWidth || 520;
+    const safeWidth = containerWidth || 520
 
     // Calculate offsets based on available width
     // Use ~30-35% of width for spacing side columns, but capped
-    const colSpacing = isMobile
-      ? Math.min(140, safeWidth * 0.25)
-      : Math.min(180, safeWidth * 0.3);
+    const colSpacing = isMobile ? Math.min(140, safeWidth * 0.25) : Math.min(180, safeWidth * 0.3)
 
     // Group definitions
     const groups = {
       Research: { x: -colSpacing, items: [] as LinkItem[] },
       Inspiration: { x: isMobile ? colSpacing : 0, items: [] as LinkItem[] },
       Build: { x: isMobile ? colSpacing : colSpacing, items: [] as LinkItem[] },
-    };
+    }
 
     // Distribute links to groups
     LINKS.forEach((link) => {
@@ -114,58 +112,55 @@ export function GroupsDemo() {
         // No, if we want them stacked, we need to manage the Y-index accumulation correctly.
         // Simplest approach: Separate mapped arrays.
       }
-    });
+    })
 
     // We'll calculate Y positions by iterating over the links and tracking counts per visual column
     const columnCounts = {
       left: 0, // Research
       center: 0, // Inspiration (Desktop only)
       right: 0, // Build (Desktop) or Insp+Build (Mobile)
-    };
+    }
 
-    const groupedPositions: Record<
-      string,
-      { x: number; y: number; rotate: number }
-    > = {};
+    const groupedPositions: Record<string, { x: number; y: number; rotate: number }> = {}
 
     LINKS.forEach((link) => {
-      let colKey: "left" | "center" | "right";
-      let xBase = 0;
+      let colKey: "left" | "center" | "right"
+      let xBase = 0
 
       if (link.group === "Research") {
-        colKey = "left";
-        xBase = groups.Research.x;
+        colKey = "left"
+        xBase = groups.Research.x
       } else if (link.group === "Inspiration") {
-        colKey = isMobile ? "right" : "center";
-        xBase = groups.Inspiration.x;
+        colKey = isMobile ? "right" : "center"
+        xBase = groups.Inspiration.x
       } else {
         // Build
-        colKey = "right";
-        xBase = groups.Build.x;
+        colKey = "right"
+        xBase = groups.Build.x
       }
 
-      const indexInCol = columnCounts[colKey];
-      columnCounts[colKey]++;
+      const indexInCol = columnCounts[colKey]
+      columnCounts[colKey]++
 
       // Spacing details
-      const rowHeight = isMobile ? 38 : 42; // Tighter vertical spacing
-      const yBase = 10; // Start slightly lower than header
+      const rowHeight = isMobile ? 38 : 42 // Tighter vertical spacing
+      const yBase = 10 // Start slightly lower than header
 
       groupedPositions[link.id] = {
         x: xBase,
         y: yBase + indexInCol * rowHeight,
         rotate: 0,
-      };
-    });
+      }
+    })
 
-    return groupedPositions;
-  }, [containerWidth, isMobile]);
+    return groupedPositions
+  }, [containerWidth, isMobile])
 
   const scatteredPositions = useMemo(() => {
     // Deterministic random positions based on ID to ensure consistent "mess"
     // Spread should be centered but not too wide to overflow
-    const safeWidth = containerWidth || 520;
-    const limitX = Math.min(safeWidth * 0.4, 180); // Restrict to safe area
+    const safeWidth = containerWidth || 520
+    const limitX = Math.min(safeWidth * 0.4, 180) // Restrict to safe area
 
     // Hardcoded offsets for specific IDs to ensure it looks good (designed mess)
     // instead of pure random which might look bad
@@ -176,12 +171,12 @@ export function GroupsDemo() {
       l4: { x: limitX * 0.9, y: -25, rotate: 10 },
       l5: { x: -limitX * 0.2, y: 35, rotate: 8 },
       l6: { x: -limitX * 0.8, y: 30, rotate: -8 },
-    };
+    }
 
-    return presets;
-  }, [containerWidth]);
+    return presets
+  }, [containerWidth])
 
-  const targets = phase === 1 ? layout : scatteredPositions;
+  const targets = phase === 1 ? layout : scatteredPositions
 
   // Header Visibility
   // We only show headers relevant to the columns
@@ -217,19 +212,16 @@ export function GroupsDemo() {
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
-  ];
+  ]
 
   // Transition settings
   const transition = {
     duration: 0.6,
     ease: [0.16, 1, 0.3, 1] as const,
-  };
+  }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-52 sm:h-56 overflow-hidden select-none"
-    >
+    <div ref={containerRef} className="relative w-full h-52 sm:h-56 overflow-hidden select-none">
       {/* Centered Content Wrapper */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         {/* Render Group Headers */}
@@ -250,9 +242,7 @@ export function GroupsDemo() {
                 transition={transition}
               >
                 <HugeiconsIcon icon={h.icon} size={12} className={h.color} />
-                <span className="text-[10px] font-medium text-foreground">
-                  {h.title}
-                </span>
+                <span className="text-[10px] font-medium text-foreground">{h.title}</span>
                 <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1.5 text-[10px] font-medium text-muted-foreground ml-auto">
                   {h.count}
                 </span>
@@ -261,43 +251,41 @@ export function GroupsDemo() {
         )}
 
         {/* Render Links */}
-        {LINKS.filter((link) => !isMobile || link.group !== "Build").map(
-          (link) => {
-            const pos = targets[link.id];
-            // Adjust Y-base for links so they sit below headers.
-            // Headers are at -40. Links start at roughly 0 to +80.
-            // Let's shift them slightly up to balance the visual center with headers included.
-            // Actually, if we keep 'y' from layout logic (approx 10..90 relative),
-            // we should subtract a bit to center the whole block vertically.
-            const centeredY = (pos?.y ?? 0) - 10;
+        {LINKS.filter((link) => !isMobile || link.group !== "Build").map((link) => {
+          const pos = targets[link.id]
+          // Adjust Y-base for links so they sit below headers.
+          // Headers are at -40. Links start at roughly 0 to +80.
+          // Let's shift them slightly up to balance the visual center with headers included.
+          // Actually, if we keep 'y' from layout logic (approx 10..90 relative),
+          // we should subtract a bit to center the whole block vertically.
+          const centeredY = (pos?.y ?? 0) - 10
 
-            return (
-              <motion.div
-                key={link.id}
-                className="absolute flex items-center gap-2 rounded-xl ring-1 ring-foreground/8 bg-muted/30 px-3 py-2 will-change-transform max-w-36"
-                animate={{
-                  x: pos?.x ?? 0,
-                  y: centeredY,
-                  rotate: pos?.rotate ?? 0,
-                }}
-                transition={transition}
-              >
-                <Image
-                  src={link.favicon}
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="h-4 w-4 shrink-0 rounded-full object-cover"
-                  unoptimized
-                />
-                <span className="text-[10px] font-medium text-foreground whitespace-nowrap truncate">
-                  {link.label}
-                </span>
-              </motion.div>
-            );
-          },
-        )}
+          return (
+            <motion.div
+              key={link.id}
+              className="absolute flex items-center gap-2 rounded-xl ring-1 ring-foreground/8 bg-muted/30 px-3 py-2 will-change-transform max-w-36"
+              animate={{
+                x: pos?.x ?? 0,
+                y: centeredY,
+                rotate: pos?.rotate ?? 0,
+              }}
+              transition={transition}
+            >
+              <Image
+                src={link.favicon}
+                alt=""
+                width={16}
+                height={16}
+                className="h-4 w-4 shrink-0 rounded-full object-cover"
+                unoptimized
+              />
+              <span className="text-[10px] font-medium text-foreground whitespace-nowrap truncate">
+                {link.label}
+              </span>
+            </motion.div>
+          )
+        })}
       </div>
     </div>
-  );
+  )
 }

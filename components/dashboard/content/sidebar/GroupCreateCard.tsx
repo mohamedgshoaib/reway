@@ -1,11 +1,11 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ALL_ICONS_MAP } from "@/lib/hugeicons-list";
-import type { IconPickerPopoverProps } from "../../IconPickerPopover";
-import { CharacterCount } from "./CharacterCount";
-import { MAX_GROUP_NAME_LENGTH } from "./constants";
+import { Add01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
+import type { IconPickerPopoverProps } from "../../IconPickerPopover"
+import { CharacterCount } from "./CharacterCount"
+import { MAX_GROUP_NAME_LENGTH } from "./constants"
 
 export function GroupCreateCard({
   isInlineCreating,
@@ -20,17 +20,17 @@ export function GroupCreateCard({
   isCreatingGroup,
   onCreate,
 }: {
-  isInlineCreating: boolean;
-  setIsInlineCreating: (value: boolean) => void;
-  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>;
-  newGroupName: string;
-  setNewGroupName: (value: string) => void;
-  newGroupIcon: string;
-  setNewGroupIcon: (value: string) => void;
-  newGroupColor: string | null;
-  setNewGroupColor: (value: string | null) => void;
-  isCreatingGroup: boolean;
-  onCreate: () => void;
+  isInlineCreating: boolean
+  setIsInlineCreating: (value: boolean) => void
+  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
+  newGroupName: string
+  setNewGroupName: (value: string) => void
+  newGroupIcon: string
+  setNewGroupIcon: (value: string) => void
+  newGroupColor: string | null
+  setNewGroupColor: (value: string | null) => void
+  isCreatingGroup: boolean
+  onCreate: () => void
 }) {
   return (
     <div className="pt-3 mt-2 border-t border-border/40">
@@ -59,7 +59,7 @@ export function GroupCreateCard({
             <Input
               value={newGroupName}
               onChange={(e) => {
-                setNewGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH));
+                setNewGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH))
               }}
               placeholder="New group"
               className="h-8 flex-1 text-sm rounded-xl"
@@ -67,12 +67,12 @@ export function GroupCreateCard({
               maxLength={MAX_GROUP_NAME_LENGTH}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  onCreate();
+                  onCreate()
                 } else if (e.key === "Escape") {
-                  setIsInlineCreating(false);
-                  setNewGroupName("");
-                  setNewGroupIcon("folder");
-                  setNewGroupColor("#6366f1");
+                  setIsInlineCreating(false)
+                  setNewGroupName("")
+                  setNewGroupIcon("folder")
+                  setNewGroupColor("#6366f1")
                 }
               }}
             />
@@ -83,19 +83,16 @@ export function GroupCreateCard({
               variant="secondary"
               className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
               onClick={() => {
-                setIsInlineCreating(false);
-                setNewGroupName("");
-                setNewGroupIcon("folder");
-                setNewGroupColor("#6366f1");
+                setIsInlineCreating(false)
+                setNewGroupName("")
+                setNewGroupIcon("folder")
+                setNewGroupColor("#6366f1")
               }}
             >
               Cancel
             </Button>
             <div className="flex items-center gap-2">
-              <CharacterCount
-                current={newGroupName.length}
-                max={MAX_GROUP_NAME_LENGTH}
-              />
+              <CharacterCount current={newGroupName.length} max={MAX_GROUP_NAME_LENGTH} />
               <Button
                 size="sm"
                 className="h-7 px-3 text-xs rounded-4xl cursor-pointer"
@@ -111,7 +108,7 @@ export function GroupCreateCard({
         <button
           type="button"
           onClick={() => {
-            setIsInlineCreating(true);
+            setIsInlineCreating(true)
           }}
           data-onboarding="create-group-desktop"
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary/90 cursor-pointer active:scale-[0.97] transition-all duration-200"
@@ -121,5 +118,5 @@ export function GroupCreateCard({
         </button>
       )}
     </div>
-  );
+  )
 }

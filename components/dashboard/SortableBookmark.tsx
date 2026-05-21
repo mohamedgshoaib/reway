@@ -1,10 +1,9 @@
-"use client";
+"use client"
 
-import { useState, memo } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Favicon } from "./Favicon";
-import { GroupRow } from "@/lib/supabase/queries";
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { useState, memo } from "react"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,38 +13,39 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { toast } from "sonner";
-import { BookmarkActions } from "./sortable-bookmark/BookmarkActions";
-import { MobileActionMenu } from "./sortable-bookmark/MobileActionMenu";
-import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu";
-import { recordBookmarkVisit } from "@/lib/bookmark-visits";
+} from "@/components/ui/alert-dialog"
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { recordBookmarkVisit } from "@/lib/bookmark-visits"
+import { GroupRow } from "@/lib/supabase/queries"
+import { Favicon } from "./Favicon"
+import { BookmarkActions } from "./sortable-bookmark/BookmarkActions"
+import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu"
+import { MobileActionMenu } from "./sortable-bookmark/MobileActionMenu"
 
 interface SortableBookmarkProps {
-  id: string;
-  title: string;
-  url: string;
-  domain: string;
-  status: string;
-  favicon?: string;
-  isEnriching?: boolean;
-  description?: string;
-  createdAt: string;
-  groupId: string;
-  onDelete?: (id: string) => void;
-  activeGroupId?: string;
-  isSelected?: boolean;
-  onEdit?: (id: string) => void;
-  onPreview?: (id: string) => void;
-  rowContent?: "date" | "group";
-  groupsMap?: Map<string, GroupRow>;
-  selectionMode?: boolean;
-  isSelectionChecked?: boolean;
-  onToggleSelection?: (id: string) => void;
-  onEnterSelectionMode?: () => void;
-  dragDimmed?: boolean;
-  dragDisabled?: boolean;
+  id: string
+  title: string
+  url: string
+  domain: string
+  status: string
+  favicon?: string
+  isEnriching?: boolean
+  description?: string
+  createdAt: string
+  groupId: string
+  onDelete?: (id: string) => void
+  activeGroupId?: string
+  isSelected?: boolean
+  onEdit?: (id: string) => void
+  onPreview?: (id: string) => void
+  rowContent?: "date" | "group"
+  groupsMap?: Map<string, GroupRow>
+  selectionMode?: boolean
+  isSelectionChecked?: boolean
+  onToggleSelection?: (id: string) => void
+  onEnterSelectionMode?: () => void
+  dragDimmed?: boolean
+  dragDisabled?: boolean
 }
 
 export const SortableBookmark = memo(function SortableBookmark({
@@ -73,83 +73,79 @@ export const SortableBookmark = memo(function SortableBookmark({
   dragDimmed = false,
   dragDisabled = false,
 }: SortableBookmarkProps) {
-  void description;
-  const [isCopied, setIsCopied] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  void description
+  const [isCopied, setIsCopied] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled: dragDisabled });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: dragDisabled,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0 : 1,
     touchAction: selectionMode ? "auto" : "manipulation",
-  };
+  }
 
   const dragStyle = isDragging
     ? "z-50 bg-background ring-1 ring-primary/20"
     : isSelected
       ? "bg-foreground/4 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] isolate shadow-none"
-      : "";
+      : ""
 
   const openInNewTab = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    recordBookmarkVisit(id);
-    window.open(url, "_blank");
-  };
+    e?.stopPropagation()
+    recordBookmarkVisit(id)
+    window.open(url, "_blank")
+  }
 
   const handleAnchorClick = (event: React.MouseEvent) => {
     if (event.shiftKey && !selectionMode) {
-      event.preventDefault();
-      event.stopPropagation();
-      onEnterSelectionMode?.();
-      onToggleSelection?.(id);
-      return;
+      event.preventDefault()
+      event.stopPropagation()
+      onEnterSelectionMode?.()
+      onToggleSelection?.(id)
+      return
     }
 
-    recordBookmarkVisit(id);
-  };
+    recordBookmarkVisit(id)
+  }
 
   const handleCopyLink = async (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+    e?.stopPropagation()
     try {
-      await navigator.clipboard.writeText(url);
-      setIsCopied(true);
-      toast.success("URL copied to clipboard");
-      setTimeout(() => setIsCopied(false), 2000);
+      await navigator.clipboard.writeText(url)
+      setIsCopied(true)
+      toast.success("URL copied to clipboard")
+      setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
-      console.error("Failed to copy:", err);
-      toast.error("Failed to copy URL");
+      console.error("Failed to copy:", err)
+      toast.error("Failed to copy URL")
     }
-  };
+  }
 
   const handleDeleteRequest = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setDeleteDialogOpen(true);
-  };
+    e?.stopPropagation()
+    setDeleteDialogOpen(true)
+  }
 
   const handleDeleteConfirm = () => {
-    onDelete?.(id);
-    setDeleteDialogOpen(false);
-  };
+    onDelete?.(id)
+    setDeleteDialogOpen(false)
+  }
 
   const handleEdit = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onEdit?.(id);
-  };
+    e?.stopPropagation()
+    onEdit?.(id)
+  }
 
   const handleBulkSelect = () => {
-    if (selectionMode) return;
-    onEnterSelectionMode?.();
-    onToggleSelection?.(id);
-  };
+    if (selectionMode) return
+    onEnterSelectionMode?.()
+    onToggleSelection?.(id)
+  }
 
   // Normal Bookmark View
   return (
@@ -165,7 +161,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                   ? "hover:bg-muted/50 cursor-pointer"
                   : dragDisabled
                     ? "hover:bg-muted/50 cursor-default"
-                  : "hover:bg-muted/50 cursor-grab active:cursor-grabbing"
+                    : "hover:bg-muted/50 cursor-grab active:cursor-grabbing"
             } ${dragStyle} ${dragDimmed ? "opacity-40 saturate-0" : ""} ${
               isDragging ? "opacity-0" : "opacity-100"
             }`}
@@ -183,13 +179,11 @@ export const SortableBookmark = memo(function SortableBookmark({
                 <button
                   type="button"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleSelection?.(id);
+                    e.stopPropagation()
+                    onToggleSelection?.(id)
                   }}
                   className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
-                  aria-label={
-                    isSelectionChecked ? "Deselect bookmark" : "Select bookmark"
-                  }
+                  aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
                 >
                   <div
                     className={`size-4 rounded border-2 flex items-center justify-center ${
@@ -225,13 +219,13 @@ export const SortableBookmark = memo(function SortableBookmark({
                   rel="noreferrer"
                   onClick={handleAnchorClick}
                   onPointerDown={(event) => {
-                    event.stopPropagation();
+                    event.stopPropagation()
                   }}
                   onMouseDown={(event) => {
-                    event.stopPropagation();
+                    event.stopPropagation()
                   }}
                   onTouchStart={(event) => {
-                    event.stopPropagation();
+                    event.stopPropagation()
                   }}
                   aria-label="Open bookmark"
                 >
@@ -259,13 +253,13 @@ export const SortableBookmark = memo(function SortableBookmark({
                       rel="noreferrer"
                       onClick={handleAnchorClick}
                       onPointerDown={(event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                       }}
                       onMouseDown={(event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                       }}
                       onTouchStart={(event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                       }}
                     >
                       {title}
@@ -285,13 +279,13 @@ export const SortableBookmark = memo(function SortableBookmark({
                       rel="noreferrer"
                       onClick={handleAnchorClick}
                       onPointerDown={(event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                       }}
                       onMouseDown={(event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                       }}
                       onTouchStart={(event) => {
-                        event.stopPropagation();
+                        event.stopPropagation()
                       }}
                     >
                       {domain}
@@ -313,18 +307,13 @@ export const SortableBookmark = memo(function SortableBookmark({
                   {rowContent === "group"
                     ? (() => {
                         // If viewing a specific group and bookmark belongs to that group, show date instead
-                        if (
-                          activeGroupId &&
-                          activeGroupId !== "all" &&
-                          groupId === activeGroupId
-                        ) {
-                          return createdAt;
+                        if (activeGroupId && activeGroupId !== "all" && groupId === activeGroupId) {
+                          return createdAt
                         }
                         // Otherwise show group name
-                        if (groupId === "all" || !groupsMap || !groupId)
-                          return "No Group";
-                        const group = groupsMap.get(groupId);
-                        return group?.name || "No Group";
+                        if (groupId === "all" || !groupsMap || !groupId) return "No Group"
+                        const group = groupsMap.get(groupId)
+                        return group?.name || "No Group"
                       })()
                     : createdAt}
                 </span>
@@ -376,9 +365,7 @@ export const SortableBookmark = memo(function SortableBookmark({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -389,5 +376,5 @@ export const SortableBookmark = memo(function SortableBookmark({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
-});
+  )
+})

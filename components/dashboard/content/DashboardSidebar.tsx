@@ -1,80 +1,72 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { createPortal } from "react-dom";
-import { DndContext, DragOverlay, MeasuringStrategy } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { RepeatIcon } from "@hugeicons/core-free-icons";
-import type { GroupRow } from "@/lib/supabase/queries";
-import type { IconPickerPopoverProps } from "../IconPickerPopover";
-import { AllBookmarksRow } from "./sidebar/AllBookmarksRow";
-import { GroupCreateCard } from "./sidebar/GroupCreateCard";
-import { GroupEditCard } from "./sidebar/GroupEditCard";
-import { GroupRowItem } from "./sidebar/GroupRowItem";
-import { GroupDragOverlayRow } from "./sidebar/GroupReorderRows";
-import { SelectionModeBar } from "./sidebar/SelectionModeBar";
-import {
-  BulkDeleteGroupsDialog,
-  DeleteGroupDialog,
-} from "./sidebar/DeleteGroupDialogs";
-import { useGroupReorderDnd } from "./sidebar/useGroupReorderDnd";
-import { useGroupSelection } from "./sidebar/useGroupSelection";
-import { SortableGroupRowItem } from "./sidebar/SortableGroupRowItem";
-import { ALL_ICONS_MAP } from "@/lib/hugeicons-list";
+import { DndContext, DragOverlay, MeasuringStrategy } from "@dnd-kit/core"
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { RepeatIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import dynamic from "next/dynamic"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
+import type { GroupRow } from "@/lib/supabase/queries"
 import {
   ALL_BOOKMARKS_GROUP_ID,
   MOST_VISITED_GROUP_ID,
   MOST_VISITED_GROUP_NAME,
   NO_GROUP_ID,
   NO_GROUP_NAME,
-} from "@/lib/system-groups";
+} from "@/lib/system-groups"
+import type { IconPickerPopoverProps } from "../IconPickerPopover"
+import { AllBookmarksRow } from "./sidebar/AllBookmarksRow"
+import { BulkDeleteGroupsDialog, DeleteGroupDialog } from "./sidebar/DeleteGroupDialogs"
+import { GroupCreateCard } from "./sidebar/GroupCreateCard"
+import { GroupEditCard } from "./sidebar/GroupEditCard"
+import { GroupDragOverlayRow } from "./sidebar/GroupReorderRows"
+import { GroupRowItem } from "./sidebar/GroupRowItem"
+import { SelectionModeBar } from "./sidebar/SelectionModeBar"
+import { SortableGroupRowItem } from "./sidebar/SortableGroupRowItem"
+import { useGroupReorderDnd } from "./sidebar/useGroupReorderDnd"
+import { useGroupSelection } from "./sidebar/useGroupSelection"
 
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
   {
-    loading: () => (
-      <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/10" />
-    ),
+    loading: () => <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/10" />,
     ssr: false,
   },
-);
+)
 
 interface DashboardSidebarProps {
-  groups: GroupRow[];
-  activeGroupId: string;
-  setActiveGroupId: (id: string) => void;
-  onReorderGroups: (newOrder: GroupRow[]) => void;
-  handleOpenGroup: (groupId: string) => void;
-  editingGroupId: string | null;
-  setEditingGroupId: (value: string | null) => void;
-  editGroupName: string;
-  setEditGroupName: (value: string) => void;
-  editGroupIcon: string;
-  setEditGroupIcon: (value: string) => void;
-  editGroupColor: string | null;
-  setEditGroupColor: (value: string | null) => void;
-  isUpdatingGroup: boolean;
-  handleSidebarGroupUpdate: (groupId: string, onError?: () => void) => void;
-  onDeleteGroup: (groupId: string) => void;
-  isInlineCreating: boolean;
-  setIsInlineCreating: (value: boolean) => void;
-  newGroupName: string;
-  setNewGroupName: (value: string) => void;
-  newGroupIcon: string;
-  setNewGroupIcon: (value: string) => void;
-  newGroupColor: string | null;
-  setNewGroupColor: (value: string | null) => void;
-  isCreatingGroup: boolean;
-  handleInlineCreateGroup: (onError?: () => void) => void;
-  onToggleHideFromAllBookmarks: (id: string, hide: boolean) => void;
-  layoutDensity?: "compact" | "extended";
+  groups: GroupRow[]
+  activeGroupId: string
+  setActiveGroupId: (id: string) => void
+  onReorderGroups: (newOrder: GroupRow[]) => void
+  handleOpenGroup: (groupId: string) => void
+  editingGroupId: string | null
+  setEditingGroupId: (value: string | null) => void
+  editGroupName: string
+  setEditGroupName: (value: string) => void
+  editGroupIcon: string
+  setEditGroupIcon: (value: string) => void
+  editGroupColor: string | null
+  setEditGroupColor: (value: string | null) => void
+  isUpdatingGroup: boolean
+  handleSidebarGroupUpdate: (groupId: string, onError?: () => void) => void
+  onDeleteGroup: (groupId: string) => void
+  isInlineCreating: boolean
+  setIsInlineCreating: (value: boolean) => void
+  newGroupName: string
+  setNewGroupName: (value: string) => void
+  newGroupIcon: string
+  setNewGroupIcon: (value: string) => void
+  newGroupColor: string | null
+  setNewGroupColor: (value: string | null) => void
+  isCreatingGroup: boolean
+  handleInlineCreateGroup: (onError?: () => void) => void
+  onToggleHideFromAllBookmarks: (id: string, hide: boolean) => void
+  layoutDensity?: "compact" | "extended"
 }
 
 export function DashboardSidebar({
@@ -107,89 +99,86 @@ export function DashboardSidebar({
   onToggleHideFromAllBookmarks,
   layoutDensity = "compact",
 }: DashboardSidebarProps) {
-  const reorderableGroups = groups.filter((g) => g.id !== NO_GROUP_ID);
+  const reorderableGroups = groups.filter((g) => g.id !== NO_GROUP_ID)
 
-  const [viewportWidth, setViewportWidth] = useState<number>(0);
-  const [isPinnedOpen, setIsPinnedOpen] = useState(false);
-  const [isHoverOpen, setIsHoverOpen] = useState(false);
-  const closeTimerRef = useRef<number | null>(null);
-  const pointerInsideRef = useRef(false);
-  const openActionMenuCountRef = useRef(0);
+  const [viewportWidth, setViewportWidth] = useState<number>(0)
+  const [isPinnedOpen, setIsPinnedOpen] = useState(false)
+  const [isHoverOpen, setIsHoverOpen] = useState(false)
+  const closeTimerRef = useRef<number | null>(null)
+  const pointerInsideRef = useRef(false)
+  const openActionMenuCountRef = useRef(0)
 
   useEffect(() => {
-    const update = () => setViewportWidth(window.innerWidth);
-    update();
-    window.addEventListener("resize", update, { passive: true });
-    return () => window.removeEventListener("resize", update);
-  }, []);
+    const update = () => setViewportWidth(window.innerWidth)
+    update()
+    window.addEventListener("resize", update, { passive: true })
+    return () => window.removeEventListener("resize", update)
+  }, [])
 
   const canPin = useMemo(() => {
-    const mainMaxWidth = layoutDensity === "extended" ? 1600 : 768;
-    const sidebarWidth = 240;
-    const gutters = 24 + 24;
-    const required = mainMaxWidth + sidebarWidth * 2 + gutters;
-    return viewportWidth >= required;
-  }, [layoutDensity, viewportWidth]);
+    const mainMaxWidth = layoutDensity === "extended" ? 1600 : 768
+    const sidebarWidth = 240
+    const gutters = 24 + 24
+    const required = mainMaxWidth + sidebarWidth * 2 + gutters
+    return viewportWidth >= required
+  }, [layoutDensity, viewportWidth])
 
   const scheduleClose = () => {
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
     closeTimerRef.current = window.setTimeout(() => {
-      if (openActionMenuCountRef.current > 0) return;
-      setIsHoverOpen(false);
-    }, 250);
-  };
+      if (openActionMenuCountRef.current > 0) return
+      setIsHoverOpen(false)
+    }, 250)
+  }
 
   const cancelClose = () => {
-    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = null;
-  };
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = null
+  }
 
   const handleSidebarMouseEnter = () => {
-    pointerInsideRef.current = true;
-    cancelClose();
-    setIsHoverOpen(true);
-  };
+    pointerInsideRef.current = true
+    cancelClose()
+    setIsHoverOpen(true)
+  }
 
   const handleSidebarMouseLeave = () => {
-    pointerInsideRef.current = false;
-    if (!isPinnedOpen) scheduleClose();
-  };
+    pointerInsideRef.current = false
+    if (!isPinnedOpen) scheduleClose()
+  }
 
   const handleActionMenuOpenChange = (open: boolean) => {
-    openActionMenuCountRef.current = Math.max(
-      0,
-      openActionMenuCountRef.current + (open ? 1 : -1),
-    );
+    openActionMenuCountRef.current = Math.max(0, openActionMenuCountRef.current + (open ? 1 : -1))
 
     if (open) {
-      cancelClose();
-      setIsHoverOpen(true);
-      return;
+      cancelClose()
+      setIsHoverOpen(true)
+      return
     }
 
     if (!isPinnedOpen && !pointerInsideRef.current) {
-      scheduleClose();
+      scheduleClose()
     }
-  };
+  }
 
   useEffect(() => {
     return () => {
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
-    };
-  }, []);
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     window.addEventListener("reway:open-sidebar-groups", () => {
-      cancelClose();
-      setIsHoverOpen(true);
-    });
+      cancelClose()
+      setIsHoverOpen(true)
+    })
     window.addEventListener("reway:close-sidebar-groups", () => {
-      setIsHoverOpen(false);
-    });
-  }, []);
+      setIsHoverOpen(false)
+    })
+  }, [])
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<GroupRow | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<GroupRow | null>(null)
   const {
     selectionMode,
     selectedGroupIds,
@@ -201,43 +190,38 @@ export function DashboardSidebar({
     exitSelectionMode,
     toggleSelected,
     requestBulkDelete,
-  } = useGroupSelection({ groups });
+  } = useGroupSelection({ groups })
 
   const openDeleteDialog = (group: GroupRow) => {
-    setDeleteTarget(group);
-    setDeleteDialogOpen(true);
-  };
+    setDeleteTarget(group)
+    setDeleteDialogOpen(true)
+  }
 
-  const {
-    sensors,
-    collisionDetection,
-    activeGroup,
-    handleGroupDragStart,
-    handleGroupDragEnd,
-  } = useGroupReorderDnd({ groups: reorderableGroups, onReorderGroups });
+  const { sensors, collisionDetection, activeGroup, handleGroupDragStart, handleGroupDragEnd } =
+    useGroupReorderDnd({ groups: reorderableGroups, onReorderGroups })
 
   const handleDeleteConfirm = () => {
     if (deleteTarget) {
-      onDeleteGroup(deleteTarget.id);
+      onDeleteGroup(deleteTarget.id)
     }
-    setDeleteDialogOpen(false);
-    setDeleteTarget(null);
-  };
+    setDeleteDialogOpen(false)
+    setDeleteTarget(null)
+  }
 
   const handleConfirmBulkDelete = () => {
-    if (selectedGroups.length === 0) return;
-    selectedGroups.forEach((g) => onDeleteGroup(g.id));
-    setBulkDeleteDialogOpen(false);
-    exitSelectionMode();
-  };
+    if (selectedGroups.length === 0) return
+    selectedGroups.forEach((g) => onDeleteGroup(g.id))
+    setBulkDeleteDialogOpen(false)
+    exitSelectionMode()
+  }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (event.key === "Escape") {
-      event.preventDefault();
-      setEditingGroupId(null);
-      exitSelectionMode();
+      event.preventDefault()
+      setEditingGroupId(null)
+      exitSelectionMode()
     }
-  };
+  }
 
   const sidebarBody = (
     <>
@@ -256,8 +240,8 @@ export function DashboardSidebar({
           onSelectAll={() => setActiveGroupId(ALL_BOOKMARKS_GROUP_ID)}
           onOpenAll={() => handleOpenGroup(ALL_BOOKMARKS_GROUP_ID)}
           onToggleSelectionMode={() => {
-            if (selectionMode) exitSelectionMode();
-            else enterSelectionMode();
+            if (selectionMode) exitSelectionMode()
+            else enterSelectionMode()
           }}
           onActionMenuOpenChange={handleActionMenuOpenChange}
         />
@@ -268,8 +252,8 @@ export function DashboardSidebar({
           onSelectAll={() => setActiveGroupId(MOST_VISITED_GROUP_ID)}
           onOpenAll={() => handleOpenGroup(MOST_VISITED_GROUP_ID)}
           onToggleSelectionMode={() => {
-            if (selectionMode) exitSelectionMode();
-            else enterSelectionMode();
+            if (selectionMode) exitSelectionMode()
+            else enterSelectionMode()
           }}
           label={MOST_VISITED_GROUP_NAME}
           openLabel="Open most visited"
@@ -291,12 +275,12 @@ export function DashboardSidebar({
             sensors={sensors}
             collisionDetection={collisionDetection}
             onDragStart={(event) => {
-              if (selectionMode || editingGroupId || isInlineCreating) return;
-              handleGroupDragStart(event);
+              if (selectionMode || editingGroupId || isInlineCreating) return
+              handleGroupDragStart(event)
             }}
             onDragEnd={(event) => {
-              if (selectionMode || editingGroupId || isInlineCreating) return;
-              handleGroupDragEnd(event);
+              if (selectionMode || editingGroupId || isInlineCreating) return
+              handleGroupDragEnd(event)
             }}
             modifiers={[restrictToVerticalAxis]}
             measuring={{
@@ -312,24 +296,23 @@ export function DashboardSidebar({
               <div className="flex flex-col gap-1">
                 {groups.map((group) => {
                   if (group.id === NO_GROUP_ID) {
-                    const isActive = activeGroupId === NO_GROUP_ID;
+                    const isActive = activeGroupId === NO_GROUP_ID
                     const NoGroupIcon =
-                      ALL_ICONS_MAP[group.icon || "folder"] ??
-                      ALL_ICONS_MAP["folder"];
+                      ALL_ICONS_MAP[group.icon || "folder"] ?? ALL_ICONS_MAP["folder"]
                     return (
                       <div
                         key={group.id}
                         role="button"
                         tabIndex={0}
                         onClick={() => {
-                          if (selectionMode) return;
-                          setActiveGroupId(NO_GROUP_ID);
+                          if (selectionMode) return
+                          setActiveGroupId(NO_GROUP_ID)
                         }}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            if (selectionMode) return;
-                            setActiveGroupId(NO_GROUP_ID);
+                            event.preventDefault()
+                            if (selectionMode) return
+                            setActiveGroupId(NO_GROUP_ID)
                           }
                         }}
                         className={`group flex items-center gap-3 px-2 py-1.5 transition-all duration-200 cursor-pointer active:scale-[0.97] outline-none ${
@@ -359,15 +342,12 @@ export function DashboardSidebar({
                           </div>
                         </div>
                       </div>
-                    );
+                    )
                   }
 
-                  const isEditing = editingGroupId === group.id;
+                  const isEditing = editingGroupId === group.id
                   const dndDisabled =
-                    selectionMode ||
-                    isInlineCreating ||
-                    Boolean(editingGroupId) ||
-                    isEditing;
+                    selectionMode || isInlineCreating || Boolean(editingGroupId) || isEditing
 
                   if (isEditing) {
                     return (
@@ -385,15 +365,11 @@ export function DashboardSidebar({
                         onCancel={() => setEditingGroupId(null)}
                         onSave={() => handleSidebarGroupUpdate(group.id)}
                       />
-                    );
+                    )
                   }
 
                   return (
-                    <SortableGroupRowItem
-                      key={group.id}
-                      id={group.id}
-                      disabled={dndDisabled}
-                    >
+                    <SortableGroupRowItem key={group.id} id={group.id} disabled={dndDisabled}>
                       <GroupRowItem
                         group={group}
                         active={activeGroupId === group.id}
@@ -404,10 +380,10 @@ export function DashboardSidebar({
                         onEnterSelectionMode={enterSelectionMode}
                         onOpenGroup={() => handleOpenGroup(group.id)}
                         onEdit={() => {
-                          setEditingGroupId(group.id);
-                          setEditGroupName(group.name);
-                          setEditGroupIcon(group.icon || "folder");
-                          setEditGroupColor(group.color || "#6366f1");
+                          setEditingGroupId(group.id)
+                          setEditGroupName(group.name)
+                          setEditGroupIcon(group.icon || "folder")
+                          setEditGroupColor(group.color || "#6366f1")
                         }}
                         onRequestDelete={() => openDeleteDialog(group)}
                         onToggleHideFromAllBookmarks={(hide) =>
@@ -416,7 +392,7 @@ export function DashboardSidebar({
                         onActionMenuOpenChange={handleActionMenuOpenChange}
                       />
                     </SortableGroupRowItem>
-                  );
+                  )
                 })}
               </div>
             </SortableContext>
@@ -424,9 +400,7 @@ export function DashboardSidebar({
             {typeof document !== "undefined" &&
               createPortal(
                 <DragOverlay dropAnimation={null} adjustScale={false}>
-                  {activeGroup ? (
-                    <GroupDragOverlayRow group={activeGroup} />
-                  ) : null}
+                  {activeGroup ? <GroupDragOverlayRow group={activeGroup} /> : null}
                 </DragOverlay>,
                 document.body,
               )}
@@ -448,15 +422,15 @@ export function DashboardSidebar({
         onCreate={() => handleInlineCreateGroup()}
       />
     </>
-  );
+  )
 
   const sidebarDialogs = (
     <>
       <DeleteGroupDialog
         open={deleteDialogOpen}
         onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) setDeleteTarget(null);
+          setDeleteDialogOpen(open)
+          if (!open) setDeleteTarget(null)
         }}
         target={deleteTarget}
         onConfirm={handleDeleteConfirm}
@@ -469,10 +443,10 @@ export function DashboardSidebar({
         onConfirm={handleConfirmBulkDelete}
       />
     </>
-  );
+  )
 
   if (layoutDensity !== "extended") {
-    const canReveal = viewportWidth >= 900;
+    const canReveal = viewportWidth >= 900
 
     return (
       <>
@@ -493,35 +467,31 @@ export function DashboardSidebar({
               className="fixed left-0 top-1/2 -translate-y-1/2 z-50 h-14 w-7 items-center justify-center rounded-r-2xl bg-muted/20 ring-1 ring-inset ring-foreground/10 text-muted-foreground text-[11px] hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               aria-label="Toggle groups sidebar"
               onClick={() => {
-                setIsPinnedOpen((p) => !p);
-                setIsHoverOpen(true);
+                setIsPinnedOpen((p) => !p)
+                setIsHoverOpen(true)
               }}
               onMouseEnter={() => {
-                handleSidebarMouseEnter();
+                handleSidebarMouseEnter()
               }}
               onMouseLeave={() => {
-                handleSidebarMouseLeave();
+                handleSidebarMouseLeave()
               }}
             >
               {/* Issue: single-letter handles are hard to discover.
                   Fix: use a compact, vertical label to preserve space while being self-explanatory. */}
-              <span className="[writing-mode:vertical-rl] text-[10px] tracking-wide">
-                Groups
-              </span>
+              <span className="[writing-mode:vertical-rl] text-[10px] tracking-wide">Groups</span>
             </button>
 
             <aside
               data-onboarding="groups-desktop"
               className={`fixed left-0 top-43 bottom-6 z-50 w-60 transition-transform duration-180 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
-                isPinnedOpen || isHoverOpen
-                  ? "translate-x-0"
-                  : "-translate-x-full"
+                isPinnedOpen || isHoverOpen ? "translate-x-0" : "-translate-x-full"
               }`}
               onMouseEnter={() => {
-                handleSidebarMouseEnter();
+                handleSidebarMouseEnter()
               }}
               onMouseLeave={() => {
-                handleSidebarMouseLeave();
+                handleSidebarMouseLeave()
               }}
             >
               <div className="h-full rounded-r-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
@@ -533,7 +503,7 @@ export function DashboardSidebar({
 
         {sidebarDialogs}
       </>
-    );
+    )
   }
 
   return (
@@ -557,33 +527,29 @@ export function DashboardSidebar({
             className="hidden min-[1200px]:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 h-24 w-5 items-center justify-center rounded-r-2xl bg-muted/20 ring-1 ring-inset ring-foreground/10 text-muted-foreground text-[11px] hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Toggle groups sidebar"
             onClick={() => {
-              setIsPinnedOpen((p) => !p);
-              setIsHoverOpen((prev) => (prev ? prev : true));
+              setIsPinnedOpen((p) => !p)
+              setIsHoverOpen((prev) => (prev ? prev : true))
             }}
             onMouseEnter={() => {
-              handleSidebarMouseEnter();
+              handleSidebarMouseEnter()
             }}
             onMouseLeave={() => {
-              handleSidebarMouseLeave();
+              handleSidebarMouseLeave()
             }}
           >
-            <span className="[writing-mode:vertical-rl] text-[10px] tracking-wide">
-              Groups
-            </span>
+            <span className="[writing-mode:vertical-rl] text-[10px] tracking-wide">Groups</span>
           </button>
 
           <aside
             data-onboarding="groups-desktop"
             className={`hidden min-[1200px]:block fixed left-0 top-43 bottom-6 z-50 w-60 transition-transform duration-180 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
-              isPinnedOpen || isHoverOpen
-                ? "translate-x-0"
-                : "-translate-x-full"
+              isPinnedOpen || isHoverOpen ? "translate-x-0" : "-translate-x-full"
             }`}
             onMouseEnter={() => {
-              handleSidebarMouseEnter();
+              handleSidebarMouseEnter()
             }}
             onMouseLeave={() => {
-              handleSidebarMouseLeave();
+              handleSidebarMouseLeave()
             }}
           >
             <div className="h-full rounded-r-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
@@ -595,5 +561,5 @@ export function DashboardSidebar({
 
       {sidebarDialogs}
     </>
-  );
+  )
 }

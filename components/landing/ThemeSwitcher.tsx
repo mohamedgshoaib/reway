@@ -1,41 +1,34 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ComputerIcon,
-  Moon02Icon,
-  Sun01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+import { ComputerIcon, Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useTheme } from "next-themes"
+import type React from "react"
+import { useEffect, useMemo, useState } from "react"
+import { cn } from "@/lib/utils"
 
 interface ThemeSwitcherProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string;
+  className?: string
 }
 
 export function ThemeSwitcher({ className, ...props }: ThemeSwitcherProps) {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     // Issue: reading client-only theme state during SSR can cause hydration mismatches.
     // Fix: only mark as mounted after the first tick so we render a deterministic fallback on the server.
-    const id = window.setTimeout(() => setMounted(true), 0);
-    return () => window.clearTimeout(id);
-  }, []);
+    const id = window.setTimeout(() => setMounted(true), 0)
+    return () => window.clearTimeout(id)
+  }, [])
 
-  const activeTheme = useMemo(
-    () => (mounted ? (theme ?? "system") : "system"),
-    [mounted, theme],
-  );
+  const activeTheme = useMemo(() => (mounted ? (theme ?? "system") : "system"), [mounted, theme])
 
   const themes = [
     { value: "system", icon: ComputerIcon, label: "Switch to system theme" },
     { value: "light", icon: Sun01Icon, label: "Switch to light theme" },
     { value: "dark", icon: Moon02Icon, label: "Switch to dark theme" },
-  ];
+  ]
 
   return (
     <div
@@ -73,5 +66,5 @@ export function ThemeSwitcher({ className, ...props }: ThemeSwitcherProps) {
         </button>
       ))}
     </div>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { toast } from "sonner";
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { useState } from "react"
+import { toast } from "sonner"
 
 import {
   AlertDialog,
@@ -14,29 +14,29 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Favicon } from "./Favicon";
-import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu";
-import { recordBookmarkVisit } from "@/lib/bookmark-visits";
+} from "@/components/ui/alert-dialog"
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { recordBookmarkVisit } from "@/lib/bookmark-visits"
+import { Favicon } from "./Favicon"
+import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu"
 
 interface SortableBookmarkIconProps {
-  id: string;
-  title: string;
-  url: string;
-  domain: string;
-  favicon?: string;
-  isEnriching?: boolean;
-  isSelected?: boolean;
-  selectionMode?: boolean;
-  isSelectionChecked?: boolean;
-  onToggleSelection?: (id: string) => void;
-  onEnterSelectionMode?: () => void;
-  onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
-  onPreview?: (id: string) => void;
-  dragDimmed?: boolean;
-  dragDisabled?: boolean;
+  id: string
+  title: string
+  url: string
+  domain: string
+  favicon?: string
+  isEnriching?: boolean
+  isSelected?: boolean
+  selectionMode?: boolean
+  isSelectionChecked?: boolean
+  onToggleSelection?: (id: string) => void
+  onEnterSelectionMode?: () => void
+  onDelete?: (id: string) => void
+  onEdit?: (id: string) => void
+  onPreview?: (id: string) => void
+  dragDimmed?: boolean
+  dragDisabled?: boolean
 }
 
 export function SortableBookmarkIcon({
@@ -57,77 +57,73 @@ export function SortableBookmarkIcon({
   dragDimmed = false,
   dragDisabled = false,
 }: SortableBookmarkIconProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled: dragDisabled });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: dragDisabled,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0 : 1,
     touchAction: selectionMode ? "auto" : "manipulation",
-  };
+  }
 
   const handleOpen = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    recordBookmarkVisit(id);
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+    e?.stopPropagation()
+    recordBookmarkVisit(id)
+    window.open(url, "_blank", "noopener,noreferrer")
+  }
 
   const handleAnchorClick = (event: React.MouseEvent) => {
     if (event.shiftKey && !selectionMode) {
-      event.preventDefault();
-      event.stopPropagation();
-      onEnterSelectionMode?.();
-      onToggleSelection?.(id);
-      return;
+      event.preventDefault()
+      event.stopPropagation()
+      onEnterSelectionMode?.()
+      onToggleSelection?.(id)
+      return
     }
 
-    recordBookmarkVisit(id);
-  };
+    recordBookmarkVisit(id)
+  }
 
   const handleCopy = async (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+    e?.stopPropagation()
     try {
-      await navigator.clipboard.writeText(url);
-      toast.success("URL copied to clipboard");
+      await navigator.clipboard.writeText(url)
+      toast.success("URL copied to clipboard")
     } catch {
-      toast.error("Failed to copy URL");
+      toast.error("Failed to copy URL")
     }
-  };
+  }
 
   const handleDeleteRequest = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setDeleteDialogOpen(true);
-  };
+    e?.stopPropagation()
+    setDeleteDialogOpen(true)
+  }
 
   const handleDeleteConfirm = () => {
-    onDelete?.(id);
-    setDeleteDialogOpen(false);
-  };
+    onDelete?.(id)
+    setDeleteDialogOpen(false)
+  }
 
   const handleEdit = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onEdit?.(id);
-  };
+    e?.stopPropagation()
+    onEdit?.(id)
+  }
 
   const handlePreview = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onPreview?.(id);
-  };
+    e?.stopPropagation()
+    onPreview?.(id)
+  }
 
   const handleBulkSelect = () => {
-    if (selectionMode) return;
-    onEnterSelectionMode?.();
-    onToggleSelection?.(id);
-  };
+    if (selectionMode) return
+    onEnterSelectionMode?.()
+    onToggleSelection?.(id)
+  }
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -143,27 +139,21 @@ export function SortableBookmarkIcon({
               dragDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing"
             } ${
               isSelectionChecked || isSelected ? "ring-2 ring-primary/30" : ""
-            } ${dragDimmed ? "opacity-40 saturate-0" : ""} ${
-              isDragging ? "opacity-0" : ""
-            }`}
+            } ${dragDimmed ? "opacity-40 saturate-0" : ""} ${isDragging ? "opacity-0" : ""}`}
           >
             {selectionMode ? (
               <button
                 type="button"
                 onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleSelection?.(id);
+                  event.stopPropagation()
+                  onToggleSelection?.(id)
                 }}
                 className="size-12 flex items-center justify-center rounded-2xl border border-border/50 hover:border-border/70 hover:bg-muted/40 transition-transform duration-150"
-                aria-label={
-                  isSelectionChecked ? "Deselect bookmark" : "Select bookmark"
-                }
+                aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
               >
                 <div
                   className={`size-5 rounded border-2 flex items-center justify-center ${
-                    isSelectionChecked
-                      ? "bg-primary border-primary"
-                      : "border-muted-foreground/30"
+                    isSelectionChecked ? "bg-primary border-primary" : "border-muted-foreground/30"
                   }`}
                 >
                   {isSelectionChecked && (
@@ -193,13 +183,13 @@ export function SortableBookmarkIcon({
                 rel="noreferrer"
                 onClick={handleAnchorClick}
                 onPointerDown={(event) => {
-                  event.stopPropagation();
+                  event.stopPropagation()
                 }}
                 onMouseDown={(event) => {
-                  event.stopPropagation();
+                  event.stopPropagation()
                 }}
                 onTouchStart={(event) => {
-                  event.stopPropagation();
+                  event.stopPropagation()
                 }}
                 aria-label="Open bookmark"
               >
@@ -220,13 +210,13 @@ export function SortableBookmarkIcon({
               rel="noreferrer"
               onClick={handleAnchorClick}
               onPointerDown={(event) => {
-                event.stopPropagation();
+                event.stopPropagation()
               }}
               onMouseDown={(event) => {
-                event.stopPropagation();
+                event.stopPropagation()
               }}
               onTouchStart={(event) => {
-                event.stopPropagation();
+                event.stopPropagation()
               }}
               aria-label="Open bookmark"
             >
@@ -253,9 +243,7 @@ export function SortableBookmarkIcon({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -266,5 +254,5 @@ export function SortableBookmarkIcon({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

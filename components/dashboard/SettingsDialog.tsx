@@ -1,6 +1,5 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState } from "react";
 import {
   Settings01Icon,
   Moon02Icon,
@@ -9,8 +8,14 @@ import {
   Delete02Icon,
   ViewSidebarRightIcon,
   ColorsIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
+import { deleteAccount } from "@/app/dashboard/actions/account"
+import { ThemeIcon } from "@/components/theme-icons/ThemeIcon"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +26,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetContent,
@@ -31,38 +47,22 @@ import {
   SheetSection,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useTheme } from "next-themes";
-import { deleteAccount } from "@/app/dashboard/actions/account";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { DASHBOARD_THEMES, type DashboardPaletteTheme } from "@/lib/themes";
-import { ThemeIcon } from "@/components/theme-icons/ThemeIcon";
+} from "@/components/ui/sheet"
+import { DASHBOARD_THEMES, type DashboardPaletteTheme } from "@/lib/themes"
 
 interface SettingsDialogProps {
-  children?: React.ReactNode;
-  rowContent: "date" | "group";
-  onRowContentChange: (value: "date" | "group") => void;
-  showNotesTodos: boolean;
-  onShowNotesTodosChange: (value: boolean) => void;
-  layoutDensity: "compact" | "extended";
-  onLayoutDensityChange: (value: "compact" | "extended") => void;
-  userName: string;
-  paletteTheme: DashboardPaletteTheme;
-  onPaletteThemeChange: (value: DashboardPaletteTheme) => void;
-  folderHeaderTint: "off" | "low" | "medium" | "high";
-  onFolderHeaderTintChange: (value: "off" | "low" | "medium" | "high") => void;
+  children?: React.ReactNode
+  rowContent: "date" | "group"
+  onRowContentChange: (value: "date" | "group") => void
+  showNotesTodos: boolean
+  onShowNotesTodosChange: (value: boolean) => void
+  layoutDensity: "compact" | "extended"
+  onLayoutDensityChange: (value: "compact" | "extended") => void
+  userName: string
+  paletteTheme: DashboardPaletteTheme
+  onPaletteThemeChange: (value: DashboardPaletteTheme) => void
+  folderHeaderTint: "off" | "low" | "medium" | "high"
+  onFolderHeaderTintChange: (value: "off" | "low" | "medium" | "high") => void
 }
 
 export function SettingsDialog({
@@ -79,64 +79,56 @@ export function SettingsDialog({
   folderHeaderTint,
   onFolderHeaderTintChange,
 }: SettingsDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [themeSelectOpen, setThemeSelectOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmValue, setConfirmValue] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const router = useRouter();
-  const normalizedName = useMemo(() => userName.trim(), [userName]);
-  const confirmPhrase = normalizedName || "your name";
-  const isConfirmMatch = confirmValue.trim() === normalizedName;
+  const [open, setOpen] = useState(false)
+  const [themeSelectOpen, setThemeSelectOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmValue, setConfirmValue] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const router = useRouter()
+  const normalizedName = useMemo(() => userName.trim(), [userName])
+  const confirmPhrase = normalizedName || "your name"
+  const isConfirmMatch = confirmValue.trim() === normalizedName
 
   useEffect(() => {
-    const handleOpenSettings = () => setOpen(true);
+    const handleOpenSettings = () => setOpen(true)
     const handleCloseSettings = () => {
-      setThemeSelectOpen(false);
-      setOpen(false);
-    };
-    const handleOpenThemeSelect = () => setThemeSelectOpen(true);
-    const handleCloseThemeSelect = () => setThemeSelectOpen(false);
+      setThemeSelectOpen(false)
+      setOpen(false)
+    }
+    const handleOpenThemeSelect = () => setThemeSelectOpen(true)
+    const handleCloseThemeSelect = () => setThemeSelectOpen(false)
 
-    window.addEventListener("reway:open-settings", handleOpenSettings);
-    window.addEventListener("reway:close-settings", handleCloseSettings);
-    window.addEventListener("reway:open-theme-select", handleOpenThemeSelect);
-    window.addEventListener("reway:close-theme-select", handleCloseThemeSelect);
+    window.addEventListener("reway:open-settings", handleOpenSettings)
+    window.addEventListener("reway:close-settings", handleCloseSettings)
+    window.addEventListener("reway:open-theme-select", handleOpenThemeSelect)
+    window.addEventListener("reway:close-theme-select", handleCloseThemeSelect)
 
     return () => {
-      window.removeEventListener("reway:open-settings", handleOpenSettings);
-      window.removeEventListener("reway:close-settings", handleCloseSettings);
-      window.removeEventListener(
-        "reway:open-theme-select",
-        handleOpenThemeSelect,
-      );
-      window.removeEventListener(
-        "reway:close-theme-select",
-        handleCloseThemeSelect,
-      );
-    };
-  }, []);
-
-  const handleDeleteAccount = async (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    event.preventDefault();
-    if (!isConfirmMatch || isDeleting) return;
-    setIsDeleting(true);
-    try {
-      await deleteAccount();
-      toast.success("Account deleted successfully");
-      setConfirmOpen(false);
-      setOpen(false);
-      router.push("/login");
-    } catch (error) {
-      console.error("Delete account failed:", error);
-      toast.error("Failed to delete account. Please try again.");
-    } finally {
-      setIsDeleting(false);
+      window.removeEventListener("reway:open-settings", handleOpenSettings)
+      window.removeEventListener("reway:close-settings", handleCloseSettings)
+      window.removeEventListener("reway:open-theme-select", handleOpenThemeSelect)
+      window.removeEventListener("reway:close-theme-select", handleCloseThemeSelect)
     }
-  };
+  }, [])
+
+  const handleDeleteAccount = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    if (!isConfirmMatch || isDeleting) return
+    setIsDeleting(true)
+    try {
+      await deleteAccount()
+      toast.success("Account deleted successfully")
+      setConfirmOpen(false)
+      setOpen(false)
+      router.push("/login")
+    } catch (error) {
+      console.error("Delete account failed:", error)
+      toast.error("Failed to delete account. Please try again.")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -170,9 +162,7 @@ export function SettingsDialog({
                 </p>
                 <div className="flex gap-2">
                   <Button
-                    variant={
-                      layoutDensity === "compact" ? "default" : "outline"
-                    }
+                    variant={layoutDensity === "compact" ? "default" : "outline"}
                     size="sm"
                     className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onLayoutDensityChange("compact")}
@@ -180,9 +170,7 @@ export function SettingsDialog({
                     Compact
                   </Button>
                   <Button
-                    variant={
-                      layoutDensity === "extended" ? "default" : "outline"
-                    }
+                    variant={layoutDensity === "extended" ? "default" : "outline"}
                     size="sm"
                     className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onLayoutDensityChange("extended")}
@@ -259,10 +247,7 @@ export function SettingsDialog({
                 Appearance
               </h3>
               <div className="rounded-2xl border border-border/60 bg-muted/10 p-3">
-                <div
-                  data-onboarding="appearance-controls"
-                  className="space-y-2"
-                >
+                <div data-onboarding="appearance-controls" className="space-y-2">
                   <div className="space-y-1">
                     <Label className="px-1">Folder header color</Label>
                     <p className="text-xs text-muted-foreground px-1">
@@ -273,9 +258,7 @@ export function SettingsDialog({
                   <Select
                     value={folderHeaderTint}
                     onValueChange={(value) =>
-                      onFolderHeaderTintChange(
-                        value as "off" | "low" | "medium" | "high",
-                      )
+                      onFolderHeaderTintChange(value as "off" | "low" | "medium" | "high")
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -304,33 +287,20 @@ export function SettingsDialog({
                     value={paletteTheme}
                     open={themeSelectOpen}
                     onOpenChange={setThemeSelectOpen}
-                    onValueChange={(value) =>
-                      onPaletteThemeChange(value as DashboardPaletteTheme)
-                    }
+                    onValueChange={(value) => onPaletteThemeChange(value as DashboardPaletteTheme)}
                   >
-                    <SelectTrigger
-                      data-onboarding="palette-theme-trigger"
-                      className="w-full"
-                    >
+                    <SelectTrigger data-onboarding="palette-theme-trigger" className="w-full">
                       <span className="min-w-0 truncate">
                         <SelectValue placeholder="Theme" />
                       </span>
                     </SelectTrigger>
-                    <SelectContent
-                      data-onboarding="palette-theme-options"
-                      align="start"
-                    >
+                    <SelectContent data-onboarding="palette-theme-options" align="start">
                       <SelectGroup>
                         {DASHBOARD_THEMES.map((themeOption) => (
-                          <SelectItem
-                            key={themeOption.value}
-                            value={themeOption.value}
-                          >
+                          <SelectItem key={themeOption.value} value={themeOption.value}>
                             <span className="flex items-center gap-2 min-w-0">
                               <ThemeIcon theme={themeOption.value} />
-                              <span className="font-medium truncate">
-                                {themeOption.label}
-                              </span>
+                              <span className="font-medium truncate">{themeOption.label}</span>
                             </span>
                           </SelectItem>
                         ))}
@@ -345,10 +315,7 @@ export function SettingsDialog({
                     </p>
                   </div>
 
-                  <div
-                    data-onboarding="color-mode-controls"
-                    className="flex gap-2"
-                  >
+                  <div data-onboarding="color-mode-controls" className="flex gap-2">
                     <Button
                       variant={theme === "light" ? "default" : "outline"}
                       size="sm"
@@ -406,12 +373,10 @@ export function SettingsDialog({
                 </AlertDialogTrigger>
                 <AlertDialogContent className="sm:max-w-md">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Delete account permanently?
-                    </AlertDialogTitle>
+                    <AlertDialogTitle>Delete account permanently?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will delete all bookmarks, groups, and your account.
-                      This action cannot be undone.
+                      This will delete all bookmarks, groups, and your account. This action cannot
+                      be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <div className="space-y-2">
@@ -427,10 +392,7 @@ export function SettingsDialog({
                     />
                   </div>
                   <AlertDialogFooter>
-                    <AlertDialogCancel
-                      className="rounded-4xl cursor-pointer"
-                      disabled={isDeleting}
-                    >
+                    <AlertDialogCancel className="rounded-4xl cursor-pointer" disabled={isDeleting}>
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -452,5 +414,5 @@ export function SettingsDialog({
         </SheetBody>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

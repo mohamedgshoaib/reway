@@ -63,64 +63,62 @@
 
     <script>
       function checkExtension() {
-        const requestId = crypto.randomUUID();
-        const statusEl = document.getElementById("status");
+        const requestId = crypto.randomUUID()
+        const statusEl = document.getElementById("status")
 
         const setStatus = ({ title, message, tone }) => {
-          if (!statusEl) return;
-          statusEl.textContent = "";
-          const strong = document.createElement("strong");
-          strong.textContent = title;
-          statusEl.appendChild(strong);
-          statusEl.appendChild(document.createElement("br"));
-          statusEl.appendChild(document.createTextNode(message));
-          statusEl.className = `status ${tone}`;
-        };
+          if (!statusEl) return
+          statusEl.textContent = ""
+          const strong = document.createElement("strong")
+          strong.textContent = title
+          statusEl.appendChild(strong)
+          statusEl.appendChild(document.createElement("br"))
+          statusEl.appendChild(document.createTextNode(message))
+          statusEl.className = `status ${tone}`
+        }
 
         const timeout = setTimeout(() => {
           setStatus({
             title: "Extension not detected",
-            message:
-              "Please install the extension following the instructions above.",
+            message: "Please install the extension following the instructions above.",
             tone: "error",
-          });
-        }, 1000);
+          })
+        }, 1000)
 
         const onMessage = (event) => {
-          if (event?.data?.type !== "reway_extension_check_response") return;
-          if (event.data.requestId !== requestId) return;
+          if (event?.data?.type !== "reway_extension_check_response") return
+          if (event.data.requestId !== requestId) return
 
-          clearTimeout(timeout);
-          window.removeEventListener("message", onMessage);
+          clearTimeout(timeout)
+          window.removeEventListener("message", onMessage)
 
           if (event.data.installed) {
             setStatus({
               title: "✓ Extension detected successfully!",
-              message:
-                "The Reway extension is properly installed and responding.",
+              message: "The Reway extension is properly installed and responding.",
               tone: "success",
-            });
+            })
           } else {
             setStatus({
               title: "Extension communication failed",
               message: "Extension may not be properly configured.",
               tone: "error",
-            });
+            })
           }
-        };
+        }
 
-        window.addEventListener("message", onMessage);
+        window.addEventListener("message", onMessage)
         window.postMessage(
           {
             type: "reway_extension_check",
             requestId: requestId,
           },
           window.location.origin,
-        );
+        )
       }
 
       // Check on page load
-      document.addEventListener("DOMContentLoaded", checkExtension);
+      document.addEventListener("DOMContentLoaded", checkExtension)
     </script>
   </body>
 </html>

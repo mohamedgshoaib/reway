@@ -138,7 +138,6 @@
   --highlight-x: oklch(0.6068 0.1664 46.04);
 }
 
-
 .theme-milka {
   --background: oklch(0.962 0.0041 301.4256);
   --foreground: oklch(0.3651 0.0325 287.0807);
@@ -629,8 +628,6 @@
   --sidebar-ring: oklch(0.76 0.135 204.7055);
 }
 
-
-
 .theme-cyberpunk {
   --background: oklch(0.9518 0.0176 240);
   --foreground: oklch(0.2046 0 0);
@@ -701,8 +698,6 @@
   --sidebar-ring: oklch(0.82 0.19 98.2711);
 }
 
-
-
 .theme-prettier {
   --background: oklch(0.9765 0.022 89.79);
   --foreground: oklch(0.3092 0.0518 219.6516);
@@ -772,7 +767,6 @@
   --sidebar-border: oklch(0.523 0.0283 219.1365);
   --sidebar-ring: oklch(0.5924 0.2025 355.8943);
 }
-
 
 .theme-vercel {
   --background: oklch(0.99 0 0);
@@ -914,7 +908,6 @@
   --sidebar-ring: oklch(0.7264 0.0581 66.6967);
 }
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -967,11 +960,7 @@ body::-webkit-scrollbar-corner,
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
-  background-color: color-mix(
-    in oklab,
-    var(--muted-foreground),
-    transparent 80%
-  );
+  background-color: color-mix(in oklab, var(--muted-foreground), transparent 80%);
   border-radius: 9999px;
   border: 4px solid transparent;
   background-clip: padding-box;
@@ -1002,11 +991,7 @@ body,
 }
 
 .scrollbar-hover-only:hover::-webkit-scrollbar-thumb {
-  background-color: color-mix(
-    in oklab,
-    var(--muted-foreground),
-    transparent 80%
-  );
+  background-color: color-mix(in oklab, var(--muted-foreground), transparent 80%);
 }
 
 .scrollbar-hover-only:hover::-webkit-scrollbar-track {
@@ -1073,4 +1058,3 @@ body,
 [data-sonner-toast] [data-button]:active {
   transform: scale(0.95) !important;
 }
-

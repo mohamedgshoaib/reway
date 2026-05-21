@@ -1,6 +1,5 @@
-"use client";
+"use client"
 
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -8,22 +7,23 @@ import {
   Folder01Icon,
   Search01Icon,
   ToolsIcon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 
-import { useState } from "react";
+import { useState } from "react"
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-import type { HeroGroupId, HeroGroup } from "./types";
+import type { HeroGroupId, HeroGroup } from "./types"
 
 export function GroupsDropdown({
   activeGroup,
@@ -40,27 +40,27 @@ export function GroupsDropdown({
   onCreateGroup,
   onCancelCreate,
 }: {
-  activeGroup: HeroGroupId;
-  heroGroups: HeroGroup[];
-  dropdownCreatingGroup: boolean;
-  dropdownNewGroupName: string;
+  activeGroup: HeroGroupId
+  heroGroups: HeroGroup[]
+  dropdownCreatingGroup: boolean
+  dropdownNewGroupName: string
   dropdownNewGroupIcon:
     | typeof Search01Icon
     | typeof BulbIcon
     | typeof ToolsIcon
-    | typeof Folder01Icon;
-  dropdownNewGroupColor: string | null;
-  setDropdownNewGroupName: (v: string) => void;
-  setDropdownCreatingGroup: (v: boolean) => void;
+    | typeof Folder01Icon
+  dropdownNewGroupColor: string | null
+  setDropdownNewGroupName: (v: string) => void
+  setDropdownCreatingGroup: (v: boolean) => void
   setDropdownNewGroupIcon: (
     v: typeof Search01Icon | typeof BulbIcon | typeof ToolsIcon | typeof Folder01Icon,
-  ) => void;
-  setDropdownNewGroupColor: (v: string | null) => void;
-  onSelectGroup: (id: HeroGroupId) => void;
-  onCreateGroup: () => void;
-  onCancelCreate: () => void;
+  ) => void
+  setDropdownNewGroupColor: (v: string | null) => void
+  onSelectGroup: (id: HeroGroupId) => void
+  onCreateGroup: () => void
+  onCancelCreate: () => void
 }) {
-  const [iconPopoverOpen, setIconPopoverOpen] = useState(false);
+  const [iconPopoverOpen, setIconPopoverOpen] = useState(false)
 
   return (
     <DropdownMenu>
@@ -89,7 +89,7 @@ export function GroupsDropdown({
                 g.id === "Build" ||
                 g.id === "Learn"
               ) {
-                onSelectGroup(g.id);
+                onSelectGroup(g.id)
               }
             }}
             className="gap-2 text-xs cursor-pointer"
@@ -134,14 +134,12 @@ export function GroupsDropdown({
                       <button
                         type="button"
                         onClick={() => {
-                          setDropdownNewGroupIcon(Search01Icon);
-                          setDropdownNewGroupColor("#3b82f6");
-                          setIconPopoverOpen(false);
+                          setDropdownNewGroupIcon(Search01Icon)
+                          setDropdownNewGroupColor("#3b82f6")
+                          setIconPopoverOpen(false)
                         }}
                         className={`flex size-8 shrink-0 aspect-square items-center justify-center rounded-full bg-muted/20 ring-1 ring-foreground/8 hover:bg-muted/30 cursor-pointer p-0 ${
-                          dropdownNewGroupIcon === Search01Icon
-                            ? "ring-2 ring-foreground/40"
-                            : ""
+                          dropdownNewGroupIcon === Search01Icon ? "ring-2 ring-foreground/40" : ""
                         }`}
                         aria-label="Use Research icon"
                       >
@@ -155,14 +153,12 @@ export function GroupsDropdown({
                       <button
                         type="button"
                         onClick={() => {
-                          setDropdownNewGroupIcon(BulbIcon);
-                          setDropdownNewGroupColor("#f59e0b");
-                          setIconPopoverOpen(false);
+                          setDropdownNewGroupIcon(BulbIcon)
+                          setDropdownNewGroupColor("#f59e0b")
+                          setIconPopoverOpen(false)
                         }}
                         className={`flex size-8 shrink-0 aspect-square items-center justify-center rounded-full bg-muted/20 ring-1 ring-foreground/8 hover:bg-muted/30 cursor-pointer p-0 ${
-                          dropdownNewGroupIcon === BulbIcon
-                            ? "ring-2 ring-foreground/40"
-                            : ""
+                          dropdownNewGroupIcon === BulbIcon ? "ring-2 ring-foreground/40" : ""
                         }`}
                         aria-label="Use Inspiration icon"
                       >
@@ -176,14 +172,12 @@ export function GroupsDropdown({
                       <button
                         type="button"
                         onClick={() => {
-                          setDropdownNewGroupIcon(ToolsIcon);
-                          setDropdownNewGroupColor("#10b981");
-                          setIconPopoverOpen(false);
+                          setDropdownNewGroupIcon(ToolsIcon)
+                          setDropdownNewGroupColor("#10b981")
+                          setIconPopoverOpen(false)
                         }}
                         className={`flex size-8 shrink-0 aspect-square items-center justify-center rounded-full bg-muted/20 ring-1 ring-foreground/8 hover:bg-muted/30 cursor-pointer p-0 ${
-                          dropdownNewGroupIcon === ToolsIcon
-                            ? "ring-2 ring-foreground/40"
-                            : ""
+                          dropdownNewGroupIcon === ToolsIcon ? "ring-2 ring-foreground/40" : ""
                         }`}
                         aria-label="Use Build icon"
                       >
@@ -206,10 +200,10 @@ export function GroupsDropdown({
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault();
-                      onCreateGroup();
+                      e.preventDefault()
+                      onCreateGroup()
                     } else if (e.key === "Escape") {
-                      onCancelCreate();
+                      onCancelCreate()
                     }
                   }}
                 />
@@ -238,8 +232,8 @@ export function GroupsDropdown({
         ) : (
           <DropdownMenuItem
             onSelect={(e) => {
-              e.preventDefault();
-              setDropdownCreatingGroup(true);
+              e.preventDefault()
+              setDropdownCreatingGroup(true)
             }}
             className="gap-2 text-xs cursor-pointer"
           >
@@ -249,5 +243,5 @@ export function GroupsDropdown({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

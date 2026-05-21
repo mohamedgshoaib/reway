@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Copy01Icon,
   ArrowUpRight03Icon,
   Delete02Icon,
   Folder01Icon,
-} from "@hugeicons/core-free-icons";
-import { demoLinks } from "./demo-data";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import Image from "next/image"
+import { useEffect, useState } from "react"
+import { demoLinks } from "./demo-data"
 
 export function ViewModesDemo() {
-  const views = ["Card", "List", "Folders"];
-  const [activeView, setActiveView] = useState(0);
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const views = ["Card", "List", "Folders"]
+  const [activeView, setActiveView] = useState(0)
+  const shouldReduceMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   useEffect(() => {
-    if (!enableMotion) return undefined;
+    if (!enableMotion) return undefined
     const timer = setInterval(() => {
-      setActiveView((prev) => (prev + 1) % views.length);
-    }, 2600);
-    return () => clearInterval(timer);
-  }, [enableMotion, views.length]);
+      setActiveView((prev) => (prev + 1) % views.length)
+    }, 2600)
+    return () => clearInterval(timer)
+  }, [enableMotion, views.length])
 
   return (
     <div className="w-full space-y-3">
@@ -47,16 +47,10 @@ export function ViewModesDemo() {
                 activeView === index ? "opacity-100" : "opacity-0"
               }`}
               style={{
-                transition: enableMotion
-                  ? "opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)"
-                  : "none",
+                transition: enableMotion ? "opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)" : "none",
               }}
             />
-            <span
-              className={`relative z-10 ${
-                activeView === index ? "text-foreground" : ""
-              }`}
-            >
+            <span className={`relative z-10 ${activeView === index ? "text-foreground" : ""}`}>
               {view}
             </span>
           </button>
@@ -91,18 +85,12 @@ export function ViewModesDemo() {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        {item.title}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {item.domain}
-                      </p>
+                      <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">{item.domain}</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span className="truncate max-w-20 sm:max-w-none">
-                      {item.group}
-                    </span>
+                    <span className="truncate max-w-20 sm:max-w-none">{item.group}</span>
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
@@ -155,13 +143,9 @@ export function ViewModesDemo() {
                       loading="lazy"
                       referrerPolicy="no-referrer"
                     />
-                    <span className="font-semibold text-foreground">
-                      {item.title}
-                    </span>
+                    <span className="font-semibold text-foreground">{item.title}</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    {item.group}
-                  </span>
+                  <span className="text-[10px] text-muted-foreground">{item.group}</span>
                 </div>
               ))}
             </motion.div>
@@ -187,13 +171,9 @@ export function ViewModesDemo() {
                     <span className="text-[11px] font-semibold text-foreground truncate">
                       Research
                     </span>
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      3
-                    </span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">3</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    Folders
-                  </span>
+                  <span className="text-[10px] text-muted-foreground">Folders</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 p-2">
@@ -216,9 +196,7 @@ export function ViewModesDemo() {
                           <p className="truncate text-[10px] font-semibold text-foreground">
                             {item.title}
                           </p>
-                          <p className="truncate text-[9px] text-muted-foreground">
-                            {item.domain}
-                          </p>
+                          <p className="truncate text-[9px] text-muted-foreground">{item.domain}</p>
                         </div>
                       </div>
                     </div>
@@ -230,5 +208,5 @@ export function ViewModesDemo() {
         </AnimatePresence>
       </div>
     </div>
-  );
+  )
 }

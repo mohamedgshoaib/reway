@@ -1,47 +1,40 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useRef } from "react";
-import { toast } from "sonner";
-import type { BookmarkRow } from "@/lib/supabase/queries";
-import { EXTENSION_DOWNLOAD_URL } from "@/lib/extension";
-import { recordBookmarkVisits } from "@/lib/bookmark-visits";
+import { useCallback, useEffect, useRef } from "react"
+import { toast } from "sonner"
+import { recordBookmarkVisits } from "@/lib/bookmark-visits"
+import { EXTENSION_DOWNLOAD_URL } from "@/lib/extension"
+import type { BookmarkRow } from "@/lib/supabase/queries"
 
 type ExtensionResponsePayload = {
-  ok: boolean;
-  count?: number;
-  error?: string;
-};
+  ok: boolean
+  count?: number
+  error?: string
+}
 
 type ExtensionResponse = {
-  type: "reway_open_group_response";
-  requestId: string;
-  response?: ExtensionResponsePayload | null;
-};
+  type: "reway_open_group_response"
+  requestId: string
+  response?: ExtensionResponsePayload | null
+}
 
 function isExtensionResponse(data: unknown): data is ExtensionResponse {
-  if (typeof data !== "object" || data === null) return false;
-  const d = data as Record<string, unknown>;
-  return (
-    d.type === "reway_open_group_response" && typeof d.requestId === "string"
-  );
+  if (typeof data !== "object" || data === null) return false
+  const d = data as Record<string, unknown>
+  return d.type === "reway_open_group_response" && typeof d.requestId === "string"
 }
 
 interface UseSelectionActionsOptions {
-  bookmarks: BookmarkRow[];
-  selectedIds: Set<string>;
-  setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
-  setSelectionMode: (value: boolean) => void;
-  setBookmarks: React.Dispatch<React.SetStateAction<BookmarkRow[]>>;
-  initialBookmarks: BookmarkRow[];
-  deleteBookmark: (id: string) => Promise<void>;
-  restoreBookmark: (bookmark: BookmarkRow) => Promise<void>;
-  moveBookmarksToGroup: (
-    ids: string[],
-    targetGroupId: string | null,
-  ) => Promise<void>;
-  lastBulkDeletedRef: React.MutableRefObject<
-    { bookmark: BookmarkRow; index: number }[]
-  >;
+  bookmarks: BookmarkRow[]
+  selectedIds: Set<string>
+  setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>
+  setSelectionMode: (value: boolean) => void
+  setBookmarks: React.Dispatch<React.SetStateAction<BookmarkRow[]>>
+  initialBookmarks: BookmarkRow[]
+  deleteBookmark: (id: string) => Promise<void>
+  restoreBookmark: (bookmark: BookmarkRow) => Promise<void>
+  moveBookmarksToGroup: (ids: string[], targetGroupId: string | null) => Promise<void>
+  lastBulkDeletedRef: React.MutableRefObject<{ bookmark: BookmarkRow; index: number }[]>
 }
 
 export function useSelectionActions({
@@ -58,98 +51,87 @@ export function useSelectionActions({
 }: UseSelectionActionsOptions) {
   const pendingRequestsRef = useRef(
     new Map<string, (response: ExtensionResponsePayload | null) => void>(),
-  );
+  )
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      const data = event.data;
-      if (!isExtensionResponse(data)) return;
+      const data = event.data
+      if (!isExtensionResponse(data)) return
 
-      const resolver = pendingRequestsRef.current.get(data.requestId);
-      if (!resolver) return;
+      const resolver = pendingRequestsRef.current.get(data.requestId)
+      if (!resolver) return
 
-      pendingRequestsRef.current.delete(data.requestId);
-      resolver(data.response ?? null);
-    };
+      pendingRequestsRef.current.delete(data.requestId)
+      resolver(data.response ?? null)
+    }
 
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, []);
+    window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [])
 
   const handleToggleSelection = useCallback(
     (id: string) => {
       setSelectedIds((prev) => {
-        const next = new Set(prev);
+        const next = new Set(prev)
         if (next.has(id)) {
-          next.delete(id);
+          next.delete(id)
         } else {
-          next.add(id);
+          next.add(id)
         }
         if (next.size === 0) {
-          setSelectionMode(false);
+          setSelectionMode(false)
         }
-        return next;
-      });
+        return next
+      })
     },
     [setSelectedIds, setSelectionMode],
-  );
+  )
 
   const handleOpenSelected = useCallback(() => {
-    if (selectedIds.size === 0) return;
-    const selectedBookmarks = bookmarks.filter((b) => selectedIds.has(b.id));
+    if (selectedIds.size === 0) return
+    const selectedBookmarks = bookmarks.filter((b) => selectedIds.has(b.id))
 
     if (
       selectedBookmarks.length > 5 &&
-      !window.confirm(
-        `Open ${selectedBookmarks.length} tabs? Your browser may block popups.`,
-      )
+      !window.confirm(`Open ${selectedBookmarks.length} tabs? Your browser may block popups.`)
     ) {
-      return;
+      return
     }
 
-    const urls = selectedBookmarks
-      .map((bookmark) => bookmark.url)
-      .filter(Boolean);
-    if (urls.length === 0) return;
+    const urls = selectedBookmarks.map((bookmark) => bookmark.url).filter(Boolean)
+    if (urls.length === 0) return
 
-    recordBookmarkVisits(selectedBookmarks.map((bookmark) => bookmark.id));
+    recordBookmarkVisits(selectedBookmarks.map((bookmark) => bookmark.id))
 
-    const requestId = crypto.randomUUID();
-    const responsePromise = new Promise<ExtensionResponsePayload | null>(
-      (resolve) => {
-        const timer = window.setTimeout(() => {
-          pendingRequestsRef.current.delete(requestId);
-          resolve(null);
-        }, 250);
+    const requestId = crypto.randomUUID()
+    const responsePromise = new Promise<ExtensionResponsePayload | null>((resolve) => {
+      const timer = window.setTimeout(() => {
+        pendingRequestsRef.current.delete(requestId)
+        resolve(null)
+      }, 250)
 
-        pendingRequestsRef.current.set(requestId, (payload) => {
-          window.clearTimeout(timer);
-          resolve(payload ?? null);
-        });
+      pendingRequestsRef.current.set(requestId, (payload) => {
+        window.clearTimeout(timer)
+        resolve(payload ?? null)
+      })
 
-        window.postMessage(
-          { type: "reway_open_group", requestId, groupId: "selected", urls },
-          "*",
-        );
-      },
-    );
+      window.postMessage({ type: "reway_open_group", requestId, groupId: "selected", urls }, "*")
+    })
 
-    (async () => {
-      const response = await responsePromise;
+    ;(async () => {
+      const response = await responsePromise
       if (response?.ok) {
-        toast.success(
-          `Opened ${response.count ?? urls.length} tabs via extension`,
-        );
+        toast.success(`Opened ${response.count ?? urls.length} tabs via extension`)
       } else {
         // If extension responded but with error, log it
         if (response && !response.ok) {
-          console.warn("Extension error:", response.error);
+          console.warn("Extension error:", response.error)
         }
 
         // Popup fallback: open all tabs immediately to avoid popup blocker
         urls.forEach((url) => {
-          window.open(url, "_blank", "noopener,noreferrer");
-        });
+          window.open(url, "_blank", "noopener,noreferrer")
+        })
 
         // Only show extension prompt if extension didn't respond at all
         if (response === null) {
@@ -159,70 +141,64 @@ export function useSelectionActions({
               action: {
                 label: "Download extension",
                 onClick: () => {
-                  window.open(
-                    EXTENSION_DOWNLOAD_URL,
-                    "_blank",
-                    "noopener,noreferrer",
-                  );
+                  window.open(EXTENSION_DOWNLOAD_URL, "_blank", "noopener,noreferrer")
                 },
               },
             },
-          );
+          )
         }
       }
 
-      setSelectionMode(false);
-      setSelectedIds(new Set());
-    })();
-  }, [bookmarks, selectedIds, setSelectedIds, setSelectionMode]);
+      setSelectionMode(false)
+      setSelectedIds(new Set())
+    })()
+  }, [bookmarks, selectedIds, setSelectedIds, setSelectionMode])
 
   const handleBulkDelete = useCallback(async () => {
-    const idsToDelete = Array.from(selectedIds);
-    if (idsToDelete.length === 0) return;
+    const idsToDelete = Array.from(selectedIds)
+    if (idsToDelete.length === 0) return
 
     const deletedBookmarks = bookmarks
       .map((bookmark, index) => ({ bookmark, index }))
-      .filter(({ bookmark }) => selectedIds.has(bookmark.id));
+      .filter(({ bookmark }) => selectedIds.has(bookmark.id))
 
-    lastBulkDeletedRef.current = deletedBookmarks;
+    lastBulkDeletedRef.current = deletedBookmarks
 
-    setBookmarks((prev) => prev.filter((b) => !selectedIds.has(b.id)));
-    setSelectionMode(false);
-    setSelectedIds(new Set());
+    setBookmarks((prev) => prev.filter((b) => !selectedIds.has(b.id)))
+    setSelectionMode(false)
+    setSelectedIds(new Set())
 
     toast.error(`Bookmark${idsToDelete.length > 1 ? "s" : ""} deleted`, {
       action: {
         label: "Undo",
         onClick: async () => {
-          const toRestore = lastBulkDeletedRef.current;
-          if (toRestore.length === 0) return;
+          const toRestore = lastBulkDeletedRef.current
+          if (toRestore.length === 0) return
           setBookmarks((prev) => {
-            const next = [...prev];
-            const sorted = toRestore.toSorted((a, b) => a.index - b.index);
+            const next = [...prev]
+            const sorted = toRestore.toSorted((a, b) => a.index - b.index)
             sorted.forEach(({ bookmark, index }) => {
-              if (next.some((b) => b.id === bookmark.id)) return;
-              next.splice(Math.min(index, next.length), 0, bookmark);
-            });
-            return next;
-          });
+              if (next.some((b) => b.id === bookmark.id)) return
+              next.splice(Math.min(index, next.length), 0, bookmark)
+            })
+            return next
+          })
           try {
-            await Promise.all(
-              toRestore.map(({ bookmark }) => restoreBookmark(bookmark)),
-            );
+            await Promise.all(toRestore.map(({ bookmark }) => restoreBookmark(bookmark)))
           } catch (error) {
-            console.error("Restore failed:", error);
-            toast.error("Failed to restore bookmarks");
+            console.error("Restore failed:", error)
+            toast.error("Failed to restore bookmarks")
           }
         },
       },
-    });
+    })
 
     try {
-      await Promise.all(idsToDelete.map((id) => deleteBookmark(id)));
+      await Promise.all(idsToDelete.map((id) => deleteBookmark(id)))
     } catch (error) {
-      console.error("Bulk delete failed:", error);
-      toast.error("Failed to delete some bookmarks");
-      setBookmarks(initialBookmarks);
+      console.error("Bulk delete failed:", error)
+      toast.error("Failed to delete some bookmarks")
+      setBookmarks(initialBookmarks)
     }
   }, [
     bookmarks,
@@ -234,29 +210,29 @@ export function useSelectionActions({
     setBookmarks,
     setSelectedIds,
     setSelectionMode,
-  ]);
+  ])
 
   const handleMoveSelectedToGroup = useCallback(
     async (targetGroupId: string | null) => {
-      const idsToMove = Array.from(selectedIds);
-      if (idsToMove.length === 0) return;
+      const idsToMove = Array.from(selectedIds)
+      if (idsToMove.length === 0) return
 
-      const idSet = new Set(idsToMove);
-      const previousGroups = new Map<string, string | null>();
-      let changedCount = 0;
+      const idSet = new Set(idsToMove)
+      const previousGroups = new Map<string, string | null>()
+      let changedCount = 0
 
       bookmarks.forEach((bookmark) => {
-        if (!idSet.has(bookmark.id)) return;
-        const prevGroupId = bookmark.group_id ?? null;
-        previousGroups.set(bookmark.id, prevGroupId);
+        if (!idSet.has(bookmark.id)) return
+        const prevGroupId = bookmark.group_id ?? null
+        previousGroups.set(bookmark.id, prevGroupId)
         if (prevGroupId !== targetGroupId) {
-          changedCount += 1;
+          changedCount += 1
         }
-      });
+      })
 
       if (changedCount === 0) {
-        toast.info("Selected bookmarks are already in that group");
-        return;
+        toast.info("Selected bookmarks are already in that group")
+        return
       }
 
       setBookmarks((prev) =>
@@ -268,47 +244,44 @@ export function useSelectionActions({
               }
             : bookmark,
         ),
-      );
-      setSelectionMode(false);
-      setSelectedIds(new Set());
+      )
+      setSelectionMode(false)
+      setSelectedIds(new Set())
 
-      toast.success(
-        `Moved ${changedCount} bookmark${changedCount === 1 ? "" : "s"}`,
-        {
-          action: {
-            label: "Undo",
-            onClick: async () => {
-              setBookmarks((prev) =>
-                prev.map((bookmark) => {
-                  const originalGroupId = previousGroups.get(bookmark.id);
-                  if (originalGroupId === undefined) return bookmark;
-                  return {
-                    ...bookmark,
-                    group_id: originalGroupId,
-                  };
-                }),
-              );
+      toast.success(`Moved ${changedCount} bookmark${changedCount === 1 ? "" : "s"}`, {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            setBookmarks((prev) =>
+              prev.map((bookmark) => {
+                const originalGroupId = previousGroups.get(bookmark.id)
+                if (originalGroupId === undefined) return bookmark
+                return {
+                  ...bookmark,
+                  group_id: originalGroupId,
+                }
+              }),
+            )
 
-              try {
-                const restoreTasks = Array.from(previousGroups.entries()).map(
-                  ([id, groupId]) => moveBookmarksToGroup([id], groupId),
-                );
-                await Promise.all(restoreTasks);
-              } catch (error) {
-                console.error("Undo move failed:", error);
-                toast.error("Failed to undo move");
-              }
-            },
+            try {
+              const restoreTasks = Array.from(previousGroups.entries()).map(([id, groupId]) =>
+                moveBookmarksToGroup([id], groupId),
+              )
+              await Promise.all(restoreTasks)
+            } catch (error) {
+              console.error("Undo move failed:", error)
+              toast.error("Failed to undo move")
+            }
           },
         },
-      );
+      })
 
       try {
-        await moveBookmarksToGroup(idsToMove, targetGroupId);
+        await moveBookmarksToGroup(idsToMove, targetGroupId)
       } catch (error) {
-        console.error("Bulk move failed:", error);
-        toast.error("Failed to move selected bookmarks");
-        setBookmarks(initialBookmarks);
+        console.error("Bulk move failed:", error)
+        toast.error("Failed to move selected bookmarks")
+        setBookmarks(initialBookmarks)
       }
     },
     [
@@ -320,12 +293,12 @@ export function useSelectionActions({
       setSelectedIds,
       setSelectionMode,
     ],
-  );
+  )
 
   const handleCancelSelection = useCallback(() => {
-    setSelectionMode(false);
-    setSelectedIds(new Set());
-  }, [setSelectedIds, setSelectionMode]);
+    setSelectionMode(false)
+    setSelectedIds(new Set())
+  }, [setSelectedIds, setSelectionMode])
 
   return {
     handleToggleSelection,
@@ -333,5 +306,5 @@ export function useSelectionActions({
     handleBulkDelete,
     handleMoveSelectedToGroup,
     handleCancelSelection,
-  };
+  }
 }

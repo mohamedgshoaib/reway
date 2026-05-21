@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
 function StatusSpinner() {
   return (
@@ -8,23 +8,23 @@ function StatusSpinner() {
       className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground"
       aria-hidden="true"
     />
-  );
+  )
 }
 
 interface CommandBarInputProps {
-  mode: "add" | "search";
-  searchQuery: string;
-  inputValue: string;
-  addStatus?: string | null;
-  isAddBusy?: boolean;
-  isFocused: boolean;
-  isMac: boolean;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  onModeChange?: (mode: "add" | "search") => void;
-  onSearchChange?: (query: string) => void;
-  onInputValueChange: (value: string) => void;
-  onFocusChange: (focused: boolean) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  mode: "add" | "search"
+  searchQuery: string
+  inputValue: string
+  addStatus?: string | null
+  isAddBusy?: boolean
+  isFocused: boolean
+  isMac: boolean
+  inputRef: React.RefObject<HTMLInputElement | null>
+  onModeChange?: (mode: "add" | "search") => void
+  onSearchChange?: (query: string) => void
+  onInputValueChange: (value: string) => void
+  onFocusChange: (focused: boolean) => void
+  onSubmit: (e: React.FormEvent) => void
 }
 
 export function CommandBarInput({
@@ -59,9 +59,9 @@ export function CommandBarInput({
             value={mode === "search" ? searchQuery : inputValue}
             onChange={(e) => {
               if (mode === "search") {
-                onSearchChange?.(e.target.value);
+                onSearchChange?.(e.target.value)
               } else {
-                onInputValueChange(e.target.value);
+                onInputValueChange(e.target.value)
               }
             }}
             placeholder={
@@ -100,9 +100,7 @@ export function CommandBarInput({
           >
             <span>Add</span>
             <KbdGroup className="hidden md:inline-flex">
-              <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">
-                {isMac ? "⌘K" : "CtrlK"}
-              </Kbd>
+              <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">{isMac ? "⌘K" : "CtrlK"}</Kbd>
             </KbdGroup>
           </button>
           <button
@@ -119,9 +117,7 @@ export function CommandBarInput({
           >
             <span>Search</span>
             <KbdGroup className="hidden md:inline-flex">
-              <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">
-                {isMac ? "⌘F" : "CtrlF"}
-              </Kbd>
+              <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">{isMac ? "⌘F" : "CtrlF"}</Kbd>
             </KbdGroup>
           </button>
         </div>
@@ -130,18 +126,12 @@ export function CommandBarInput({
       {!isFocused && !inputValue ? (
         <div className="absolute -bottom-6 left-1/2 hidden -translate-x-1/2 opacity-0 transition-opacity duration-200 motion-reduce:transition-none group-hover:opacity-100 md:block">
           <p className="text-[10px] font-bold uppercase text-muted-foreground/30">
-            Press{" "}
-            <span className="text-muted-foreground/50">
-              {isMac ? "⌘F" : "CtrlF"}
-            </span>{" "}
-            to search ·{" "}
-            <span className="text-muted-foreground/50">
-              {isMac ? "⌘K" : "CtrlK"}
-            </span>{" "}
-            to add
+            Press <span className="text-muted-foreground/50">{isMac ? "⌘F" : "CtrlF"}</span> to
+            search · <span className="text-muted-foreground/50">{isMac ? "⌘K" : "CtrlK"}</span> to
+            add
           </p>
         </div>
       ) : null}
     </div>
-  );
+  )
 }

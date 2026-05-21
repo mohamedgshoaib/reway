@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ExtensionInstallDialog } from "@/components/extension-install-dialog";
-import ChromeWebStoreIcon from "@/components/chrome-store-logo";
-import { HeroDemoPreview } from "@/components/landing/HeroDemoPreview";
-import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "motion/react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import ChromeWebStoreIcon from "@/components/chrome-store-logo"
+import { ExtensionInstallDialog } from "@/components/extension-install-dialog"
+import { HeroDemoPreview } from "@/components/landing/HeroDemoPreview"
+import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
 
 export function HeroSection() {
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false);
-  const router = useRouter();
+  const shouldReduceMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createClient()
     supabase.auth
       .getUser()
       .then(({ data }) => setIsAuthenticated(Boolean(data?.user)))
-      .catch(() => setIsAuthenticated(false));
-  }, []);
+      .catch(() => setIsAuthenticated(false))
+  }, [])
 
-  const primaryHref = isAuthenticated ? "/dashboard" : "/login";
-  const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started";
+  const primaryHref = isAuthenticated ? "/dashboard" : "/login"
+  const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started"
 
   const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
@@ -40,9 +40,9 @@ export function HeroSection() {
       y: 0,
       transition: { duration: 0.28, ease: "easeOut" },
     },
-  };
+  }
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
     <section className="border-b border-foreground/8 bg-background">
@@ -58,10 +58,9 @@ export function HeroSection() {
             A Calm Home For Everything You Save.
           </h1>
           <p className="mx-auto max-w-2xl text-pretty text-base text-foreground/70 sm:text-lg">
-            Reway turns noisy links into a structured library. Capture links
-            from any source, extract what matters from pasted text, and move
-            fast with keyboard-first search, groups, and view modes designed for
-            speed.
+            Reway turns noisy links into a structured library. Capture links from any source,
+            extract what matters from pasted text, and move fast with keyboard-first search, groups,
+            and view modes designed for speed.
           </p>
 
           <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 pt-1">
@@ -71,30 +70,22 @@ export function HeroSection() {
                   size="lg"
                   className="rounded-full px-8 cursor-pointer"
                   onClick={() => {
-                    if (isPrimaryNavLoading) return;
-                    setIsPrimaryNavLoading(true);
-                    router.push("/dashboard");
+                    if (isPrimaryNavLoading) return
+                    setIsPrimaryNavLoading(true)
+                    router.push("/dashboard")
                   }}
                   disabled={isPrimaryNavLoading}
                 >
                   {isPrimaryNavLoading ? "Loading..." : "Dashboard"}
                 </Button>
               ) : (
-                <Button
-                  asChild
-                  size="lg"
-                  className="rounded-full px-8 cursor-pointer"
-                >
+                <Button asChild size="lg" className="rounded-full px-8 cursor-pointer">
                   <Link href={primaryHref}>{primaryLabel}</Link>
                 </Button>
               )}
 
               <ExtensionInstallDialog>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full px-8 cursor-pointer"
-                >
+                <Button variant="outline" size="lg" className="rounded-full px-8 cursor-pointer">
                   <ChromeWebStoreIcon
                     className="mr-2 size-5"
                     aria-hidden="true"
@@ -110,5 +101,5 @@ export function HeroSection() {
         <HeroDemoPreview />
       </div>
     </section>
-  );
+  )
 }

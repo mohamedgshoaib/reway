@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import { features } from "./features/demo-data";
-import { ExtractDemo } from "./features/ExtractDemo";
-import { GroupsDemo } from "./features/GroupsDemo";
-import { KeyboardNavDemo } from "./features/KeyboardNavDemo";
-import { ViewModesDemo } from "./features/ViewModesDemo";
+import { motion, useReducedMotion, type Variants } from "motion/react"
+import { useEffect, useState } from "react"
+import { features } from "./features/demo-data"
+import { ExtractDemo } from "./features/ExtractDemo"
+import { GroupsDemo } from "./features/GroupsDemo"
+import { KeyboardNavDemo } from "./features/KeyboardNavDemo"
+import { ViewModesDemo } from "./features/ViewModesDemo"
 
 export function FeaturesSection() {
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const shouldReduceMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
 
   const containerVariants: Variants = {
     hidden: { opacity: 0, y: 12 },
@@ -19,14 +19,14 @@ export function FeaturesSection() {
       y: 0,
       transition: { duration: 0.28, ease: "easeOut" },
     },
-  };
+  }
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
     <section id="features" className="border-b border-foreground/8 bg-muted/20">
@@ -45,8 +45,8 @@ export function FeaturesSection() {
             Focus On The Link, Not The Management
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-sm text-foreground/65 sm:text-base">
-            Reway is built for speed. Every interaction is optimized to keep
-            your library clean and your research moving.
+            Reway is built for speed. Every interaction is optimized to keep your library clean and
+            your research moving.
           </p>
         </div>
 
@@ -58,12 +58,8 @@ export function FeaturesSection() {
             >
               <div className="flex min-h-24 items-start">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-foreground/65">
-                    {feature.description}
-                  </p>
+                  <h3 className="text-lg font-semibold text-foreground">{feature.title}</h3>
+                  <p className="text-sm text-foreground/65">{feature.description}</p>
                 </div>
               </div>
               <div className="flex h-46 items-center overflow-visible">
@@ -79,9 +75,7 @@ export function FeaturesSection() {
         {/* Power user signature - High contrast, no cards, no borders. */}
         <div className="mt-6 text-center lg:mt-10">
           <p className="mx-auto max-w-3xl text-balance px-4 text-[15px] leading-relaxed text-foreground antialiased sm:text-lg">
-            <span className="text-foreground/40 font-medium">
-              And for power users:
-            </span>{" "}
+            <span className="text-foreground/40 font-medium">And for power users:</span>{" "}
             <span className="font-bold underline decoration-foreground/20 underline-offset-[6px] decoration-2">
               Import & Export
             </span>{" "}
@@ -98,5 +92,5 @@ export function FeaturesSection() {
         </div>
       </motion.div>
     </section>
-  );
+  )
 }

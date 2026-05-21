@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   // General
@@ -142,15 +142,15 @@ import {
   Target01Icon,
   NewsIcon,
   SpotifyIcon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
 
 // Type for icons
-type IconType = typeof Folder01Icon;
+type IconType = typeof Folder01Icon
 
 // Icon category definition
 export interface IconCategory {
-  name: string;
-  icons: { name: string; icon: IconType }[];
+  name: string
+  icons: { name: string; icon: IconType }[]
 }
 
 // Icons organized by category
@@ -366,24 +366,25 @@ export const ICON_CATEGORIES: IconCategory[] = [
       { name: "spotify", icon: SpotifyIcon },
     ],
   },
-];
+]
 
 // Flat list of all icons for backward compatibility
-export const CATEGORY_ICONS: { name: string; icon: IconType }[] =
-  ICON_CATEGORIES.flatMap((category) => category.icons);
+export const CATEGORY_ICONS: { name: string; icon: IconType }[] = ICON_CATEGORIES.flatMap(
+  (category) => category.icons,
+)
 
 export const ALL_ICONS_MAP = ICON_CATEGORIES.reduce(
   (acc, category) => {
     category.icons.forEach((icon) => {
-      acc[icon.name] = icon.icon;
-    });
-    return acc;
+      acc[icon.name] = icon.icon
+    })
+    return acc
   },
   {} as Record<string, IconType>,
-);
+)
 
 // Get icon by name
 export function getCategoryIcon(iconName: string): IconType {
-  const found = CATEGORY_ICONS.find((i) => i.name === iconName);
-  return found?.icon || Folder01Icon;
+  const found = CATEGORY_ICONS.find((i) => i.name === iconName)
+  return found?.icon || Folder01Icon
 }

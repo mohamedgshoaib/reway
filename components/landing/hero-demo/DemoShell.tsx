@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import { useEffect, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "motion/react"
+import { useEffect, useState } from "react"
 
 export function DemoShell({
   children,
   controls,
 }: {
-  children: React.ReactNode;
-  controls?: React.ReactNode;
+  children: React.ReactNode
+  controls?: React.ReactNode
 }) {
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const shouldReduceMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   const showcaseVariants: Variants = {
     hidden: { opacity: 0 },
@@ -24,9 +24,9 @@ export function DemoShell({
       opacity: 1,
       transition: { duration: 0.3, ease: "easeOut" },
     },
-  };
+  }
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
     <motion.div
@@ -34,9 +34,7 @@ export function DemoShell({
       initial={enableMotion ? { opacity: 0 } : false}
       whileInView={enableMotion ? { opacity: 1 } : undefined}
       viewport={{ once: true, margin: "-120px" }}
-      transition={
-        enableMotion ? { duration: 0.35, ease: "easeOut" } : undefined
-      }
+      transition={enableMotion ? { duration: 0.35, ease: "easeOut" } : undefined}
     >
       <div className="mb-2 px-2 sm:px-3 text-xs font-medium text-muted-foreground">
         <div className="flex flex-col gap-2 items-center sm:flex-row sm:items-center sm:justify-between">
@@ -44,9 +42,7 @@ export function DemoShell({
             Interactive demo, click around (nothing is saved)
           </span>
           {controls ? (
-            <div className="flex justify-center sm:justify-end w-full sm:w-auto">
-              {controls}
-            </div>
+            <div className="flex justify-center sm:justify-end w-full sm:w-auto">{controls}</div>
           ) : null}
         </div>
       </div>
@@ -62,5 +58,5 @@ export function DemoShell({
         {children}
       </motion.div>
     </motion.div>
-  );
+  )
 }

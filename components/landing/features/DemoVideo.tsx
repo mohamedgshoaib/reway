@@ -1,26 +1,21 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  PlayIcon,
-  PauseIcon,
-  Maximize01Icon,
-  Minimize01Icon,
-} from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+import { PlayIcon, PauseIcon, Maximize01Icon, Minimize01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useEffect, useRef, useState, useCallback } from "react"
+import { createPortal } from "react-dom"
+import { cn } from "@/lib/utils"
 
 interface DemoVideoProps {
-  src: string;
-  poster?: string;
-  className?: string;
-  hideControls?: boolean;
-  onProgressUpdate?: (progress: number) => void;
-  onEnded?: () => void;
-  loop?: boolean;
-  isHovered?: boolean;
-  blurDataURL?: string;
+  src: string
+  poster?: string
+  className?: string
+  hideControls?: boolean
+  onProgressUpdate?: (progress: number) => void
+  onEnded?: () => void
+  loop?: boolean
+  isHovered?: boolean
+  blurDataURL?: string
 }
 
 export function DemoVideo({
@@ -34,155 +29,155 @@ export function DemoVideo({
   isHovered: isHoveredExternally,
   blurDataURL,
 }: DemoVideoProps) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const overlayVideoRef = useRef<HTMLVideoElement>(null);
-  const onProgressUpdateRef = useRef(onProgressUpdate);
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const overlayVideoRef = useRef<HTMLVideoElement>(null)
+  const onProgressUpdateRef = useRef(onProgressUpdate)
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isHoveredInternally, setIsHoveredInternally] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const [isTouchUI, setIsTouchUI] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [isHoveredInternally, setIsHoveredInternally] = useState(false)
+  const [isReady, setIsReady] = useState(false)
+  const [isTouchUI, setIsTouchUI] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
 
   // 2-phase loading states
-  const [shouldAttachSource, setShouldAttachSource] = useState(false);
-  const [shouldPlay, setShouldPlay] = useState(false);
+  const [shouldAttachSource, setShouldAttachSource] = useState(false)
+  const [shouldPlay, setShouldPlay] = useState(false)
 
-  const isHovered = isHoveredExternally ?? isHoveredInternally;
-
-  useEffect(() => {
-    onProgressUpdateRef.current = onProgressUpdate;
-  }, [onProgressUpdate]);
+  const isHovered = isHoveredExternally ?? isHoveredInternally
 
   useEffect(() => {
-    let rafId: number;
+    onProgressUpdateRef.current = onProgressUpdate
+  }, [onProgressUpdate])
+
+  useEffect(() => {
+    let rafId: number
     const updateProgress = () => {
-      const video = videoRef.current;
+      const video = videoRef.current
       if (video && !video.paused) {
-        const duration = video.duration;
-        const current = video.currentTime;
+        const duration = video.duration
+        const current = video.currentTime
         if (duration > 0) {
-          const newProgress = (current / duration) * 100;
-          if (!hideControls) setProgress(newProgress);
-          onProgressUpdateRef.current?.(newProgress);
+          const newProgress = (current / duration) * 100
+          if (!hideControls) setProgress(newProgress)
+          onProgressUpdateRef.current?.(newProgress)
         }
       }
-      rafId = requestAnimationFrame(updateProgress);
-    };
-    rafId = requestAnimationFrame(updateProgress);
-    return () => cancelAnimationFrame(rafId);
-  }, [hideControls]);
+      rafId = requestAnimationFrame(updateProgress)
+    }
+    rafId = requestAnimationFrame(updateProgress)
+    return () => cancelAnimationFrame(rafId)
+  }, [hideControls])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const ratio = entry.intersectionRatio;
-        if (entry.isIntersecting) setShouldAttachSource(true);
-        setShouldPlay(ratio >= 0.5);
+        const ratio = entry.intersectionRatio
+        if (entry.isIntersecting) setShouldAttachSource(true)
+        setShouldPlay(ratio >= 0.5)
       },
       { rootMargin: "300px", threshold: [0, 0.1, 0.5] },
-    );
-    if (videoRef.current) observer.observe(videoRef.current);
-    return () => observer.disconnect();
-  }, []);
+    )
+    if (videoRef.current) observer.observe(videoRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) return
     if (shouldPlay && !isMaximized) {
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => {})
     } else {
-      videoRef.current.pause();
+      videoRef.current.pause()
     }
-  }, [shouldPlay, isMaximized]);
+  }, [shouldPlay, isMaximized])
 
   useEffect(() => {
-    const mql = window.matchMedia("(hover: none), (pointer: coarse)");
-    const update = () => setIsTouchUI(Boolean(mql.matches));
-    update();
-    mql.addEventListener("change", update);
-    return () => mql.removeEventListener("change", update);
-  }, []);
+    const mql = window.matchMedia("(hover: none), (pointer: coarse)")
+    const update = () => setIsTouchUI(Boolean(mql.matches))
+    update()
+    mql.addEventListener("change", update)
+    return () => mql.removeEventListener("change", update)
+  }, [])
 
   // Sync overlay video currentTime when opening maximize
   useEffect(() => {
     if (isMaximized && overlayVideoRef.current && videoRef.current) {
-      overlayVideoRef.current.currentTime = videoRef.current.currentTime;
-      overlayVideoRef.current.play().catch(() => {});
+      overlayVideoRef.current.currentTime = videoRef.current.currentTime
+      overlayVideoRef.current.play().catch(() => {})
     }
-  }, [isMaximized]);
+  }, [isMaximized])
 
   // Lock body scroll when maximized
   useEffect(() => {
     if (isMaximized) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = "hidden"
     } else {
-      document.body.style.overflow = "";
+      document.body.style.overflow = ""
     }
     return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMaximized]);
+      document.body.style.overflow = ""
+    }
+  }, [isMaximized])
 
   // Close on Escape key
   useEffect(() => {
-    if (!isMaximized) return;
+    if (!isMaximized) return
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsMaximized(false);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [isMaximized]);
+      if (e.key === "Escape") setIsMaximized(false)
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [isMaximized])
 
   const handleMaximize = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMaximized(true);
-  }, []);
+    e.stopPropagation()
+    setIsMaximized(true)
+  }, [])
 
   const handleMinimize = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation()
     // Sync time back to main video before closing
     if (overlayVideoRef.current && videoRef.current) {
-      videoRef.current.currentTime = overlayVideoRef.current.currentTime;
+      videoRef.current.currentTime = overlayVideoRef.current.currentTime
     }
-    setIsMaximized(false);
-  }, []);
+    setIsMaximized(false)
+  }, [])
 
   const togglePlay = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
+    e.stopPropagation()
+    const video = videoRef.current
+    if (!video) return
     if (video.paused) {
-      video.play().catch(() => {});
+      video.play().catch(() => {})
     } else {
-      video.pause();
+      video.pause()
     }
-  }, []);
+  }, [])
 
   const handleWrapperClick = useCallback(() => {
-    if (!videoRef.current || isMaximized) return;
+    if (!videoRef.current || isMaximized) return
     if (videoRef.current.paused) {
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => {})
     } else {
-      videoRef.current.pause();
+      videoRef.current.pause()
     }
-  }, [isMaximized]);
+  }, [isMaximized])
 
   const handleTimeUpdate = () => {
-    const video = videoRef.current;
-    if (video && !isReady && video.currentTime > 0) setIsReady(true);
-  };
+    const video = videoRef.current
+    if (video && !isReady && video.currentTime > 0) setIsReady(true)
+  }
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
+    e.stopPropagation()
     if (videoRef.current) {
-      const seekValue = parseFloat(e.target.value);
-      const seekTime = (seekValue / 100) * videoRef.current.duration;
-      videoRef.current.currentTime = seekTime;
-      setProgress(seekValue);
+      const seekValue = parseFloat(e.target.value)
+      const seekTime = (seekValue / 100) * videoRef.current.duration
+      videoRef.current.currentTime = seekTime
+      setProgress(seekValue)
     }
-  };
+  }
 
   return (
     <>
@@ -270,10 +265,7 @@ export function DemoVideo({
                 className="flex size-8 items-center justify-center rounded-xl ring-1 ring-foreground/8 bg-background text-foreground hover:bg-muted transition-colors cursor-pointer"
                 type="button"
               >
-                <HugeiconsIcon
-                  icon={isPlaying ? PauseIcon : PlayIcon}
-                  size={14}
-                />
+                <HugeiconsIcon icon={isPlaying ? PauseIcon : PlayIcon} size={14} />
               </button>
 
               <div className="relative flex-1 flex items-center h-4">
@@ -353,5 +345,5 @@ export function DemoVideo({
           document.body,
         )}
     </>
-  );
+  )
 }

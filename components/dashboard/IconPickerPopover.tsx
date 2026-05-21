@@ -1,23 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ICON_CATEGORIES } from "@/lib/hugeicons-list";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import { ColorPicker } from "@/components/ui/color-picker";
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState } from "react"
+import { ColorPicker } from "@/components/ui/color-picker"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ICON_CATEGORIES } from "@/lib/hugeicons-list"
 
 export interface IconPickerPopoverProps {
-  selectedIcon: string;
-  onIconSelect: (iconName: string) => void;
-  color?: string | null;
-  onColorChange?: (color: string) => void;
-  children: React.ReactNode;
+  selectedIcon: string
+  onIconSelect: (iconName: string) => void
+  color?: string | null
+  onColorChange?: (color: string) => void
+  children: React.ReactNode
 }
 
 export function IconPickerPopover({
@@ -27,12 +23,12 @@ export function IconPickerPopover({
   onColorChange,
   children,
 }: IconPickerPopoverProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   const handleIconSelect = (iconName: string) => {
-    onIconSelect(iconName);
-    setOpen(false);
-  };
+    onIconSelect(iconName)
+    setOpen(false)
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -44,9 +40,7 @@ export function IconPickerPopover({
         sideOffset={8}
       >
         <div className="px-3 pt-3 pb-2 border-b border-border/10 flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-muted-foreground">
-            Choose Icon
-          </h4>
+          <h4 className="text-xs font-semibold text-muted-foreground">Choose Icon</h4>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -101,5 +95,5 @@ export function IconPickerPopover({
         </ScrollArea>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

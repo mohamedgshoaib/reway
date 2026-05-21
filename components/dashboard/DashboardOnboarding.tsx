@@ -1,77 +1,77 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { driver, type DriveStep } from "driver.js";
-import "driver.js/dist/driver.css";
-import { DASHBOARD_THEMES } from "@/lib/themes";
+import { driver, type DriveStep } from "driver.js"
+import { useEffect } from "react"
+import "driver.js/dist/driver.css"
+import { DASHBOARD_THEMES } from "@/lib/themes"
 
-const KEY = "reway.dashboard.onboarding.v1";
+const KEY = "reway.dashboard.onboarding.v1"
 
 function safeGet() {
   try {
-    return window.localStorage.getItem(KEY);
+    return window.localStorage.getItem(KEY)
   } catch {
-    return null;
+    return null
   }
 }
 
 function safeSet(value: string) {
   try {
-    window.localStorage.setItem(KEY, value);
+    window.localStorage.setItem(KEY, value)
   } catch {
     // ignore
   }
 }
 
 function openUserMenu() {
-  window.dispatchEvent(new CustomEvent("reway:open-user-menu"));
+  window.dispatchEvent(new CustomEvent("reway:open-user-menu"))
 }
 
 function closeUserMenu() {
-  window.dispatchEvent(new CustomEvent("reway:close-user-menu"));
+  window.dispatchEvent(new CustomEvent("reway:close-user-menu"))
 }
 
 function openGroupsMenu() {
-  window.dispatchEvent(new CustomEvent("reway:open-groups-menu"));
+  window.dispatchEvent(new CustomEvent("reway:open-groups-menu"))
 }
 
 function closeGroupsMenu() {
-  window.dispatchEvent(new CustomEvent("reway:close-groups-menu"));
+  window.dispatchEvent(new CustomEvent("reway:close-groups-menu"))
 }
 
 function openSettingsSheet() {
-  window.dispatchEvent(new CustomEvent("reway:open-settings"));
+  window.dispatchEvent(new CustomEvent("reway:open-settings"))
 }
 
 function closeSettingsSheet() {
-  window.dispatchEvent(new CustomEvent("reway:close-settings"));
+  window.dispatchEvent(new CustomEvent("reway:close-settings"))
 }
 
 function openThemeSelect() {
-  window.dispatchEvent(new CustomEvent("reway:open-theme-select"));
+  window.dispatchEvent(new CustomEvent("reway:open-theme-select"))
 }
 
 function closeThemeSelect() {
-  window.dispatchEvent(new CustomEvent("reway:close-theme-select"));
+  window.dispatchEvent(new CustomEvent("reway:close-theme-select"))
 }
 
 function waitForElement(selector: string, timeoutMs = 1500) {
   return new Promise<boolean>((resolve) => {
-    const start = Date.now();
+    const start = Date.now()
     const tick = () => {
-      const el = document.querySelector(selector) as HTMLElement | null;
+      const el = document.querySelector(selector) as HTMLElement | null
       if (el && el.offsetParent !== null) {
-        resolve(true);
-        return;
+        resolve(true)
+        return
       }
       if (Date.now() - start >= timeoutMs) {
-        resolve(false);
-        return;
+        resolve(false)
+        return
       }
-      window.setTimeout(tick, 50);
-    };
-    tick();
-  });
+      window.setTimeout(tick, 50)
+    }
+    tick()
+  })
 }
 
 /**
@@ -80,11 +80,9 @@ function waitForElement(selector: string, timeoutMs = 1500) {
  * trigger pill instead, which is always visible and properly positioned.
  */
 function getVisibleTarget(mainAttr: string, triggerAttr: string): string {
-  const main = document.querySelector(
-    `[data-onboarding="${mainAttr}"]`,
-  ) as HTMLElement | null;
+  const main = document.querySelector(`[data-onboarding="${mainAttr}"]`) as HTMLElement | null
   if (main) {
-    const rect = main.getBoundingClientRect();
+    const rect = main.getBoundingClientRect()
     // Element is considered "on-screen" if it has positive dimensions within viewport
     const onScreen =
       rect.width > 10 &&
@@ -92,15 +90,15 @@ function getVisibleTarget(mainAttr: string, triggerAttr: string): string {
       rect.right > 0 &&
       rect.left < window.innerWidth &&
       rect.bottom > 0 &&
-      rect.top < window.innerHeight;
-    if (onScreen) return `[data-onboarding="${mainAttr}"]`;
+      rect.top < window.innerHeight
+    if (onScreen) return `[data-onboarding="${mainAttr}"]`
   }
   // Fall back to trigger pill (always visible)
-  return `[data-onboarding="${triggerAttr}"]`;
+  return `[data-onboarding="${triggerAttr}"]`
 }
 
 function isSmallScreen() {
-  return window.matchMedia("(max-width: 767px)").matches;
+  return window.matchMedia("(max-width: 767px)").matches
 }
 
 function createTour() {
@@ -113,12 +111,12 @@ function createTour() {
     nextBtnText: "Next",
     prevBtnText: "Back",
     onDestroyed: () => {
-      safeSet("done");
+      safeSet("done")
     },
-  });
+  })
 
-  const isMobile = isSmallScreen();
-  const themeCount = DASHBOARD_THEMES.length;
+  const isMobile = isSmallScreen()
+  const themeCount = DASHBOARD_THEMES.length
 
   const steps: DriveStep[] = [
     {
@@ -132,33 +130,26 @@ function createTour() {
       element: '[data-onboarding="command-bar"]',
       popover: {
         title: "Add & search",
-        description:
-          "Add URLs, upload an image to extract URLs, or search from one place.",
+        description: "Add URLs, upload an image to extract URLs, or search from one place.",
         side: "bottom",
         align: "center",
         onNextClick: async () => {
           if (isMobile) {
-            openGroupsMenu();
-            await waitForElement(
-              '[data-onboarding="groups-mobile-content"]',
-              2000,
-            );
-            setTimeout(() => driverObj.moveNext(), 100);
-            return;
+            openGroupsMenu()
+            await waitForElement('[data-onboarding="groups-mobile-content"]', 2000)
+            setTimeout(() => driverObj.moveNext(), 100)
+            return
           }
-          driverObj.moveNext();
+          driverObj.moveNext()
         },
       },
     },
     {
       element: () =>
         isMobile
-          ? (document.querySelector(
-              '[data-onboarding="groups-mobile-content"]',
-            ) ?? document.body)
-          : (document.querySelector(
-              getVisibleTarget("groups-desktop", "groups-trigger"),
-            ) ?? document.body),
+          ? (document.querySelector('[data-onboarding="groups-mobile-content"]') ?? document.body)
+          : (document.querySelector(getVisibleTarget("groups-desktop", "groups-trigger")) ??
+            document.body),
       popover: {
         title: "Groups",
         description: isMobile
@@ -168,51 +159,49 @@ function createTour() {
         align: "start",
         onNextClick: async () => {
           if (isMobile) {
-            closeGroupsMenu();
-            setTimeout(() => driverObj.moveNext(), 150);
-            return;
+            closeGroupsMenu()
+            setTimeout(() => driverObj.moveNext(), 150)
+            return
           }
-          driverObj.moveNext();
+          driverObj.moveNext()
         },
         onPrevClick: async () => {
           if (isMobile) {
-            closeGroupsMenu();
-            setTimeout(() => driverObj.movePrevious(), 150);
-            return;
+            closeGroupsMenu()
+            setTimeout(() => driverObj.movePrevious(), 150)
+            return
           }
-          driverObj.movePrevious();
+          driverObj.movePrevious()
         },
       },
       onDeselected: () => {
         // no-op
       },
     },
-  ];
+  ]
 
   // Add notes/todos step only for desktop
   if (!isMobile) {
     steps.push({
       element: () =>
-        document.querySelector(
-          getVisibleTarget("notes-todos-desktop", "notes-todos-trigger"),
-        ) ?? document.body,
+        document.querySelector(getVisibleTarget("notes-todos-desktop", "notes-todos-trigger")) ??
+        document.body,
       popover: {
         title: "Notes & todos",
-        description:
-          "Here you can add quick notes and track to-do tasks, all in one place.",
+        description: "Here you can add quick notes and track to-do tasks, all in one place.",
         side: "left",
         align: "center",
         onNextClick: async () => {
-          driverObj.moveNext();
+          driverObj.moveNext()
         },
         onPrevClick: async () => {
-          driverObj.movePrevious();
+          driverObj.movePrevious()
         },
       },
       onDeselected: () => {
         // no-op
       },
-    });
+    })
   }
 
   // Continue with common steps
@@ -227,7 +216,7 @@ function createTour() {
         side: "bottom",
         align: "end",
         onPrevClick: async () => {
-          driverObj.movePrevious();
+          driverObj.movePrevious()
         },
       },
     },
@@ -241,9 +230,9 @@ function createTour() {
         side: isMobile ? "bottom" : "top",
         align: "center",
         onNextClick: async () => {
-          openUserMenu();
-          await waitForElement('[data-onboarding="user-menu-content"]', 1500);
-          setTimeout(() => driverObj.moveNext(), 100);
+          openUserMenu()
+          await waitForElement('[data-onboarding="user-menu-content"]', 1500)
+          setTimeout(() => driverObj.moveNext(), 100)
         },
       },
     },
@@ -256,8 +245,8 @@ function createTour() {
         side: "left",
         align: "center",
         onPrevClick: () => {
-          closeUserMenu();
-          setTimeout(() => driverObj.movePrevious(), 150);
+          closeUserMenu()
+          setTimeout(() => driverObj.movePrevious(), 150)
         },
       },
     },
@@ -279,28 +268,22 @@ function createTour() {
         side: "left",
         align: "center",
         onNextClick: async () => {
-          closeUserMenu();
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          openSettingsSheet();
-          let settingsVisible = await waitForElement(
-            '[data-onboarding="settings-controls"]',
-            3000,
-          );
+          closeUserMenu()
+          await new Promise((resolve) => setTimeout(resolve, 200))
+          openSettingsSheet()
+          let settingsVisible = await waitForElement('[data-onboarding="settings-controls"]', 3000)
           if (!settingsVisible) {
-            openSettingsSheet();
-            settingsVisible = await waitForElement(
-              '[data-onboarding="settings-controls"]',
-              2000,
-            );
+            openSettingsSheet()
+            settingsVisible = await waitForElement('[data-onboarding="settings-controls"]', 2000)
           }
           if (!settingsVisible) {
-            return;
+            return
           }
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          driverObj.moveNext();
+          await new Promise((resolve) => setTimeout(resolve, 300))
+          driverObj.moveNext()
         },
         onPrevClick: () => {
-          driverObj.movePrevious();
+          driverObj.movePrevious()
         },
       },
     },
@@ -315,26 +298,23 @@ function createTour() {
         align: "center",
         onNextClick: async () => {
           if (isMobile) {
-            openThemeSelect();
-            await waitForElement(
-              '[data-onboarding="palette-theme-options"]',
-              3000,
-            );
+            openThemeSelect()
+            await waitForElement('[data-onboarding="palette-theme-options"]', 3000)
           }
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          driverObj.moveNext();
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          driverObj.moveNext()
         },
         onPrevClick: async () => {
-          closeSettingsSheet();
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          openUserMenu();
-          await waitForElement('[data-onboarding="user-menu-content"]', 1500);
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          driverObj.movePrevious();
+          closeSettingsSheet()
+          await new Promise((resolve) => setTimeout(resolve, 200))
+          openUserMenu()
+          await waitForElement('[data-onboarding="user-menu-content"]', 1500)
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          driverObj.movePrevious()
         },
       },
     },
-  );
+  )
 
   if (!isMobile) {
     steps.push({
@@ -346,20 +326,17 @@ function createTour() {
         side: "left",
         align: "center",
         onNextClick: async () => {
-          openThemeSelect();
-          await waitForElement(
-            '[data-onboarding="palette-theme-options"]',
-            3000,
-          );
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          driverObj.moveNext();
+          openThemeSelect()
+          await waitForElement('[data-onboarding="palette-theme-options"]', 3000)
+          await new Promise((resolve) => setTimeout(resolve, 200))
+          driverObj.moveNext()
         },
         onPrevClick: async () => {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          driverObj.movePrevious();
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          driverObj.movePrevious()
         },
       },
-    });
+    })
   }
 
   steps.push(
@@ -371,50 +348,49 @@ function createTour() {
         side: "left",
         align: "center",
         onNextClick: async () => {
-          closeThemeSelect();
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          closeSettingsSheet();
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          driverObj.moveNext();
+          closeThemeSelect()
+          await new Promise((resolve) => setTimeout(resolve, 200))
+          closeSettingsSheet()
+          await new Promise((resolve) => setTimeout(resolve, 300))
+          driverObj.moveNext()
         },
         onPrevClick: async () => {
-          closeThemeSelect();
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          driverObj.movePrevious();
+          closeThemeSelect()
+          await new Promise((resolve) => setTimeout(resolve, 200))
+          driverObj.movePrevious()
         },
       },
     },
     {
       popover: {
         title: "You’re all set",
-        description:
-          "You can restart this tour anytime from your avatar menu: Start Onboarding.",
+        description: "You can restart this tour anytime from your avatar menu: Start Onboarding.",
       },
     },
-  );
+  )
 
-  driverObj.setSteps(steps);
+  driverObj.setSteps(steps)
 
-  return driverObj;
+  return driverObj
 }
 
 export function DashboardOnboarding() {
   useEffect(() => {
     const run = (force?: boolean) => {
-      if (!force && safeGet() === "done") return;
-      const tour = createTour();
-      tour.drive();
-    };
+      if (!force && safeGet() === "done") return
+      const tour = createTour()
+      tour.drive()
+    }
 
-    const handleStart = () => run(true);
-    window.addEventListener("reway:start-onboarding", handleStart);
+    const handleStart = () => run(true)
+    window.addEventListener("reway:start-onboarding", handleStart)
 
-    run(false);
+    run(false)
 
     return () => {
-      window.removeEventListener("reway:start-onboarding", handleStart);
-    };
-  }, []);
+      window.removeEventListener("reway:start-onboarding", handleStart)
+    }
+  }, [])
 
-  return null;
+  return null
 }

@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import { Button } from "@/components/ui/button";
-import type { DashboardHref } from "@/components/landing/types";
-import RewayLogo from "@/components/logo";
-import { useScroll } from "@/hooks/use-scroll";
-import { useEffect, useState } from "react";
+import { motion, useReducedMotion, type Variants } from "motion/react"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import type { DashboardHref } from "@/components/landing/types"
+import RewayLogo from "@/components/logo"
+import { Button } from "@/components/ui/button"
+import { useScroll } from "@/hooks/use-scroll"
 
 interface LandingNavProps {
-  dashboardHref: DashboardHref;
-  ctaLabel: string;
+  dashboardHref: DashboardHref
+  ctaLabel: string
 }
 
 export function LandingNav({ dashboardHref, ctaLabel }: LandingNavProps) {
-  const hasScrolled = useScroll(8);
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const hasScrolled = useScroll(8)
+  const shouldReduceMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   const headerVariants: Variants = {
     hidden: { opacity: 0, y: -8 },
@@ -30,9 +30,9 @@ export function LandingNav({ dashboardHref, ctaLabel }: LandingNavProps) {
       y: 0,
       transition: { duration: 0.25, ease: "easeOut" },
     },
-  };
+  }
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
     <motion.header
@@ -52,11 +52,7 @@ export function LandingNav({ dashboardHref, ctaLabel }: LandingNavProps) {
             className="flex items-center gap-1.5 sm:gap-2 text-foreground transition-[color,transform] duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none"
             aria-label="Reway Home"
           >
-            <RewayLogo
-              className="size-7"
-              aria-hidden="true"
-              focusable="false"
-            />
+            <RewayLogo className="size-7" aria-hidden="true" focusable="false" />
             <span className="text-base font-bold sm:text-lg">Reway</span>
           </Link>
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
@@ -79,5 +75,5 @@ export function LandingNav({ dashboardHref, ctaLabel }: LandingNavProps) {
         </div>
       </div>
     </motion.header>
-  );
+  )
 }

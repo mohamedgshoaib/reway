@@ -1,38 +1,36 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUp01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useEffect, useRef, useState } from "react"
 
 export function ScrollToTopButton() {
-  const [opacityMode, setOpacityMode] = useState<"hidden" | "dim" | "shown">(
-    "hidden",
-  );
-  const lastScrollYRef = useRef(0);
+  const [opacityMode, setOpacityMode] = useState<"hidden" | "dim" | "shown">("hidden")
+  const lastScrollYRef = useRef(0)
 
   useEffect(() => {
     const update = () => {
-      const currentY = window.scrollY;
-      const isAtTop = currentY < 100;
-      const isScrollingDown = currentY > lastScrollYRef.current;
+      const currentY = window.scrollY
+      const isAtTop = currentY < 100
+      const isScrollingDown = currentY > lastScrollYRef.current
 
       if (isAtTop) {
-        setOpacityMode("hidden");
+        setOpacityMode("hidden")
       } else if (isScrollingDown) {
-        setOpacityMode("dim");
+        setOpacityMode("dim")
       } else {
-        setOpacityMode("shown");
+        setOpacityMode("shown")
       }
 
-      lastScrollYRef.current = currentY;
-    };
+      lastScrollYRef.current = currentY
+    }
 
-    lastScrollYRef.current = window.scrollY;
-    update();
+    lastScrollYRef.current = window.scrollY
+    update()
 
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
-  }, []);
+    window.addEventListener("scroll", update, { passive: true })
+    return () => window.removeEventListener("scroll", update)
+  }, [])
 
   return (
     <button
@@ -49,5 +47,5 @@ export function ScrollToTopButton() {
     >
       <HugeiconsIcon icon={ArrowUp01Icon} size={18} strokeWidth={2} />
     </button>
-  );
+  )
 }

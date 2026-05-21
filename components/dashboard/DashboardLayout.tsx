@@ -1,30 +1,21 @@
-"use client";
+"use client"
 
-import type { Dispatch, SetStateAction } from "react";
-import { useMemo } from "react";
-import type {
-  BookmarkRow,
-  GroupRow,
-  NoteRow,
-  TodoRow,
-} from "@/lib/supabase/queries";
-import type { User } from "@/components/dashboard/nav/types";
-import type { DashboardPaletteTheme } from "@/lib/themes";
-import type {
-  EnrichmentResult,
-  ImportEntry,
-  ImportGroupSummary,
-} from "./content/dashboard-types";
-import { DashboardOnboarding } from "./DashboardOnboarding";
-import { DashboardSidebar } from "./content/DashboardSidebar";
-import { DashboardNotesTodosSidebar } from "./content/DashboardNotesTodosSidebar";
-import { DashboardNav } from "./DashboardNav";
-import { CommandBar } from "./CommandBar";
-import { TableHeader } from "./content/TableHeader";
-import { FolderBoard } from "./FolderBoard";
-import { BookmarkBoard } from "./BookmarkBoard";
-import { FloatingActionBar } from "./content/FloatingActionBar";
-import { createNoGroupRow, NO_GROUP_ID } from "@/lib/system-groups";
+import type { Dispatch, SetStateAction } from "react"
+import { useMemo } from "react"
+import type { User } from "@/components/dashboard/nav/types"
+import type { BookmarkRow, GroupRow, NoteRow, TodoRow } from "@/lib/supabase/queries"
+import { createNoGroupRow, NO_GROUP_ID } from "@/lib/system-groups"
+import type { DashboardPaletteTheme } from "@/lib/themes"
+import { BookmarkBoard } from "./BookmarkBoard"
+import { CommandBar } from "./CommandBar"
+import type { EnrichmentResult, ImportEntry, ImportGroupSummary } from "./content/dashboard-types"
+import { DashboardNotesTodosSidebar } from "./content/DashboardNotesTodosSidebar"
+import { DashboardSidebar } from "./content/DashboardSidebar"
+import { FloatingActionBar } from "./content/FloatingActionBar"
+import { TableHeader } from "./content/TableHeader"
+import { DashboardNav } from "./DashboardNav"
+import { DashboardOnboarding } from "./DashboardOnboarding"
+import { FolderBoard } from "./FolderBoard"
 
 export function DashboardLayout({
   layoutDensity,
@@ -121,162 +112,143 @@ export function DashboardLayout({
   isFilteredSearch,
   handleToggleHideFromAllBookmarks,
 }: {
-  layoutDensity: "compact" | "extended";
-  showNotesTodos: boolean;
-  groups: GroupRow[];
-  bookmarks: BookmarkRow[];
-  notes: NoteRow[];
-  todos: TodoRow[];
-  user: User;
-  folderHeaderTint: "off" | "low" | "medium" | "high";
-  setFolderHeaderTint: Dispatch<
-    SetStateAction<"off" | "low" | "medium" | "high">
-  >;
-  activeGroupId: string;
-  setActiveGroupId: Dispatch<SetStateAction<string>>;
-  groupCounts: Record<string, number>;
-  handleGroupsReorder: (newOrder: GroupRow[]) => Promise<void>;
-  handleOpenGroup: (groupId: string) => void;
-  editingGroupId: string | null;
-  setEditingGroupId: Dispatch<SetStateAction<string | null>>;
-  editGroupName: string;
-  setEditGroupName: Dispatch<SetStateAction<string>>;
-  editGroupIcon: string;
-  setEditGroupIcon: Dispatch<SetStateAction<string>>;
-  editGroupColor: string | null;
-  setEditGroupColor: Dispatch<SetStateAction<string | null>>;
-  isUpdatingGroup: boolean;
-  handleSidebarGroupUpdate: (id: string, onError?: () => void) => Promise<void>;
-  handleDeleteGroup: (groupId: string) => Promise<void>;
-  isInlineCreating: boolean;
-  setIsInlineCreating: Dispatch<SetStateAction<boolean>>;
-  newGroupName: string;
-  setNewGroupName: Dispatch<SetStateAction<string>>;
-  newGroupIcon: string;
-  setNewGroupIcon: Dispatch<SetStateAction<string>>;
-  newGroupColor: string | null;
-  setNewGroupColor: Dispatch<SetStateAction<string | null>>;
-  isCreatingGroup: boolean;
-  handleInlineCreateGroup: () => Promise<void>;
-  rowContent: "date" | "group";
-  setRowContent: Dispatch<SetStateAction<"date" | "group">>;
-  setShowNotesTodos: Dispatch<SetStateAction<boolean>>;
-  paletteTheme: DashboardPaletteTheme;
-  setPaletteTheme: Dispatch<SetStateAction<DashboardPaletteTheme>>;
-  setLayoutDensity: Dispatch<SetStateAction<"compact" | "extended">>;
-  viewMode: "list" | "card" | "folders";
-  setViewMode: (value: "list" | "card" | "folders") => void;
-  exportGroupOptions: string[];
-  handleGroupCreated: (
-    id: string,
-    name: string,
-    icon: string,
-    color?: string | null,
-  ) => void;
+  layoutDensity: "compact" | "extended"
+  showNotesTodos: boolean
+  groups: GroupRow[]
+  bookmarks: BookmarkRow[]
+  notes: NoteRow[]
+  todos: TodoRow[]
+  user: User
+  folderHeaderTint: "off" | "low" | "medium" | "high"
+  setFolderHeaderTint: Dispatch<SetStateAction<"off" | "low" | "medium" | "high">>
+  activeGroupId: string
+  setActiveGroupId: Dispatch<SetStateAction<string>>
+  groupCounts: Record<string, number>
+  handleGroupsReorder: (newOrder: GroupRow[]) => Promise<void>
+  handleOpenGroup: (groupId: string) => void
+  editingGroupId: string | null
+  setEditingGroupId: Dispatch<SetStateAction<string | null>>
+  editGroupName: string
+  setEditGroupName: Dispatch<SetStateAction<string>>
+  editGroupIcon: string
+  setEditGroupIcon: Dispatch<SetStateAction<string>>
+  editGroupColor: string | null
+  setEditGroupColor: Dispatch<SetStateAction<string | null>>
+  isUpdatingGroup: boolean
+  handleSidebarGroupUpdate: (id: string, onError?: () => void) => Promise<void>
+  handleDeleteGroup: (groupId: string) => Promise<void>
+  isInlineCreating: boolean
+  setIsInlineCreating: Dispatch<SetStateAction<boolean>>
+  newGroupName: string
+  setNewGroupName: Dispatch<SetStateAction<string>>
+  newGroupIcon: string
+  setNewGroupIcon: Dispatch<SetStateAction<string>>
+  newGroupColor: string | null
+  setNewGroupColor: Dispatch<SetStateAction<string | null>>
+  isCreatingGroup: boolean
+  handleInlineCreateGroup: () => Promise<void>
+  rowContent: "date" | "group"
+  setRowContent: Dispatch<SetStateAction<"date" | "group">>
+  setShowNotesTodos: Dispatch<SetStateAction<boolean>>
+  paletteTheme: DashboardPaletteTheme
+  setPaletteTheme: Dispatch<SetStateAction<DashboardPaletteTheme>>
+  setLayoutDensity: Dispatch<SetStateAction<"compact" | "extended">>
+  viewMode: "list" | "card" | "folders"
+  setViewMode: (value: "list" | "card" | "folders") => void
+  exportGroupOptions: string[]
+  handleGroupCreated: (id: string, name: string, icon: string, color?: string | null) => void
   handleUpdateGroup: (
     id: string,
     name: string,
     icon: string,
     color?: string | null,
-  ) => Promise<void>;
+  ) => Promise<void>
   importPreview: {
-    groups: ImportGroupSummary[];
-    entries: ImportEntry[];
-  } | null;
+    groups: ImportGroupSummary[]
+    entries: ImportEntry[]
+  } | null
   importProgress: {
-    processed: number;
-    total: number;
-    status: "idle" | "importing" | "stopping" | "done" | "error" | "stopped";
-  };
+    processed: number
+    total: number
+    status: "idle" | "importing" | "stopping" | "done" | "error" | "stopped"
+  }
   importResult: {
-    imported: number;
-    cancelled: number;
-    total: number;
-    status: "done" | "error" | "stopped";
-  } | null;
+    imported: number
+    cancelled: number
+    total: number
+    status: "done" | "error" | "stopped"
+  } | null
   exportProgress: {
-    processed: number;
-    total: number;
-    status: "idle" | "exporting" | "done" | "error";
-  };
-  handleImportFileSelected: (file: File) => void;
-  handleResolveConflicts: (action: "skip" | "override") => Promise<void>;
-  handleConfirmImport: (selectedGroups: string[]) => Promise<void>;
-  handleClearImport: () => void;
-  handleExportBookmarks: (selectedGroups: string[]) => void;
-  resetExportProgress: () => void;
-  handleOptimisticRemoveBookmarks: (ids: string[]) => void;
-  addOptimisticBookmark: (bookmark: BookmarkRow) => void;
-  applyEnrichment: (id: string, enrichment?: EnrichmentResult) => void;
-  replaceBookmarkId: (tempId: string, realId: string) => void;
-  commandMode: "add" | "search";
-  searchQuery: string;
-  setSearchQuery: Dispatch<SetStateAction<string>>;
-  handleCommandModeChange: (mode: "add" | "search") => void;
-  keyboardContext: "folder" | "bookmark";
-  isMac: boolean;
-  filteredBookmarks: BookmarkRow[];
-  nonFolderViewMode: "list" | "card";
-  selectionMode: boolean;
-  selectedIds: Set<string>;
-  handleToggleSelection: (id: string) => void;
-  setSelectionMode: Dispatch<SetStateAction<boolean>>;
-  setKeyboardContext: Dispatch<SetStateAction<"folder" | "bookmark">>;
-  handleFolderReorder: (groupId: string, newOrder: BookmarkRow[]) => void;
-  handleReorder: (groupId: string, newOrder: BookmarkRow[]) => void;
-  handleDeleteBookmark: (id: string) => void;
+    processed: number
+    total: number
+    status: "idle" | "exporting" | "done" | "error"
+  }
+  handleImportFileSelected: (file: File) => void
+  handleResolveConflicts: (action: "skip" | "override") => Promise<void>
+  handleConfirmImport: (selectedGroups: string[]) => Promise<void>
+  handleClearImport: () => void
+  handleExportBookmarks: (selectedGroups: string[]) => void
+  resetExportProgress: () => void
+  handleOptimisticRemoveBookmarks: (ids: string[]) => void
+  addOptimisticBookmark: (bookmark: BookmarkRow) => void
+  applyEnrichment: (id: string, enrichment?: EnrichmentResult) => void
+  replaceBookmarkId: (tempId: string, realId: string) => void
+  commandMode: "add" | "search"
+  searchQuery: string
+  setSearchQuery: Dispatch<SetStateAction<string>>
+  handleCommandModeChange: (mode: "add" | "search") => void
+  keyboardContext: "folder" | "bookmark"
+  isMac: boolean
+  filteredBookmarks: BookmarkRow[]
+  nonFolderViewMode: "list" | "card"
+  selectionMode: boolean
+  selectedIds: Set<string>
+  handleToggleSelection: (id: string) => void
+  setSelectionMode: Dispatch<SetStateAction<boolean>>
+  setKeyboardContext: Dispatch<SetStateAction<"folder" | "bookmark">>
+  handleFolderReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  handleReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  handleDeleteBookmark: (id: string) => void
   handleEditBookmark: (
     id: string,
     data: {
-      title: string;
-      url: string;
-      description?: string;
-      favicon_url?: string;
-      group_id?: string;
-      applyFaviconToDomain?: boolean;
+      title: string
+      url: string
+      description?: string
+      favicon_url?: string
+      group_id?: string
+      applyFaviconToDomain?: boolean
     },
-  ) => Promise<void>;
-  handleCreateNote: (formData: {
-    text: string;
-    color?: string | null;
-  }) => Promise<string>;
-  handleUpdateNote: (
-    id: string,
-    formData: { text: string; color?: string | null },
-  ) => Promise<void>;
-  handleDeleteNote: (id: string) => Promise<void>;
-  handleDeleteNotes: (ids: string[]) => Promise<void>;
+  ) => Promise<void>
+  handleCreateNote: (formData: { text: string; color?: string | null }) => Promise<string>
+  handleUpdateNote: (id: string, formData: { text: string; color?: string | null }) => Promise<void>
+  handleDeleteNote: (id: string) => Promise<void>
+  handleDeleteNotes: (ids: string[]) => Promise<void>
   handleCreateTodo: (formData: {
-    text: string;
-    priority: "high" | "medium" | "low";
-  }) => Promise<string>;
+    text: string
+    priority: "high" | "medium" | "low"
+  }) => Promise<string>
   handleUpdateTodo: (
     id: string,
     formData: { text: string; priority: "high" | "medium" | "low" },
-  ) => Promise<void>;
-  handleDeleteTodo: (id: string) => Promise<void>;
-  handleDeleteTodos: (ids: string[]) => Promise<void>;
-  handleSetTodoCompleted: (id: string, completed: boolean) => Promise<void>;
-  handleSetTodosCompleted: (ids: string[], completed: boolean) => Promise<void>;
-  handleOpenSelected: () => void;
-  handleBulkDelete: () => Promise<void>;
-  handleMoveSelectedToGroup: (groupId: string | null) => Promise<void>;
-  handleCancelSelection: () => void;
-  isFilteredSearch: boolean;
-  handleToggleHideFromAllBookmarks: (
-    id: string,
-    hide: boolean,
-  ) => Promise<void>;
+  ) => Promise<void>
+  handleDeleteTodo: (id: string) => Promise<void>
+  handleDeleteTodos: (ids: string[]) => Promise<void>
+  handleSetTodoCompleted: (id: string, completed: boolean) => Promise<void>
+  handleSetTodosCompleted: (ids: string[], completed: boolean) => Promise<void>
+  handleOpenSelected: () => void
+  handleBulkDelete: () => Promise<void>
+  handleMoveSelectedToGroup: (groupId: string | null) => Promise<void>
+  handleCancelSelection: () => void
+  isFilteredSearch: boolean
+  handleToggleHideFromAllBookmarks: (id: string, hide: boolean) => Promise<void>
 }) {
   const groupsWithNoGroup = useMemo(() => {
-    const hasUngrouped = bookmarks.some((b) => !b.group_id);
-    if (!hasUngrouped) return groups;
-    if (groups.some((g) => g.id === NO_GROUP_ID)) return groups;
-    return [
-      ...groups,
-      createNoGroupRow(),
-    ];
-  }, [bookmarks, groups]);
+    const hasUngrouped = bookmarks.some((b) => !b.group_id)
+    if (!hasUngrouped) return groups
+    if (groups.some((g) => g.id === NO_GROUP_ID)) return groups
+    return [...groups, createNoGroupRow()]
+  }, [bookmarks, groups])
 
   return (
     <>
@@ -399,11 +371,7 @@ export function DashboardLayout({
               />
             </div>
 
-            <TableHeader
-              viewMode={viewMode}
-              keyboardContext={keyboardContext}
-              isMac={isMac}
-            />
+            <TableHeader viewMode={viewMode} keyboardContext={keyboardContext} isMac={isMac} />
           </div>
 
           <div className="flex-1 min-h-0">
@@ -460,5 +428,5 @@ export function DashboardLayout({
         </div>
       </div>
     </>
-  );
+  )
 }

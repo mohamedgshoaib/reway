@@ -1,15 +1,15 @@
-import { cn } from "@/lib/utils";
-import type { NoteRow as NoteRowType } from "@/lib/supabase/queries";
-import { NOTE_COLORS } from "@/components/dashboard/content/notes-todos/config";
+import { NOTE_COLORS } from "@/components/dashboard/content/notes-todos/config"
+import type { NoteRow as NoteRowType } from "@/lib/supabase/queries"
+import { cn } from "@/lib/utils"
 
 export function HeroNoteRow({
   note,
   expanded,
   onToggleExpanded,
 }: {
-  note: NoteRowType;
-  expanded: boolean;
-  onToggleExpanded: () => void;
+  note: NoteRowType
+  expanded: boolean
+  onToggleExpanded: () => void
 }) {
   return (
     <div
@@ -18,8 +18,8 @@ export function HeroNoteRow({
       onClick={onToggleExpanded}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onToggleExpanded();
+          event.preventDefault()
+          onToggleExpanded()
         }
       }}
       className="group flex items-start gap-3 px-2 py-1.5 rounded-xl transition-all duration-200 hover:text-primary cursor-pointer text-left active:scale-[0.97] outline-none"
@@ -39,5 +39,5 @@ export function HeroNoteRow({
         </span>
       </div>
     </div>
-  );
+  )
 }

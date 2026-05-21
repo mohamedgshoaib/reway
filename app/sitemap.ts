@@ -1,8 +1,8 @@
-import type { MetadataRoute } from "next";
+import type { MetadataRoute } from "next"
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = "https://reway.page";
-  const lastModified = new Date();
+  const siteUrl = "https://reway.page"
+  const lastModified = new Date()
   return [
     {
       url: `${siteUrl}/`,
@@ -24,5 +24,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${siteUrl}/terms`,
       lastModified,
     },
-  ];
+  ]
 }

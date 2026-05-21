@@ -1,15 +1,15 @@
-import type { BookmarkRow } from "@/lib/supabase/queries";
+import type { BookmarkRow } from "@/lib/supabase/queries"
 
 function normalizeVisitCount(value: number | null | undefined) {
-  return typeof value === "number" ? value : 0;
+  return typeof value === "number" ? value : 0
 }
 
 function normalizeVisitedAt(value: string | null | undefined) {
-  return value ? new Date(value).getTime() : 0;
+  return value ? new Date(value).getTime() : 0
 }
 
 export function hasVisitedBookmark(bookmark: Pick<BookmarkRow, "visit_count">) {
-  return normalizeVisitCount(bookmark.visit_count) > 0;
+  return normalizeVisitCount(bookmark.visit_count) > 0
 }
 
 export function sortBookmarksByVisitRanking<
@@ -24,16 +24,16 @@ export function sortBookmarksByVisitRanking<
       createdAt: new Date(item.created_at).getTime(),
     }))
     .toSorted((a, b) => {
-      const visitCountDiff = b.visitCount - a.visitCount;
-      if (visitCountDiff !== 0) return visitCountDiff;
+      const visitCountDiff = b.visitCount - a.visitCount
+      if (visitCountDiff !== 0) return visitCountDiff
 
-      const visitedAtDiff = b.visitedAt - a.visitedAt;
-      if (visitedAtDiff !== 0) return visitedAtDiff;
+      const visitedAtDiff = b.visitedAt - a.visitedAt
+      if (visitedAtDiff !== 0) return visitedAtDiff
 
-      const createdAtDiff = b.createdAt - a.createdAt;
-      if (createdAtDiff !== 0) return createdAtDiff;
+      const createdAtDiff = b.createdAt - a.createdAt
+      if (createdAtDiff !== 0) return createdAtDiff
 
-      return a.index - b.index;
+      return a.index - b.index
     })
-    .map(({ item }) => item);
+    .map(({ item }) => item)
 }

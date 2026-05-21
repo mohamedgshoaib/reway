@@ -1,7 +1,7 @@
-import React from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
-import { Button as UIButton } from "@/components/ui/button";
+import { Cancel01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import React from "react"
+import { Button as UIButton } from "@/components/ui/button"
 
 export function SelectionModeHeader({
   selectedCount,
@@ -9,18 +9,16 @@ export function SelectionModeHeader({
   onDelete,
   disableDelete,
 }: {
-  selectedCount: number;
-  onCancel: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onDelete: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  disableDelete: boolean;
+  selectedCount: number
+  onCancel: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onDelete: (e: React.MouseEvent<HTMLButtonElement>) => void
+  disableDelete: boolean
 }) {
   return (
     <div className="px-1 pb-2">
       <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">
-            {selectedCount} selected
-          </span>
+          <span className="text-xs text-muted-foreground">{selectedCount} selected</span>
           <div className="flex items-center gap-2">
             <UIButton
               size="sm"
@@ -45,5 +43,5 @@ export function SelectionModeHeader({
         </div>
       </div>
     </div>
-  );
+  )
 }

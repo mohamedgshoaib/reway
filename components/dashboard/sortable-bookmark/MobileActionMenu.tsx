@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ArrowUpRight03Icon,
@@ -7,25 +7,25 @@ import {
   MoreVerticalIcon,
   PencilEdit01Icon,
   Tick01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 
 interface MobileActionMenuProps {
-  isCopied: boolean;
-  onEdit: (e?: React.MouseEvent) => void;
-  onCopyLink: (e?: React.MouseEvent) => void | Promise<void>;
-  onOpen: (e?: React.MouseEvent) => void;
-  onDelete: (e?: React.MouseEvent) => void;
-  onBulkSelect?: () => void;
-  showBulkSelect?: boolean;
+  isCopied: boolean
+  onEdit: (e?: React.MouseEvent) => void
+  onCopyLink: (e?: React.MouseEvent) => void | Promise<void>
+  onOpen: (e?: React.MouseEvent) => void
+  onDelete: (e?: React.MouseEvent) => void
+  onBulkSelect?: () => void
+  showBulkSelect?: boolean
 }
 
 export function MobileActionMenu({
@@ -37,7 +37,7 @@ export function MobileActionMenu({
   onBulkSelect,
   showBulkSelect = false,
 }: MobileActionMenuProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="md:hidden">
@@ -55,11 +55,7 @@ export function MobileActionMenu({
             onTouchStart={(e) => e.stopPropagation()}
             aria-label="Open bookmark actions"
           >
-            <HugeiconsIcon
-              icon={MoreVerticalIcon}
-              size={16}
-              className="text-muted-foreground"
-            />
+            <HugeiconsIcon icon={MoreVerticalIcon} size={16} className="text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -71,13 +67,13 @@ export function MobileActionMenu({
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer"
             onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
+              e.stopPropagation()
+              onEdit()
             }}
             onTouchEnd={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onEdit();
+              e.stopPropagation()
+              e.preventDefault()
+              onEdit()
             }}
           >
             <HugeiconsIcon icon={PencilEdit01Icon} size={16} /> Edit
@@ -85,13 +81,13 @@ export function MobileActionMenu({
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer"
             onClick={(e) => {
-              e.stopPropagation();
-              onCopyLink();
+              e.stopPropagation()
+              onCopyLink()
             }}
             onTouchEnd={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onCopyLink();
+              e.stopPropagation()
+              e.preventDefault()
+              onCopyLink()
             }}
           >
             <HugeiconsIcon
@@ -104,13 +100,13 @@ export function MobileActionMenu({
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer"
             onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
+              e.stopPropagation()
+              onOpen()
             }}
             onTouchEnd={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onOpen();
+              e.stopPropagation()
+              e.preventDefault()
+              onOpen()
             }}
           >
             <HugeiconsIcon icon={ArrowUpRight03Icon} size={16} /> Open
@@ -119,15 +115,15 @@ export function MobileActionMenu({
             <DropdownMenuItem
               className="rounded-xl flex items-center gap-2 cursor-pointer"
               onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-                onBulkSelect();
+                e.stopPropagation()
+                setOpen(false)
+                onBulkSelect()
               }}
               onTouchEnd={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setOpen(false);
-                onBulkSelect();
+                e.stopPropagation()
+                e.preventDefault()
+                setOpen(false)
+                onBulkSelect()
               }}
             >
               <HugeiconsIcon icon={Tick01Icon} size={16} /> Bulk select
@@ -137,13 +133,13 @@ export function MobileActionMenu({
             variant="destructive"
             className="rounded-xl flex items-center gap-2 cursor-pointer font-medium"
             onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
+              e.stopPropagation()
+              onDelete()
             }}
             onTouchEnd={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onDelete();
+              e.stopPropagation()
+              e.preventDefault()
+              onDelete()
             }}
           >
             <HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -152,5 +148,5 @@ export function MobileActionMenu({
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  );
+  )
 }

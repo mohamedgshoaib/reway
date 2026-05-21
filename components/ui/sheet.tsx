@@ -1,17 +1,14 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Dialog as SheetPrimitive } from "radix-ui";
+import { Dialog as SheetPrimitive } from "radix-ui"
+import * as React from "react"
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
-function SheetBody({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function SheetBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-body"
@@ -21,42 +18,27 @@ function SheetBody({
       )}
       {...props}
     />
-  );
+  )
 }
 
-function SheetSection({
-  className,
-  ...props
-}: React.ComponentProps<"section">) {
-  return (
-    <section
-      data-slot="sheet-section"
-      className={cn("space-y-3", className)}
-      {...props}
-    />
-  );
+function SheetSection({ className, ...props }: React.ComponentProps<"section">) {
+  return <section data-slot="sheet-section" className={cn("space-y-3", className)} {...props} />
 }
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
+function SheetTrigger({ ...props }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
-function SheetClose({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Close>) {
-  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
+function SheetClose({ ...props }: React.ComponentProps<typeof SheetPrimitive.Close>) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 }
 
-function SheetPortal({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Portal>) {
-  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
+function SheetPortal({ ...props }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
 function SheetOverlay({
@@ -72,7 +54,7 @@ function SheetOverlay({
       )}
       {...props}
     />
-  );
+  )
 }
 
 function SheetContent({
@@ -83,9 +65,9 @@ function SheetContent({
   showOverlay = true,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: "top" | "right" | "bottom" | "left";
-  showCloseButton?: boolean;
-  showOverlay?: boolean;
+  side?: "top" | "right" | "bottom" | "left"
+  showCloseButton?: boolean
+  showOverlay?: boolean
 }) {
   return (
     <SheetPortal>
@@ -114,7 +96,7 @@ function SheetContent({
         )}
       </SheetPrimitive.Content>
     </SheetPortal>
-  );
+  )
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
@@ -127,7 +109,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
-  );
+  )
 }
 
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
@@ -140,20 +122,17 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
-  );
+  )
 }
 
-function SheetTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Title>) {
+function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
       className={cn("text-foreground text-base font-medium", className)}
       {...props}
     />
-  );
+  )
 }
 
 function SheetDescription({
@@ -166,7 +145,7 @@ function SheetDescription({
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
-  );
+  )
 }
 
 export {
@@ -180,4 +159,4 @@ export {
   SheetFooter,
   SheetTitle,
   SheetDescription,
-};
+}

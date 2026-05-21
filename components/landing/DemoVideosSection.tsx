@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
   motion,
   useReducedMotion,
@@ -8,39 +8,39 @@ import {
   useMotionValue,
   useTransform,
   type Variants,
-} from "motion/react";
-import { demoVideos } from "./features/demo-data";
-import { DemoVideo } from "./features/DemoVideo";
-import { cn } from "@/lib/utils";
-import { HugeiconsIcon } from "@hugeicons/react";
+} from "motion/react"
+import { useEffect, useRef, useState } from "react"
+import { cn } from "@/lib/utils"
+import { demoVideos } from "./features/demo-data"
+import { DemoVideo } from "./features/DemoVideo"
 
 export function DemoVideosSection() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const progress = useMotionValue(0);
-  const scaleX = useTransform(progress, [0, 100], [0, 1]);
-  const shouldReduceMotion = useReducedMotion();
-  const activeIndexRef = useRef(activeIndex);
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const progress = useMotionValue(0)
+  const scaleX = useTransform(progress, [0, 100], [0, 1])
+  const shouldReduceMotion = useReducedMotion()
+  const activeIndexRef = useRef(activeIndex)
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
-    activeIndexRef.current = activeIndex;
-  }, [activeIndex]);
+    activeIndexRef.current = activeIndex
+  }, [activeIndex])
 
   const handleEnded = () => {
-    setActiveIndex((current) => (current + 1) % demoVideos.length);
-    progress.set(0);
-  };
+    setActiveIndex((current) => (current + 1) % demoVideos.length)
+    progress.set(0)
+  }
 
   const handleIndexChange = (index: number) => {
-    setActiveIndex(index);
-    progress.set(0);
-  };
+    setActiveIndex(index)
+    progress.set(0)
+  }
 
   const containerVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
@@ -49,15 +49,12 @@ export function DemoVideosSection() {
       y: 0,
       transition: { duration: 0.5, ease: "easeOut" },
     },
-  };
+  }
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <section
-      id="extension"
-      className="border-b border-foreground/8 bg-muted/20 overflow-hidden"
-    >
+    <section id="extension" className="border-b border-foreground/8 bg-muted/20 overflow-hidden">
       <motion.div
         className="mx-auto flex w-full max-w-350 flex-col gap-12 px-4 py-16 sm:px-6 lg:py-20"
         initial={enableMotion ? "hidden" : false}
@@ -99,12 +96,12 @@ export function DemoVideosSection() {
                     hideControls
                     loop={false}
                     onProgressUpdate={(v) => {
-                      if (activeIndexRef.current !== activeIndex) return;
-                      progress.set(v);
+                      if (activeIndexRef.current !== activeIndex) return
+                      progress.set(v)
                     }}
                     onEnded={() => {
-                      if (activeIndexRef.current !== activeIndex) return;
-                      handleEnded();
+                      if (activeIndexRef.current !== activeIndex) return
+                      handleEnded()
                     }}
                     isHovered={isHovered}
                   />
@@ -117,7 +114,7 @@ export function DemoVideosSection() {
           <div className="lg:col-span-4 order-2">
             <div className="flex flex-col gap-2">
               {demoVideos.map((video, index) => {
-                const isActive = activeIndex === index;
+                const isActive = activeIndex === index
                 return (
                   <div
                     key={video.title}
@@ -212,12 +209,12 @@ export function DemoVideosSection() {
                       )}
                     </AnimatePresence>
                   </div>
-                );
+                )
               })}
             </div>
           </div>
         </div>
       </motion.div>
     </section>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import type { SVGProps } from "react"
 
 const T3Stack = (props: SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 258 199" fill="none">
@@ -23,6 +23,6 @@ const T3Stack = (props: SVGProps<SVGSVGElement>) => (
       fill="currentColor"
     />
   </svg>
-);
+)
 
-export { T3Stack };
+export { T3Stack }

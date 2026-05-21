@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import type { TodoRow } from "@/lib/supabase/queries";
-import type { TodoPriority } from "./types";
-import { PriorityPicker } from "./pickers";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import type { TodoRow } from "@/lib/supabase/queries"
+import { PriorityPicker } from "./pickers"
+import type { TodoPriority } from "./types"
 
 export function TodoEditCard({
   todo,
@@ -14,16 +14,16 @@ export function TodoEditCard({
   onCancel,
   onSave,
 }: {
-  todo: TodoRow;
-  editText: string;
-  setEditText: (v: string) => void;
-  editPriority: TodoPriority;
-  setEditPriority: (v: TodoPriority) => void;
-  isUpdating: boolean;
-  onCancel: () => void;
-  onSave: () => void;
+  todo: TodoRow
+  editText: string
+  setEditText: (v: string) => void
+  editPriority: TodoPriority
+  setEditPriority: (v: TodoPriority) => void
+  isUpdating: boolean
+  onCancel: () => void
+  onSave: () => void
 }) {
-  void todo;
+  void todo
   return (
     <div className="relative my-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
       <div className="space-y-2">
@@ -37,9 +37,9 @@ export function TodoEditCard({
           disabled={isUpdating}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !isUpdating) {
-              onSave();
+              onSave()
             } else if (e.key === "Escape") {
-              onCancel();
+              onCancel()
             }
           }}
         />
@@ -64,5 +64,5 @@ export function TodoEditCard({
         </Button>
       </div>
     </div>
-  );
+  )
 }

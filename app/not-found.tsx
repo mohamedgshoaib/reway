@@ -1,27 +1,23 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Home01Icon,
-  FileNotFoundIcon,
-  ArrowRight01Icon,
-} from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { Home01Icon, FileNotFoundIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, useReducedMotion } from "motion/react"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
 
 export default function NotFound() {
-  const shouldReduceMotion = useReducedMotion();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const shouldReduceMotion = useReducedMotion()
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      setIsAuthenticated(!!data?.user);
-    });
-  }, []);
+      setIsAuthenticated(!!data?.user)
+    })
+  }, [])
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
@@ -29,11 +25,7 @@ export default function NotFound() {
         <motion.div
           initial={{ opacity: 0, transform: "translateY(12px)" }}
           animate={{ opacity: 1, transform: "translateY(0px)" }}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { duration: 0.28, ease: "easeOut" }
-          }
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.28, ease: "easeOut" }}
           suppressHydrationWarning
           className="space-y-8"
         >
@@ -44,8 +36,7 @@ export default function NotFound() {
             <div className="space-y-2">
               <h1 className="text-3xl font-bold">Page not found</h1>
               <p className="text-muted-foreground">
-                The page you&apos;re looking for doesn&apos;t exist or has been
-                moved.
+                The page you&apos;re looking for doesn&apos;t exist or has been moved.
               </p>
             </div>
           </div>
@@ -60,16 +51,12 @@ export default function NotFound() {
             <Button asChild variant="outline" size="lg" className="rounded-3xl">
               <Link href={isAuthenticated ? "/dashboard" : "/login"}>
                 {isAuthenticated ? "Dashboard" : "Sign in"}
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  size={18}
-                  className="ml-2"
-                />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
               </Link>
             </Button>
           </div>
         </motion.div>
       </main>
     </div>
-  );
+  )
 }

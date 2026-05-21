@@ -1,26 +1,23 @@
-"use server";
+"use server"
 
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache"
+import { createClient } from "@/lib/supabase/server"
 
-export type TodoPriority = "high" | "medium" | "low";
+export type TodoPriority = "high" | "medium" | "low"
 
 const normalizePriority = (value: string): TodoPriority => {
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "high" || normalized === "h") return "high";
-  if (normalized === "low" || normalized === "l") return "low";
-  return "medium";
-};
+  const normalized = value.trim().toLowerCase()
+  if (normalized === "high" || normalized === "h") return "high"
+  if (normalized === "low" || normalized === "l") return "low"
+  return "medium"
+}
 
-export async function createTodo(formData: {
-  text: string;
-  priority: TodoPriority | string;
-}) {
-  const supabase = await createClient();
+export async function createTodo(formData: { text: string; priority: TodoPriority | string }) {
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   const { data: minOrderData } = await supabase
@@ -28,11 +25,11 @@ export async function createTodo(formData: {
     .select("order_index")
     .order("order_index", { ascending: true })
     .limit(1)
-    .single();
+    .single()
 
-  const nextOrderIndex = minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0;
+  const nextOrderIndex = minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0
 
-  const priority = normalizePriority(formData.priority);
+  const priority = normalizePriority(formData.priority)
 
   const { data, error } = await supabase
     .from("todos")
@@ -46,29 +43,29 @@ export async function createTodo(formData: {
       updated_at: new Date().toISOString(),
     })
     .select("id")
-    .single();
+    .single()
 
   if (error) {
-    console.error("Error creating todo:", error);
-    throw new Error("Failed to create todo");
+    console.error("Error creating todo:", error)
+    throw new Error("Failed to create todo")
   }
 
-  revalidatePath("/dashboard");
-  return data.id;
+  revalidatePath("/dashboard")
+  return data.id
 }
 
 export async function updateTodo(
   id: string,
   formData: { text: string; priority: TodoPriority | string },
 ) {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
-  const priority = normalizePriority(formData.priority);
+  const priority = normalizePriority(formData.priority)
 
   const { error } = await supabase
     .from("todos")
@@ -78,34 +75,34 @@ export async function updateTodo(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", userData.user.id)
 
   if (error) {
-    console.error("Error updating todo:", error);
-    throw new Error("Failed to update todo");
+    console.error("Error updating todo:", error)
+    throw new Error("Failed to update todo")
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard")
 }
 
 export async function restoreTodo(todo: {
-  id: string;
-  text: string;
-  priority: TodoPriority | string;
-  completed: boolean;
-  completed_at?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  order_index?: number | null;
+  id: string
+  text: string
+  priority: TodoPriority | string
+  completed: boolean
+  completed_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+  order_index?: number | null
 }) {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
-  const priority = normalizePriority(todo.priority);
+  const priority = normalizePriority(todo.priority)
 
   const { error } = await supabase.from("todos").insert({
     id: todo.id,
@@ -117,22 +114,22 @@ export async function restoreTodo(todo: {
     created_at: todo.created_at ?? new Date().toISOString(),
     updated_at: todo.updated_at ?? new Date().toISOString(),
     order_index: todo.order_index ?? null,
-  });
+  })
 
   if (error) {
-    console.error("Error restoring todo:", error);
-    throw new Error("Failed to restore todo");
+    console.error("Error restoring todo:", error)
+    throw new Error("Failed to restore todo")
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard")
 }
 
 export async function setTodoCompleted(id: string, completed: boolean) {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   const { error } = await supabase
@@ -143,73 +140,73 @@ export async function setTodoCompleted(id: string, completed: boolean) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", userData.user.id)
 
   if (error) {
-    console.error("Error updating todo completion:", error);
-    throw new Error("Failed to update todo");
+    console.error("Error updating todo completion:", error)
+    throw new Error("Failed to update todo")
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard")
 }
 
 export async function deleteTodo(id: string) {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   const { error } = await supabase
     .from("todos")
     .delete()
     .eq("id", id)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", userData.user.id)
 
   if (error) {
-    console.error("Error deleting todo:", error);
-    throw new Error("Failed to delete todo");
+    console.error("Error deleting todo:", error)
+    throw new Error("Failed to delete todo")
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard")
 }
 
 export async function deleteTodos(ids: string[]) {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
-  const uniqueIds = Array.from(new Set(ids)).filter(Boolean);
-  if (uniqueIds.length === 0) return;
+  const uniqueIds = Array.from(new Set(ids)).filter(Boolean)
+  if (uniqueIds.length === 0) return
 
   const { error } = await supabase
     .from("todos")
     .delete()
     .in("id", uniqueIds)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", userData.user.id)
 
   if (error) {
-    console.error("Error deleting todos:", error);
-    throw new Error("Failed to delete todos");
+    console.error("Error deleting todos:", error)
+    throw new Error("Failed to delete todos")
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard")
 }
 
 export async function setTodosCompleted(ids: string[], completed: boolean) {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
-  const uniqueIds = Array.from(new Set(ids)).filter(Boolean);
-  if (uniqueIds.length === 0) return;
+  const uniqueIds = Array.from(new Set(ids)).filter(Boolean)
+  if (uniqueIds.length === 0) return
 
   const { error } = await supabase
     .from("todos")
@@ -219,12 +216,12 @@ export async function setTodosCompleted(ids: string[], completed: boolean) {
       updated_at: new Date().toISOString(),
     })
     .in("id", uniqueIds)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", userData.user.id)
 
   if (error) {
-    console.error("Error bulk updating todos:", error);
-    throw new Error("Failed to update todos");
+    console.error("Error bulk updating todos:", error)
+    throw new Error("Failed to update todos")
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard")
 }

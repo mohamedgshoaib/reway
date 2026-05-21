@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo } from "react"
 
 /**
  * Detects if the current platform is macOS/iOS
@@ -6,9 +6,7 @@ import { useMemo } from "react";
  */
 export function useIsMac() {
   return useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform),
+    () => typeof window !== "undefined" && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform),
     [],
-  );
+  )
 }

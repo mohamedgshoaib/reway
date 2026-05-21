@@ -1,53 +1,53 @@
-import { cn } from "@/lib/utils";
-import React from "react";
-import Link from "next/link";
-import { Portal, PortalBackdrop } from "@/components/ui/portal";
-import { Button } from "@/components/ui/button";
-import { navLinks } from "@/components/header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { motion, useReducedMotion } from "motion/react";
-import { createClient } from "@/lib/supabase/client";
+import { motion, useReducedMotion } from "motion/react"
+import Link from "next/link"
+import React from "react"
+import { navLinks } from "@/components/header"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Portal, PortalBackdrop } from "@/components/ui/portal"
+import { createClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
 
 type MobileNavUser = {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url?: string;
-} | null;
+  id: string
+  email: string
+  name: string
+  avatar_url?: string
+} | null
 
 interface MobileNavProps {
-  user?: MobileNavUser;
-  initials?: string;
+  user?: MobileNavUser
+  initials?: string
 }
 
 export function MobileNav({ user, initials = "U" }: MobileNavProps) {
-  const [open, setOpen] = React.useState(false);
-  const shouldReduceMotion = useReducedMotion();
+  const [open, setOpen] = React.useState(false)
+  const shouldReduceMotion = useReducedMotion()
 
   const onLogout = React.useCallback(async () => {
-    setOpen(false);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.reload();
-  }, []);
+    setOpen(false)
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.reload()
+  }, [])
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) return
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setOpen(false);
+      if (event.key !== "Escape") return
+      setOpen(false)
     }
 
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown)
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [open])
 
   const onToggle = React.useCallback(() => {
-    setOpen((prev) => !prev);
-  }, []);
+    setOpen((prev) => !prev)
+  }, [])
 
   return (
     <div className="md:hidden">
@@ -92,9 +92,7 @@ export function MobileNav({ user, initials = "U" }: MobileNavProps) {
                       <div className="truncate text-sm font-medium text-foreground">
                         {user.name}
                       </div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </div>
+                      <div className="truncate text-xs text-muted-foreground">{user.email}</div>
                     </div>
                     <Button
                       size="sm"
@@ -146,19 +144,13 @@ export function MobileNav({ user, initials = "U" }: MobileNavProps) {
         </Portal>
       )}
     </div>
-  );
+  )
 }
 
-function MenuMorphIcon({
-  isOpen,
-  reduceMotion,
-}: {
-  isOpen: boolean;
-  reduceMotion: boolean;
-}) {
+function MenuMorphIcon({ isOpen, reduceMotion }: { isOpen: boolean; reduceMotion: boolean }) {
   const transition = reduceMotion
     ? { duration: 0 }
-    : { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const };
+    : { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const }
 
   return (
     <motion.svg
@@ -225,5 +217,5 @@ function MenuMorphIcon({
         transition={transition}
       />
     </motion.svg>
-  );
+  )
 }

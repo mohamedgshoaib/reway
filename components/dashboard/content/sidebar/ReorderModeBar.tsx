@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 
 export function ReorderModeBar({ onDone }: { onDone: () => void }) {
   return (
@@ -15,5 +15,5 @@ export function ReorderModeBar({ onDone }: { onDone: () => void }) {
         </Button>
       </div>
     </div>
-  );
+  )
 }

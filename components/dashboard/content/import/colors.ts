@@ -10,6 +10,6 @@ export function pickRandomGroupColor() {
     "#10b981",
     "#06b6d4",
     "#3b82f6",
-  ];
-  return palette[Math.floor(Math.random() * palette.length)];
+  ]
+  return palette[Math.floor(Math.random() * palette.length)]
 }

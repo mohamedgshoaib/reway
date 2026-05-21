@@ -1,24 +1,20 @@
-"use client";
+"use client"
 
-import React, { useMemo, useState } from "react";
-import { HexColorPicker } from "react-colorful";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { Tick01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Tick01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import React, { useMemo, useState } from "react"
+import { HexColorPicker } from "react-colorful"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
-type ButtonProps = React.ComponentProps<typeof Button>;
+type ButtonProps = React.ComponentProps<typeof Button>
 
 interface ColorPickerProps {
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
+  value: string
+  onChange: (value: string) => void
+  onBlur?: () => void
 }
 
 export function ColorPicker({
@@ -29,12 +25,12 @@ export function ColorPicker({
   size,
   ...props
 }: Omit<ButtonProps, "value" | "onChange" | "onBlur"> & ColorPickerProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   const parsedValue = useMemo(() => {
-    if (!value) return "#6366f1";
-    return value.startsWith("#") ? value : `#${value}`;
-  }, [value]);
+    if (!value) return "#6366f1"
+    return value.startsWith("#") ? value : `#${value}`
+  }, [value])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -70,5 +66,5 @@ export function ColorPicker({
         </div>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

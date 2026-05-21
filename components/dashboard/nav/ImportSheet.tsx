@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useRef, useState } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  CheckmarkCircle02Icon,
-  Cancel01Icon,
-  FileImportIcon,
-} from "@hugeicons/core-free-icons";
+import { CheckmarkCircle02Icon, Cancel01Icon, FileImportIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Sheet,
   SheetContent,
@@ -16,42 +16,38 @@ import {
   SheetSection,
   SheetFooter,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/components/ui/sheet"
 
 interface ImportSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   importPreview: {
-    groups: { name: string; count: number; duplicateCount?: number }[];
+    groups: { name: string; count: number; duplicateCount?: number }[]
     entries: {
-      title: string;
-      url: string;
-      groupName: string;
-      isDuplicate?: boolean;
-      action?: "skip" | "override" | "add";
-    }[];
-  } | null;
+      title: string
+      url: string
+      groupName: string
+      isDuplicate?: boolean
+      action?: "skip" | "override" | "add"
+    }[]
+  } | null
   importProgress: {
-    processed: number;
-    total: number;
-    status: "idle" | "importing" | "stopping" | "done" | "error" | "stopped";
-  };
+    processed: number
+    total: number
+    status: "idle" | "importing" | "stopping" | "done" | "error" | "stopped"
+  }
   importResult: {
-    imported: number;
-    cancelled: number;
-    total: number;
-    status: "done" | "stopped" | "error";
-  } | null;
-  selectedImportGroups: string[];
-  onToggleImportGroup: (name: string) => void;
-  onImportFileSelected: (file: File) => void;
-  onUpdateImportAction: (action: "skip" | "override") => void;
-  onConfirmImport: (groups: string[]) => void;
-  onClearImport: () => void;
+    imported: number
+    cancelled: number
+    total: number
+    status: "done" | "stopped" | "error"
+  } | null
+  selectedImportGroups: string[]
+  onToggleImportGroup: (name: string) => void
+  onImportFileSelected: (file: File) => void
+  onUpdateImportAction: (action: "skip" | "override") => void
+  onConfirmImport: (groups: string[]) => void
+  onClearImport: () => void
 }
 
 export function ImportSheet({
@@ -67,60 +63,51 @@ export function ImportSheet({
   onConfirmImport,
   onClearImport,
 }: ImportSheetProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
 
-  const isImporting = importProgress.status === "importing";
-  const isStopping = importProgress.status === "stopping";
-  const isDone = importProgress.status === "done";
-  const isStopped = importProgress.status === "stopped";
-  const totalDuplicates =
-    importPreview?.entries.filter((entry) => entry.isDuplicate).length ?? 0;
+  const isImporting = importProgress.status === "importing"
+  const isStopping = importProgress.status === "stopping"
+  const isDone = importProgress.status === "done"
+  const isStopped = importProgress.status === "stopped"
+  const totalDuplicates = importPreview?.entries.filter((entry) => entry.isDuplicate).length ?? 0
 
   const duplicateAction = (() => {
-    if (!importPreview || totalDuplicates === 0) return null;
+    if (!importPreview || totalDuplicates === 0) return null
     const dupActions = importPreview.entries
       .filter((e) => e.isDuplicate)
       .map((e) => e.action)
-      .filter(
-        (value): value is "skip" | "override" =>
-          value === "skip" || value === "override",
-      );
-    if (dupActions.length === 0) return null;
-    const first = dupActions[0];
-    return dupActions.every((a) => a === first) ? first : null;
-  })();
+      .filter((value): value is "skip" | "override" => value === "skip" || value === "override")
+    if (dupActions.length === 0) return null
+    const first = dupActions[0]
+    return dupActions.every((a) => a === first) ? first : null
+  })()
 
   const handleSelectAllGroups = () => {
-    if (!importPreview) return;
+    if (!importPreview) return
     importPreview.groups.forEach((group) => {
       if (!selectedImportGroups.includes(group.name)) {
-        onToggleImportGroup(group.name);
+        onToggleImportGroup(group.name)
       }
-    });
-  };
+    })
+  }
 
   const resetFileSelection = () => {
-    setSelectedFileName(null);
+    setSelectedFileName(null)
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = ""
     }
-  };
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col sm:max-w-md p-0"
-      >
+      <SheetContent side="right" className="flex w-full flex-col sm:max-w-md p-0">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-lg">
             <HugeiconsIcon icon={FileImportIcon} size={18} />
             Import Bookmarks
           </SheetTitle>
-          <SheetDescription>
-            Upload a Netscape bookmarks HTML file to import.
-          </SheetDescription>
+          <SheetDescription>Upload a Netscape bookmarks HTML file to import.</SheetDescription>
         </SheetHeader>
 
         <SheetBody className="space-y-5">
@@ -154,8 +141,8 @@ export function ImportSheet({
                 />
               </div>
               <p className="sr-only" aria-live="polite">
-                Import {importProgress.status}. {importProgress.processed} of{" "}
-                {importProgress.total}.
+                Import {importProgress.status}. {importProgress.processed} of {importProgress.total}
+                .
               </p>
             </div>
           ) : null}
@@ -200,11 +187,11 @@ export function ImportSheet({
                   className="text-sm"
                   disabled={isImporting || isStopping}
                   onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    setSelectedFileName(file.name);
-                    await onImportFileSelected(file);
-                    event.target.value = "";
+                    const file = event.target.files?.[0]
+                    if (!file) return
+                    setSelectedFileName(file.name)
+                    await onImportFileSelected(file)
+                    event.target.value = ""
                   }}
                 />
                 {selectedFileName ? (
@@ -219,8 +206,8 @@ export function ImportSheet({
                       className="rounded-4xl cursor-pointer"
                       disabled={isImporting || isStopping}
                       onClick={() => {
-                        onClearImport();
-                        resetFileSelection();
+                        onClearImport()
+                        resetFileSelection()
                       }}
                     >
                       Remove
@@ -245,9 +232,7 @@ export function ImportSheet({
                         <Button
                           type="button"
                           size="sm"
-                          variant={
-                            duplicateAction === "skip" ? "default" : "secondary"
-                          }
+                          variant={duplicateAction === "skip" ? "default" : "secondary"}
                           className="rounded-4xl cursor-pointer"
                           aria-pressed={duplicateAction === "skip"}
                           disabled={isImporting || isStopping}
@@ -258,11 +243,7 @@ export function ImportSheet({
                         <Button
                           type="button"
                           size="sm"
-                          variant={
-                            duplicateAction === "override"
-                              ? "default"
-                              : "secondary"
-                          }
+                          variant={duplicateAction === "override" ? "default" : "secondary"}
                           className="rounded-4xl cursor-pointer"
                           aria-pressed={duplicateAction === "override"}
                           disabled={isImporting || isStopping}
@@ -274,9 +255,7 @@ export function ImportSheet({
                     </div>
                   ) : null}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      Choose groups to import
-                    </span>
+                    <span className="text-xs text-muted-foreground">Choose groups to import</span>
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
@@ -328,9 +307,9 @@ export function ImportSheet({
               size="sm"
               className="rounded-4xl cursor-pointer"
               onClick={() => {
-                onClearImport();
-                resetFileSelection();
-                onOpenChange(false);
+                onClearImport()
+                resetFileSelection()
+                onOpenChange(false)
               }}
             >
               Close
@@ -352,7 +331,7 @@ export function ImportSheet({
                   className="rounded-4xl cursor-pointer"
                   disabled={isStopping}
                   onClick={() => {
-                    onClearImport();
+                    onClearImport()
                   }}
                 >
                   {isStopping ? "Stopping…" : "Stop"}
@@ -363,8 +342,8 @@ export function ImportSheet({
                   variant="secondary"
                   className="rounded-4xl cursor-pointer"
                   onClick={() => {
-                    resetFileSelection();
-                    onOpenChange(false);
+                    resetFileSelection()
+                    onOpenChange(false)
                   }}
                 >
                   Close
@@ -375,5 +354,5 @@ export function ImportSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

@@ -1,26 +1,26 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CheckmarkSquare02Icon,
   Delete02Icon,
   MoreVerticalIcon,
   PencilEdit01Icon,
-} from "@hugeicons/core-free-icons";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { cn } from "@/lib/utils";
-import type { NoteRow as NoteRowType } from "@/lib/supabase/queries";
-import { NOTE_COLORS } from "./config";
+} from "@/components/ui/context-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { NoteRow as NoteRowType } from "@/lib/supabase/queries"
+import { cn } from "@/lib/utils"
+import { NOTE_COLORS } from "./config"
 
 export function NoteRow({
   note,
@@ -36,20 +36,20 @@ export function NoteRow({
   variant = "app",
   onActionMenuOpenChange,
 }: {
-  note: NoteRowType;
-  expanded: boolean;
-  onToggleExpanded: () => void;
-  selectionMode: boolean;
-  selected: boolean;
-  onToggleSelected: () => void;
-  onEnterSelectionMode: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  showActions?: boolean;
-  variant?: "demo" | "app";
-  onActionMenuOpenChange?: (open: boolean) => void;
+  note: NoteRowType
+  expanded: boolean
+  onToggleExpanded: () => void
+  selectionMode: boolean
+  selected: boolean
+  onToggleSelected: () => void
+  onEnterSelectionMode: () => void
+  onEdit: () => void
+  onDelete: () => void
+  showActions?: boolean
+  variant?: "demo" | "app"
+  onActionMenuOpenChange?: (open: boolean) => void
 }) {
-  const dotMarginTop = variant === "demo" ? "mt-1" : "mt-[7px]";
+  const dotMarginTop = variant === "demo" ? "mt-1" : "mt-[7px]"
 
   const Row = (
     <div
@@ -57,18 +57,18 @@ export function NoteRow({
       tabIndex={0}
       onClick={() => {
         if (selectionMode) {
-          onToggleSelected();
+          onToggleSelected()
         } else {
-          onToggleExpanded();
+          onToggleExpanded()
         }
       }}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
+          event.preventDefault()
           if (selectionMode) {
-            onToggleSelected();
+            onToggleSelected()
           } else {
-            onToggleExpanded();
+            onToggleExpanded()
           }
         }
       }}
@@ -139,9 +139,9 @@ export function NoteRow({
             <DropdownMenuItem
               onSelect={() => {
                 if (selectionMode) {
-                  onToggleSelected();
+                  onToggleSelected()
                 } else {
-                  onEnterSelectionMode();
+                  onEnterSelectionMode()
                 }
               }}
               className="gap-2 text-xs cursor-pointer"
@@ -149,10 +149,7 @@ export function NoteRow({
               <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
               {selectionMode ? "Toggle selection" : "Select notes"}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={onEdit}
-              className="gap-2 text-xs cursor-pointer"
-            >
+            <DropdownMenuItem onClick={onEdit} className="gap-2 text-xs cursor-pointer">
               <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
               Edit note
             </DropdownMenuItem>
@@ -168,10 +165,10 @@ export function NoteRow({
         </DropdownMenu>
       ) : null}
     </div>
-  );
+  )
 
   if (!showActions) {
-    return Row;
+    return Row
   }
 
   return (
@@ -182,9 +179,9 @@ export function NoteRow({
         <ContextMenuItem
           onSelect={() => {
             if (selectionMode) {
-              onToggleSelected();
+              onToggleSelected()
             } else {
-              onEnterSelectionMode();
+              onEnterSelectionMode()
             }
           }}
           className="gap-2 text-xs cursor-pointer"
@@ -192,10 +189,7 @@ export function NoteRow({
           <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
           {selectionMode ? "Toggle selection" : "Select notes"}
         </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={onEdit}
-          className="gap-2 text-xs cursor-pointer"
-        >
+        <ContextMenuItem onSelect={onEdit} className="gap-2 text-xs cursor-pointer">
           <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
           Edit note
         </ContextMenuItem>
@@ -209,5 +203,5 @@ export function NoteRow({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  );
+  )
 }

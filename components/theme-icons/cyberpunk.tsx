@@ -1,12 +1,7 @@
-import { SVGProps } from "react";
+import { SVGProps } from "react"
 
 const Cyberpunk = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlSpace="preserve"
-    viewBox="0 0 192 192"
-    {...props}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" viewBox="0 0 192 192" {...props}>
     <path
       fill="#FFEF00"
       d="M116 193H1.037V1.1h191.8V193H116m74.001-59.5V4.296H4.296v185.408H190V133.5z"
@@ -28,5 +23,5 @@ const Cyberpunk = (props: SVGProps<SVGSVGElement>) => (
       d="M63.003 109.242c4.648.157 9.3.555 14.083 1.357-4.483 2.097-8.952 1.922-13.665-.63-.426-.005-.416-.486-.418-.727z"
     />
   </svg>
-);
-export default Cyberpunk;
+)
+export default Cyberpunk

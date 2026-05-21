@@ -1,34 +1,26 @@
-"use client";
+"use client"
 
-import { ColorsIcon, Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useTheme } from "next-themes";
+import { ColorsIcon, Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useTheme } from "next-themes"
+import { ThemeIcon } from "@/components/theme-icons/ThemeIcon"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { DASHBOARD_THEMES, type DashboardPaletteTheme } from "@/lib/themes";
-import { ThemeIcon } from "@/components/theme-icons/ThemeIcon";
+} from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { DASHBOARD_THEMES, type DashboardPaletteTheme } from "@/lib/themes"
 
 interface ThemeControlsProps {
-  paletteTheme: DashboardPaletteTheme;
-  setPaletteTheme: (value: DashboardPaletteTheme) => void;
+  paletteTheme: DashboardPaletteTheme
+  setPaletteTheme: (value: DashboardPaletteTheme) => void
 }
 
-export function ThemeControls({
-  paletteTheme,
-  setPaletteTheme,
-}: ThemeControlsProps) {
-  const { theme, setTheme } = useTheme();
+export function ThemeControls({ paletteTheme, setPaletteTheme }: ThemeControlsProps) {
+  const { theme, setTheme } = useTheme()
 
   return (
     <TooltipProvider>
@@ -58,7 +50,7 @@ export function ThemeControls({
           className="w-56 rounded-2xl p-2 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate"
         >
           {DASHBOARD_THEMES.map((themeOption) => {
-            const isActive = paletteTheme === themeOption.value;
+            const isActive = paletteTheme === themeOption.value
             return (
               <DropdownMenuItem
                 key={themeOption.value}
@@ -70,7 +62,7 @@ export function ThemeControls({
                 <ThemeIcon theme={themeOption.value} />
                 <span className="truncate">{themeOption.label}</span>
               </DropdownMenuItem>
-            );
+            )
           })}
 
           <div className="my-1 h-px w-full bg-border/40" />
@@ -99,5 +91,5 @@ export function ThemeControls({
         </DropdownMenuContent>
       </DropdownMenu>
     </TooltipProvider>
-  );
+  )
 }

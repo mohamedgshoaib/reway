@@ -4,11 +4,8 @@ import {
   Download01Icon,
   Folder01Icon,
   NewTwitterIcon,
-} from "@hugeicons/core-free-icons";
-import {
-  EXTENSION_DOWNLOAD_URL,
-  EXTENSION_TUTORIAL_VIDEO_URL,
-} from "@/lib/extension";
+} from "@hugeicons/core-free-icons"
+import { EXTENSION_DOWNLOAD_URL, EXTENSION_TUTORIAL_VIDEO_URL } from "@/lib/extension"
 
 export const features = [
   {
@@ -35,7 +32,7 @@ export const features = [
       "Switch between high-density lists, visual cards, and organized folder views. Every view is optimized for rapid scanning and clarity.",
     demo: "views",
   },
-] as const;
+] as const
 
 export const demoLinks = [
   {
@@ -59,7 +56,7 @@ export const demoLinks = [
     group: "Build",
     favicon: "https://www.google.com/s2/favicons?domain=ui.shadcn.com&sz=64",
   },
-] as const;
+] as const
 
 export const demoVideos = [
   {
@@ -108,4 +105,4 @@ export const demoVideos = [
     blurDataURL: undefined,
     icon: NewTwitterIcon,
   },
-] as const;
+] as const

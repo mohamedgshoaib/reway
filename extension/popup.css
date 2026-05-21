@@ -106,7 +106,6 @@ body {
   display: none !important;
 }
 
-
 .footer-links .link {
   font-size: 11px;
   font-weight: 600;
@@ -161,8 +160,7 @@ body {
   background: var(--card);
   border-radius: var(--radius-4xl);
   padding: 16px;
-  box-shadow: inset 0 0 0 1px
-    color-mix(in oklab, var(--foreground), transparent 95%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
   isolation: isolate;
 }
 
@@ -206,8 +204,7 @@ body {
   height: 28px;
   border-radius: var(--radius-control);
   background: var(--card);
-  box-shadow: inset 0 0 0 1px
-    color-mix(in oklab, var(--foreground), transparent 95%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
   object-fit: contain;
 }
 
@@ -345,8 +342,7 @@ body {
   border-radius: var(--radius-control);
   outline: none;
   transition: all 0.2s ease;
-  box-shadow: inset 0 0 0 1px
-    color-mix(in oklab, var(--foreground), transparent 95%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
 }
 
 .field textarea {
@@ -446,8 +442,7 @@ button.success::after {
 .secondary {
   width: 100%;
   background: color-mix(in oklab, var(--input), transparent 80%);
-  box-shadow: inset 0 0 0 1px
-    color-mix(in oklab, var(--foreground), transparent 95%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
 }
 
 .secondary::after {

@@ -1,5 +1,5 @@
-import * as React from "react";
-import { SVGProps } from "react";
+import * as React from "react"
+import { SVGProps } from "react"
 
 const BrandWord = (props: SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 70.366" {...props}>
@@ -23,6 +23,6 @@ const BrandWord = (props: SVGProps<SVGSVGElement>) => (
       </tspan>
     </text>
   </svg>
-);
+)
 
-export default BrandWord;
+export default BrandWord

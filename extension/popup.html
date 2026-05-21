@@ -37,37 +37,19 @@
           <div class="field" style="margin-top: 20px">
             <span>Environment</span>
             <div style="display: flex; gap: 8px; margin-top: 8px">
-              <button
-                id="env-prod"
-                class="secondary"
-                style="flex: 1; font-size: 11px"
-              >
+              <button id="env-prod" class="secondary" style="flex: 1; font-size: 11px">
                 Production
               </button>
-              <button
-                id="env-local"
-                class="ghost"
-                style="flex: 1; font-size: 11px"
-              >
-                Local
-              </button>
+              <button id="env-local" class="ghost" style="flex: 1; font-size: 11px">Local</button>
             </div>
           </div>
 
-          <label
-            id="local-port-field"
-            class="field"
-            style="margin-top: 12px; display: none"
-          >
+          <label id="local-port-field" class="field" style="margin-top: 12px; display: none">
             <span>Local Port</span>
             <input id="local-port" type="number" placeholder="3000" />
           </label>
 
-          <button
-            id="save-dev-settings"
-            class="secondary"
-            style="width: 100%; margin-top: 12px"
-          >
+          <button id="save-dev-settings" class="secondary" style="width: 100%; margin-top: 12px">
             Apply Changes
           </button>
         </div>
@@ -75,12 +57,7 @@
 
       <section id="main-section" class="card hidden">
         <!-- Tab Navigation -->
-        <div
-          class="tabs"
-          id="real-content"
-          role="tablist"
-          aria-label="Extension features"
-        >
+        <div class="tabs" id="real-content" role="tablist" aria-label="Extension features">
           <button
             class="tab-button active"
             role="tab"
@@ -135,11 +112,7 @@
 
           <label class="field">
             <span>Description</span>
-            <textarea
-              id="description"
-              rows="4"
-              placeholder="Short summary"
-            ></textarea>
+            <textarea id="description" rows="4" placeholder="Short summary"></textarea>
           </label>
 
           <div class="field">
@@ -176,11 +149,7 @@
                   <span id="save-group-label">Select a group</span>
                   <span class="select-chevron" aria-hidden="true"></span>
                 </button>
-                <div
-                  id="save-group-menu"
-                  class="select-menu"
-                  role="listbox"
-                ></div>
+                <div id="save-group-menu" class="select-menu" role="listbox"></div>
               </div>
             </div>
             <div id="save-new-group-field" class="hidden">
@@ -191,9 +160,7 @@
                   placeholder="New group name"
                   maxlength="18"
                 />
-                <span id="save-group-char-count" class="input-suffix char-count"
-                  >0/18</span
-                >
+                <span id="save-group-char-count" class="input-suffix char-count">0/18</span>
               </div>
             </div>
             <div id="status" class="status"></div>
@@ -209,11 +176,7 @@
           <label class="field">
             <span>Add a link</span>
             <div class="inline-input">
-              <input
-                id="links-manual-url"
-                type="text"
-                placeholder="https://example.com"
-              />
+              <input id="links-manual-url" type="text" placeholder="https://example.com" />
               <button
                 id="add-manual-link"
                 class="secondary link-action-button icon-button"
@@ -272,11 +235,7 @@
                     <span id="links-group-label">Select a group</span>
                     <span class="select-chevron" aria-hidden="true"></span>
                   </button>
-                  <div
-                    id="links-group-menu"
-                    class="select-menu"
-                    role="listbox"
-                  ></div>
+                  <div id="links-group-menu" class="select-menu" role="listbox"></div>
                 </div>
               </div>
               <div id="links-new-group-field" class="hidden">
@@ -287,9 +246,7 @@
                     placeholder="My Research Links"
                     maxlength="18"
                   />
-                  <span id="links-group-char-count" class="input-suffix char-count"
-                    >0/18</span
-                  >
+                  <span id="links-group-char-count" class="input-suffix char-count">0/18</span>
                 </div>
               </div>
               <div id="links-status" class="status"></div>
@@ -348,24 +305,13 @@
                   <span id="session-group-label">Select a group</span>
                   <span class="select-chevron" aria-hidden="true"></span>
                 </button>
-                <div
-                  id="session-group-menu"
-                  class="select-menu"
-                  role="listbox"
-                ></div>
+                <div id="session-group-menu" class="select-menu" role="listbox"></div>
               </div>
             </div>
             <div id="session-new-group-field" class="hidden">
               <div class="input-with-suffix">
-                <input
-                  id="session-name"
-                  type="text"
-                  placeholder="My Work Session"
-                  maxlength="18"
-                />
-                <span id="session-char-count" class="input-suffix char-count"
-                  >0/18</span
-                >
+                <input id="session-name" type="text" placeholder="My Work Session" maxlength="18" />
+                <span id="session-char-count" class="input-suffix char-count">0/18</span>
               </div>
             </div>
             <div id="session-status" class="status"></div>
@@ -378,22 +324,10 @@
       </section>
 
       <div id="footer-links" class="footer-links hidden">
-        <a
-          id="footer-homepage-link"
-          class="link"
-          href="#"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a id="footer-homepage-link" class="link" href="#" target="_blank" rel="noreferrer">
           Homepage
         </a>
-        <a
-          id="footer-dashboard-link"
-          class="link"
-          href="#"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a id="footer-dashboard-link" class="link" href="#" target="_blank" rel="noreferrer">
           Dashboard
         </a>
       </div>

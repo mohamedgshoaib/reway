@@ -1,7 +1,5 @@
-"use client";
+"use client"
 
-import React, { memo, useState, useId, useMemo, useRef } from "react";
-import { toast } from "sonner";
 import {
   DndContext,
   DragOverlay,
@@ -14,66 +12,68 @@ import {
   DragStartEvent,
   DragEndEvent,
   MeasuringStrategy,
-} from "@dnd-kit/core";
+} from "@dnd-kit/core"
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   rectSortingStrategy,
-} from "@dnd-kit/sortable";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { SortableBookmark } from "./SortableBookmark";
-import { SortableBookmarkCard } from "./SortableBookmarkCard";
-import { createPortal } from "react-dom";
-import { BookmarkDragOverlay } from "./bookmark-board/BookmarkDragOverlay";
-import { EmptyState } from "./bookmark-board/EmptyState";
-import { useBookmarkGrid } from "./bookmark-board/useBookmarkGrid";
-import { useBookmarkKeyboardNav } from "./bookmark-board/useBookmarkKeyboardNav";
-import { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
-import { getDisplayTitle, getDomain } from "@/lib/utils";
-import { QuickGlanceDialog } from "./QuickGlanceDialog";
-import { BookmarkEditSheet } from "./BookmarkEditSheet";
-import { useIsMac } from "@/hooks/useIsMac";
+} from "@dnd-kit/sortable"
+import React, { memo, useState, useId, useMemo, useRef } from "react"
+import { createPortal } from "react-dom"
+import { toast } from "sonner"
+import { useIsMac } from "@/hooks/useIsMac"
+import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import {
   ALL_BOOKMARKS_GROUP_ID,
   isAllBookmarksGroupId,
   isMostVisitedGroupId,
   NO_GROUP_ID,
-} from "@/lib/system-groups";
+} from "@/lib/system-groups"
+import { getDisplayTitle, getDomain } from "@/lib/utils"
+import { BookmarkDragOverlay } from "./bookmark-board/BookmarkDragOverlay"
+import { EmptyState } from "./bookmark-board/EmptyState"
+import { useBookmarkGrid } from "./bookmark-board/useBookmarkGrid"
+import { useBookmarkKeyboardNav } from "./bookmark-board/useBookmarkKeyboardNav"
+import { BookmarkEditSheet } from "./BookmarkEditSheet"
+import { QuickGlanceDialog } from "./QuickGlanceDialog"
+import { SortableBookmark } from "./SortableBookmark"
+import { SortableBookmarkCard } from "./SortableBookmarkCard"
 
 const createdAtFormatter = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
-});
+})
 
-const CROSS_GROUP_DROP_TOAST_DELAY_MS = 240;
-const UNGROUPED_DRAG_BUCKET = "__ungrouped__";
+const CROSS_GROUP_DROP_TOAST_DELAY_MS = 240
+const UNGROUPED_DRAG_BUCKET = "__ungrouped__"
 
 interface BookmarkBoardProps {
-  bookmarks: BookmarkRow[];
-  initialGroups: GroupRow[];
-  activeGroupId: string;
-  onReorder: (groupId: string, newOrder: BookmarkRow[]) => void;
-  onDeleteBookmark: (id: string) => void;
+  bookmarks: BookmarkRow[]
+  initialGroups: GroupRow[]
+  activeGroupId: string
+  onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  onDeleteBookmark: (id: string) => void
   onEditBookmark: (
     id: string,
     data: {
-      title: string;
-      url: string;
-      description?: string;
-      favicon_url?: string;
-      group_id?: string;
-      applyFaviconToDomain?: boolean;
+      title: string
+      url: string
+      description?: string
+      favicon_url?: string
+      group_id?: string
+      applyFaviconToDomain?: boolean
     },
-  ) => Promise<void>;
-  rowContent: "date" | "group";
-  viewMode: "list" | "card";
-  layoutDensity?: "compact" | "extended";
-  selectionMode?: boolean;
-  selectedIds?: Set<string>;
-  onToggleSelection?: (id: string) => void;
-  onEnterSelectionMode?: () => void;
+  ) => Promise<void>
+  rowContent: "date" | "group"
+  viewMode: "list" | "card"
+  layoutDensity?: "compact" | "extended"
+  selectionMode?: boolean
+  selectedIds?: Set<string>
+  onToggleSelection?: (id: string) => void
+  onEnterSelectionMode?: () => void
 }
 
 export const BookmarkBoard = memo(function BookmarkBoard({
@@ -91,67 +91,57 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   onToggleSelection,
   onEnterSelectionMode,
 }: BookmarkBoardProps) {
-  const stableSelectedIds = useMemo(
-    () => selectedIds ?? new Set<string>(),
-    [selectedIds],
-  );
-  const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId);
+  const stableSelectedIds = useMemo(() => selectedIds ?? new Set<string>(), [selectedIds])
+  const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId)
 
   // ... existing sensors and handlers
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewBookmark, setPreviewBookmark] = useState<BookmarkRow | null>(
-    null,
-  );
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [editSheetBookmark, setEditSheetBookmark] =
-    useState<BookmarkRow | null>(null);
-  const dndContextId = useId();
-  const isExtendedListGrid =
-    viewMode === "list" && layoutDensity === "extended";
-  const isGridView = viewMode !== "list" || isExtendedListGrid;
-  const minCardWidth = layoutDensity === "extended" ? 260 : 320;
-  const boardRef = useRef<HTMLDivElement>(null);
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewBookmark, setPreviewBookmark] = useState<BookmarkRow | null>(null)
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false)
+  const [editSheetBookmark, setEditSheetBookmark] = useState<BookmarkRow | null>(null)
+  const dndContextId = useId()
+  const isExtendedListGrid = viewMode === "list" && layoutDensity === "extended"
+  const isGridView = viewMode !== "list" || isExtendedListGrid
+  const minCardWidth = layoutDensity === "extended" ? 260 : 320
+  const boardRef = useRef<HTMLDivElement>(null)
   const gridColumns = useBookmarkGrid({
     viewMode,
     isGridView,
-    minItemWidth:
-      viewMode === "card" ? minCardWidth : isExtendedListGrid ? 360 : undefined,
+    minItemWidth: viewMode === "card" ? minCardWidth : isExtendedListGrid ? 360 : undefined,
     boardRef,
-  });
+  })
 
   const orderedBookmarks = useMemo(() => {
-    if (!isAllBookmarksGroupId(activeGroupId)) return bookmarks;
+    if (!isAllBookmarksGroupId(activeGroupId)) return bookmarks
 
-    const groupOrder = new Map<string, number>();
+    const groupOrder = new Map<string, number>()
     initialGroups.forEach((g, index) => {
-      groupOrder.set(g.id, g.order_index ?? index);
-    });
+      groupOrder.set(g.id, g.order_index ?? index)
+    })
 
     const getGroupKey = (groupId?: string | null) => {
       // In All Bookmarks only, keep sidebar order but render ungrouped first.
-      if (!groupId) return Number.NEGATIVE_INFINITY;
-      return groupOrder.get(groupId) ?? Number.POSITIVE_INFINITY;
-    };
+      if (!groupId) return Number.NEGATIVE_INFINITY
+      return groupOrder.get(groupId) ?? Number.POSITIVE_INFINITY
+    }
 
     return bookmarks.toSorted((a, b) => {
-      const groupA = getGroupKey(a.group_id);
-      const groupB = getGroupKey(b.group_id);
-      if (groupA !== groupB) return groupA - groupB;
+      const groupA = getGroupKey(a.group_id)
+      const groupB = getGroupKey(b.group_id)
+      if (groupA !== groupB) return groupA - groupB
 
-      const aOrder = a.order_index ?? Number.POSITIVE_INFINITY;
-      const bOrder = b.order_index ?? Number.POSITIVE_INFINITY;
-      if (aOrder !== bOrder) return aOrder - bOrder;
+      const aOrder = a.order_index ?? Number.POSITIVE_INFINITY
+      const bOrder = b.order_index ?? Number.POSITIVE_INFINITY
+      if (aOrder !== bOrder) return aOrder - bOrder
 
-      return (
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    });
-  }, [activeGroupId, bookmarks, initialGroups]);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+  }, [activeGroupId, bookmarks, initialGroups])
 
   const renderedBookmarks = useMemo(() => {
-    return isAllBookmarksGroupId(activeGroupId) ? orderedBookmarks : bookmarks;
-  }, [activeGroupId, bookmarks, orderedBookmarks]);
+    return isAllBookmarksGroupId(activeGroupId) ? orderedBookmarks : bookmarks
+  }, [activeGroupId, bookmarks, orderedBookmarks])
 
   const renderedDisplayBookmarks = useMemo(() => {
     return renderedBookmarks.map((b) => ({
@@ -172,16 +162,16 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       createdAt: createdAtFormatter.format(new Date(b.created_at)),
       groupId: b.group_id || ALL_BOOKMARKS_GROUP_ID,
       status: b.status || "ready",
-    }));
-  }, [renderedBookmarks]);
+    }))
+  }, [renderedBookmarks])
 
   // Pre-calculate groups map for O(1) lookups in children
   const groupsMap = useMemo(() => {
-    return new Map(initialGroups.map((g) => [g.id, g]));
-  }, [initialGroups]);
+    return new Map(initialGroups.map((g) => [g.id, g]))
+  }, [initialGroups])
 
   // Detect OS for keyboard shortcuts
-  const isMac = useIsMac();
+  const isMac = useIsMac()
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -194,86 +184,76 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
-  );
+  )
 
-  const activeBookmark = activeId
-    ? (bookmarks.find((b) => b.id === activeId) ?? null)
-    : null;
+  const activeBookmark = activeId ? (bookmarks.find((b) => b.id === activeId) ?? null) : null
 
-  const getDragBucket = (groupId?: string | null) =>
-    groupId ?? UNGROUPED_DRAG_BUCKET;
+  const getDragBucket = (groupId?: string | null) => groupId ?? UNGROUPED_DRAG_BUCKET
 
-  const activeDragBucket = activeBookmark
-    ? getDragBucket(activeBookmark.group_id)
-    : null;
+  const activeDragBucket = activeBookmark ? getDragBucket(activeBookmark.group_id) : null
 
   const isGroupRestrictedDragActive =
-    isAllBookmarksGroupId(activeGroupId) &&
-    Boolean(activeId) &&
-    activeDragBucket !== null;
+    isAllBookmarksGroupId(activeGroupId) && Boolean(activeId) && activeDragBucket !== null
 
   function handleDragStart(event: DragStartEvent) {
-    if (isMostVisitedGroup) return;
-    setActiveId(event.active.id as string);
+    if (isMostVisitedGroup) return
+    setActiveId(event.active.id as string)
   }
 
   function handleDragEnd(event: DragEndEvent) {
     if (isMostVisitedGroup) {
-      setActiveId(null);
-      return;
+      setActiveId(null)
+      return
     }
-    const { active, over } = event;
+    const { active, over } = event
 
     if (!over) {
-      setActiveId(null);
-      return;
+      setActiveId(null)
+      return
     }
 
     if (isAllBookmarksGroupId(activeGroupId)) {
-      const activeItem = bookmarks.find((b) => b.id === active.id) ?? null;
-      const overItem = bookmarks.find((b) => b.id === over.id) ?? null;
+      const activeItem = bookmarks.find((b) => b.id === active.id) ?? null
+      const overItem = bookmarks.find((b) => b.id === over.id) ?? null
 
-      const groupId = activeItem?.group_id ?? null;
-      const activeBucket = getDragBucket(groupId);
-      const overBucket = overItem ? getDragBucket(overItem.group_id) : null;
+      const groupId = activeItem?.group_id ?? null
+      const activeBucket = getDragBucket(groupId)
+      const overBucket = overItem ? getDragBucket(overItem.group_id) : null
 
       if (!overItem || overBucket !== activeBucket) {
-        setActiveId(null);
+        setActiveId(null)
 
         if (overItem && overBucket !== activeBucket) {
           window.setTimeout(() => {
-            toast.error("Bookmarks can’t be dragged between groups");
-          }, CROSS_GROUP_DROP_TOAST_DELAY_MS);
+            toast.error("Bookmarks can’t be dragged between groups")
+          }, CROSS_GROUP_DROP_TOAST_DELAY_MS)
         }
-        return;
+        return
       }
 
       if (active.id !== over.id) {
         const groupBookmarks = orderedBookmarks.filter(
           (b) => getDragBucket(b.group_id) === activeBucket,
-        );
-        const oldIndex = groupBookmarks.findIndex((b) => b.id === active.id);
-        const newIndex = groupBookmarks.findIndex((b) => b.id === over.id);
+        )
+        const oldIndex = groupBookmarks.findIndex((b) => b.id === active.id)
+        const newIndex = groupBookmarks.findIndex((b) => b.id === over.id)
         if (oldIndex >= 0 && newIndex >= 0) {
-          onReorder(
-            groupId ?? NO_GROUP_ID,
-            arrayMove(groupBookmarks, oldIndex, newIndex),
-          );
+          onReorder(groupId ?? NO_GROUP_ID, arrayMove(groupBookmarks, oldIndex, newIndex))
         }
       }
 
-      setActiveId(null);
-      return;
+      setActiveId(null)
+      return
     }
 
     if (over && active.id !== over.id) {
-      const oldIndex = bookmarks.findIndex((b) => b.id === active.id);
-      const newIndex = bookmarks.findIndex((b) => b.id === over.id);
-      const newOrder = arrayMove(bookmarks, oldIndex, newIndex);
-      onReorder(activeGroupId, newOrder);
+      const oldIndex = bookmarks.findIndex((b) => b.id === active.id)
+      const newIndex = bookmarks.findIndex((b) => b.id === over.id)
+      const newOrder = arrayMove(bookmarks, oldIndex, newIndex)
+      onReorder(activeGroupId, newOrder)
     }
 
-    setActiveId(null);
+    setActiveId(null)
   }
 
   const { clampedSelectedIndex } = useBookmarkKeyboardNav({
@@ -281,19 +261,16 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     isGridView,
     gridColumns,
     onPreview: (bookmark) => {
-      setPreviewBookmark(bookmark);
-      setIsPreviewOpen(true);
+      setPreviewBookmark(bookmark)
+      setIsPreviewOpen(true)
     },
-  });
+  })
   if (bookmarks.length === 0) {
-    return <EmptyState isMac={isMac} />;
+    return <EmptyState isMac={isMac} />
   }
 
   return (
-    <div
-      className="w-full bookmark-board-empty-space"
-      data-slot="bookmark-board"
-    >
+    <div className="w-full bookmark-board-empty-space" data-slot="bookmark-board">
       <DndContext
         id={dndContextId}
         sensors={sensors}
@@ -305,9 +282,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       >
         <SortableContext
           items={renderedDisplayBookmarks.map((b) => b.id)}
-          strategy={
-            isGridView ? rectSortingStrategy : verticalListSortingStrategy
-          }
+          strategy={isGridView ? rectSortingStrategy : verticalListSortingStrategy}
         >
           <div
             ref={boardRef}
@@ -325,9 +300,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
             data-slot="bookmark-board"
           >
             {renderedDisplayBookmarks.map((bookmark, index) => {
-              const bookmarkDragBucket = getDragBucket(
-                renderedBookmarks[index]?.group_id ?? null,
-              );
+              const bookmarkDragBucket = getDragBucket(renderedBookmarks[index]?.group_id ?? null)
 
               if (viewMode === "card") {
                 return (
@@ -348,23 +321,23 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                     }
                     onDelete={onDeleteBookmark}
                     onEdit={(id: string) => {
-                      const target = bookmarks.find((bm) => bm.id === id);
+                      const target = bookmarks.find((bm) => bm.id === id)
                       if (target) {
-                        setEditSheetBookmark(target);
-                        setIsEditSheetOpen(true);
+                        setEditSheetBookmark(target)
+                        setIsEditSheetOpen(true)
                       }
                     }}
                     onPreview={(id: string) => {
-                      const b = bookmarks.find((bm) => bm.id === id);
+                      const b = bookmarks.find((bm) => bm.id === id)
                       if (b) {
-                        setPreviewBookmark(b);
-                        setIsPreviewOpen(true);
+                        setPreviewBookmark(b)
+                        setIsPreviewOpen(true)
                       }
                     }}
                     rowContent={rowContent}
                     {...bookmark}
                   />
-                );
+                )
               }
 
               return (
@@ -372,20 +345,20 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                   key={bookmark.id}
                   onDelete={onDeleteBookmark}
                   onEdit={(id: string) => {
-                    const target = bookmarks.find((bm) => bm.id === id);
+                    const target = bookmarks.find((bm) => bm.id === id)
                     if (target) {
-                      setEditSheetBookmark(target);
-                      setIsEditSheetOpen(true);
+                      setEditSheetBookmark(target)
+                      setIsEditSheetOpen(true)
                     }
                   }}
                   isSelected={clampedSelectedIndex === index}
                   activeGroupId={activeGroupId}
                   dragDisabled={isMostVisitedGroup}
                   onPreview={(id) => {
-                    const b = bookmarks.find((bm) => bm.id === id);
+                    const b = bookmarks.find((bm) => bm.id === id)
                     if (b) {
-                      setPreviewBookmark(b);
-                      setIsPreviewOpen(true);
+                      setPreviewBookmark(b)
+                      setIsPreviewOpen(true)
                     }
                   }}
                   rowContent={rowContent}
@@ -401,7 +374,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                   onEnterSelectionMode={onEnterSelectionMode}
                   {...bookmark}
                 />
-              );
+              )
             })}
           </div>
         </SortableContext>
@@ -409,10 +382,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         {typeof document !== "undefined" &&
           createPortal(
             <DragOverlay dropAnimation={null} adjustScale={false}>
-              <BookmarkDragOverlay
-                activeBookmark={activeBookmark}
-                viewMode={viewMode}
-              />
+              <BookmarkDragOverlay activeBookmark={activeBookmark} viewMode={viewMode} />
             </DragOverlay>,
             document.body,
           )}
@@ -423,13 +393,13 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         open={isPreviewOpen}
         onOpenChange={setIsPreviewOpen}
         onEdit={(bookmark) => {
-          setIsPreviewOpen(false);
-          setEditSheetBookmark(bookmark);
-          setIsEditSheetOpen(true);
+          setIsPreviewOpen(false)
+          setEditSheetBookmark(bookmark)
+          setIsEditSheetOpen(true)
         }}
         onDelete={(id) => {
-          setIsPreviewOpen(false);
-          onDeleteBookmark(id);
+          setIsPreviewOpen(false)
+          onDeleteBookmark(id)
         }}
         groups={initialGroups}
       />
@@ -442,5 +412,5 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         onSave={onEditBookmark}
       />
     </div>
-  );
-});
+  )
+})

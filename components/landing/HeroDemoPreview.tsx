@@ -1,17 +1,14 @@
-"use client";
+"use client"
 
-import { useState, useSyncExternalStore } from "react";
-import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useTheme } from "next-themes";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import RewayLogo from "@/components/logo";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import {
-  DASHBOARD_THEMES,
-  getPaletteThemeClassName,
-  type DashboardPaletteTheme,
-} from "@/lib/themes";
+import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useTheme } from "next-themes"
+import { useState, useSyncExternalStore } from "react"
+import RewayLogo from "@/components/logo"
+import { ThemeIcon } from "@/components/theme-icons/ThemeIcon"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import {
   Select,
   SelectContent,
@@ -19,41 +16,41 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { ThemeIcon } from "@/components/theme-icons/ThemeIcon";
-
+} from "@/components/ui/select"
 import {
-  NotesSectionPreview,
-  TodosSectionPreview,
-} from "./hero-demo/NotesTodosPreviews";
-import { DemoShell } from "./hero-demo/DemoShell";
-import { GroupsSidebar } from "./hero-demo/GroupsSidebar";
-import { GroupsDropdown } from "./hero-demo/GroupsDropdown";
-import { BookmarksGrid } from "./hero-demo/BookmarksGrid";
-import { NotesTodosSidebar } from "./hero-demo/NotesTodosSidebar";
-import { useHeroDemoState } from "./hero-demo/useHeroDemoState";
+  DASHBOARD_THEMES,
+  getPaletteThemeClassName,
+  type DashboardPaletteTheme,
+} from "@/lib/themes"
 
-let __heroDemoHydrated = false;
+import { BookmarksGrid } from "./hero-demo/BookmarksGrid"
+import { DemoShell } from "./hero-demo/DemoShell"
+import { GroupsDropdown } from "./hero-demo/GroupsDropdown"
+import { GroupsSidebar } from "./hero-demo/GroupsSidebar"
+import { NotesSectionPreview, TodosSectionPreview } from "./hero-demo/NotesTodosPreviews"
+import { NotesTodosSidebar } from "./hero-demo/NotesTodosSidebar"
+import { useHeroDemoState } from "./hero-demo/useHeroDemoState"
+
+let __heroDemoHydrated = false
 
 function useHasHydrated() {
   return useSyncExternalStore(
     (onStoreChange) => {
       if (!__heroDemoHydrated) {
-        __heroDemoHydrated = true;
-        queueMicrotask(onStoreChange);
+        __heroDemoHydrated = true
+        queueMicrotask(onStoreChange)
       }
-      return () => {};
+      return () => {}
     },
     () => __heroDemoHydrated,
     () => false,
-  );
+  )
 }
 
 export function HeroDemoPreview() {
-  const [demoTheme, setDemoTheme] = useState<DashboardPaletteTheme>("default");
-  const { resolvedTheme, setTheme } = useTheme();
-  const hasHydrated = useHasHydrated();
+  const [demoTheme, setDemoTheme] = useState<DashboardPaletteTheme>("default")
+  const { resolvedTheme, setTheme } = useTheme()
+  const hasHydrated = useHasHydrated()
 
   const {
     copiedIndex,
@@ -98,17 +95,14 @@ export function HeroDemoPreview() {
     handleToggleTodoCompleted,
     handleCreateNote,
     handleCreateTodo,
-  } = useHeroDemoState();
+  } = useHeroDemoState()
 
-  const themeClassName = getPaletteThemeClassName(demoTheme);
-  const isDark = hasHydrated && resolvedTheme === "dark";
+  const themeClassName = getPaletteThemeClassName(demoTheme)
+  const isDark = hasHydrated && resolvedTheme === "dark"
 
   const demoControls = (
     <div className="flex flex-wrap items-center gap-3">
-      <span
-        id="hero-demo-theme-label"
-        className="text-xs font-medium text-muted-foreground"
-      >
+      <span id="hero-demo-theme-label" className="text-xs font-medium text-muted-foreground">
         Theme:
       </span>
       <Select
@@ -128,9 +122,7 @@ export function HeroDemoPreview() {
               <SelectItem key={themeOption.value} value={themeOption.value}>
                 <span className="flex items-center gap-2 min-w-0">
                   <ThemeIcon theme={themeOption.value} />
-                  <span className="font-medium truncate">
-                    {themeOption.label}
-                  </span>
+                  <span className="font-medium truncate">{themeOption.label}</span>
                 </span>
               </SelectItem>
             ))}
@@ -163,15 +155,13 @@ export function HeroDemoPreview() {
         <HugeiconsIcon icon={Moon02Icon} size={13} />
       </Button>
     </div>
-  );
+  )
 
   return (
     <div className="mx-auto mt-12 w-full max-w-350">
       <DemoShell controls={demoControls}>
         <div className="flex">
-          <div
-            className={`${themeClassName} flex flex-1 bg-background text-foreground`}
-          >
+          <div className={`${themeClassName} flex flex-1 bg-background text-foreground`}>
             <GroupsSidebar
               activeGroup={activeGroup}
               heroGroups={heroGroups}
@@ -192,11 +182,7 @@ export function HeroDemoPreview() {
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <RewayLogo
-                      className="size-7"
-                      aria-hidden="true"
-                      focusable="false"
-                    />
+                    <RewayLogo className="size-7" aria-hidden="true" focusable="false" />
 
                     <GroupsDropdown
                       activeGroup={activeGroup}
@@ -236,8 +222,8 @@ export function HeroDemoPreview() {
                     <div className="relative flex-1 min-w-0">
                       <form
                         onSubmit={(e) => {
-                          e.preventDefault();
-                          submitCommandInput();
+                          e.preventDefault()
+                          submitCommandInput()
                         }}
                       >
                         <input
@@ -270,9 +256,7 @@ export function HeroDemoPreview() {
                       >
                         <span>Add</span>
                         <KbdGroup className="hidden md:inline-flex">
-                          <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">
-                            CtrlK
-                          </Kbd>
+                          <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">CtrlK</Kbd>
                         </KbdGroup>
                       </button>
                       <button
@@ -287,9 +271,7 @@ export function HeroDemoPreview() {
                       >
                         <span>Search</span>
                         <KbdGroup className="hidden md:inline-flex">
-                          <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">
-                            CtrlF
-                          </Kbd>
+                          <Kbd className="h-4.5 min-w-4.5 text-[10px] px-1">CtrlF</Kbd>
                         </KbdGroup>
                       </button>
                     </div>
@@ -312,9 +294,7 @@ export function HeroDemoPreview() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <KbdGroup className="gap-0.5">
-                      <Kbd className="h-4.5 min-w-4.5 px-1 text-[9px]">
-                        Ctrl
-                      </Kbd>
+                      <Kbd className="h-4.5 min-w-4.5 px-1 text-[9px]">Ctrl</Kbd>
                       <Kbd className="h-4.5 min-w-4.5 px-0.5 text-[9px]">⏎</Kbd>
                     </KbdGroup>
                     open
@@ -325,12 +305,8 @@ export function HeroDemoPreview() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <KbdGroup className="gap-0.5">
-                      <Kbd className="h-4.5 min-w-4.5 px-1 text-[9px]">
-                        Shift
-                      </Kbd>
-                      <Kbd className="h-4.5 min-w-4.5 px-1 text-[9px]">
-                        Click
-                      </Kbd>
+                      <Kbd className="h-4.5 min-w-4.5 px-1 text-[9px]">Shift</Kbd>
+                      <Kbd className="h-4.5 min-w-4.5 px-1 text-[9px]">Click</Kbd>
                     </KbdGroup>
                     bulk select
                   </div>
@@ -353,10 +329,7 @@ export function HeroDemoPreview() {
               todos={todos}
               NotesSectionPreview={NotesSectionPreview}
               TodosSectionPreview={(props) => (
-                <TodosSectionPreview
-                  {...props}
-                  onToggleCompleted={handleToggleTodoCompleted}
-                />
+                <TodosSectionPreview {...props} onToggleCompleted={handleToggleTodoCompleted} />
               )}
               onCreateNote={handleCreateNote}
               onCreateTodo={handleCreateTodo}
@@ -365,5 +338,5 @@ export function HeroDemoPreview() {
         </div>
       </DemoShell>
     </div>
-  );
+  )
 }

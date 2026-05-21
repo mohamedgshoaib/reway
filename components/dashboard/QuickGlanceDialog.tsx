@@ -1,12 +1,16 @@
-"use client";
+"use client"
 
-import React from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  PencilEdit01Icon,
+  Delete02Icon,
+  Copy01Icon,
+  ArrowUpRight01Icon,
+  Cancel01Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import NextImage from "next/image"
+import React from "react"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,30 +20,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  PencilEdit01Icon,
-  Delete02Icon,
-  Copy01Icon,
-  ArrowUpRight01Icon,
-  Cancel01Icon,
-} from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Favicon } from "./Favicon";
-import { getDomain } from "@/lib/utils";
-import { toast } from "sonner";
-import NextImage from "next/image";
-import { recordBookmarkVisit } from "@/lib/bookmark-visits";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { recordBookmarkVisit } from "@/lib/bookmark-visits"
+import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
+import { getDomain } from "@/lib/utils"
+import { Favicon } from "./Favicon"
 
 interface QuickGlanceDialogProps {
-  bookmark: BookmarkRow | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onEdit: (bookmark: BookmarkRow) => void;
-  onDelete: (id: string) => void;
-  groups: GroupRow[];
+  bookmark: BookmarkRow | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onEdit: (bookmark: BookmarkRow) => void
+  onDelete: (id: string) => void
+  groups: GroupRow[]
 }
 
 export function QuickGlanceDialog({
@@ -50,46 +45,43 @@ export function QuickGlanceDialog({
   onDelete,
   groups,
 }: QuickGlanceDialogProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 
   React.useEffect(() => {
-    setDeleteDialogOpen(false);
-  }, [bookmark?.id, open]);
+    setDeleteDialogOpen(false)
+  }, [bookmark?.id, open])
 
   const handleDeleteRequest = () => {
-    setDeleteDialogOpen(true);
-  };
+    setDeleteDialogOpen(true)
+  }
 
   const handleDeleteConfirm = () => {
-    onDelete(bookmark?.id || "");
-    setDeleteDialogOpen(false);
-    onOpenChange(false);
-  };
+    onDelete(bookmark?.id || "")
+    setDeleteDialogOpen(false)
+    onOpenChange(false)
+  }
 
-  if (!bookmark) return null;
+  if (!bookmark) return null
 
-  const domain = getDomain(bookmark.url);
-  const dateFormatted = new Date(bookmark.created_at).toLocaleDateString(
-    undefined,
-    {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    },
-  );
+  const domain = getDomain(bookmark.url)
+  const dateFormatted = new Date(bookmark.created_at).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 
   const handleCopyUrl = () => {
-    navigator.clipboard.writeText(bookmark.url);
-    toast.success("URL copied to clipboard");
-  };
+    navigator.clipboard.writeText(bookmark.url)
+    toast.success("URL copied to clipboard")
+  }
 
   const handleOpenUrl = () => {
-    recordBookmarkVisit(bookmark.id);
-    window.open(bookmark.url, "_blank", "noopener,noreferrer");
-  };
+    recordBookmarkVisit(bookmark.id)
+    window.open(bookmark.url, "_blank", "noopener,noreferrer")
+  }
 
-  const group = groups.find((g) => g.id === bookmark.group_id);
-  const previewImageUrl = bookmark.og_image_url || bookmark.image_url || null;
+  const group = groups.find((g) => g.id === bookmark.group_id)
+  const previewImageUrl = bookmark.og_image_url || bookmark.image_url || null
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -98,18 +90,14 @@ export function QuickGlanceDialog({
           className="sm:max-w-125 p-0 overflow-hidden bg-background rounded-4xl focus:outline-none"
           showCloseButton={false}
         >
-          <DialogTitle className="sr-only">
-            Bookmark Preview: {bookmark.title}
-          </DialogTitle>
+          <DialogTitle className="sr-only">Bookmark Preview: {bookmark.title}</DialogTitle>
           <DialogDescription className="sr-only">
             A quick preview of the bookmark titled {bookmark.title}
           </DialogDescription>
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="px-5 py-4 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground/90">
-                Quick glance
-              </h2>
+              <h2 className="text-sm font-bold text-foreground/90">Quick glance</h2>
               <button
                 onClick={() => onOpenChange(false)}
                 className="text-muted-foreground/40 hover:text-primary/90 p-1"
@@ -152,9 +140,7 @@ export function QuickGlanceDialog({
                         </div>
                       )}
 
-                      <span className="tabular-nums opacity-60">
-                        {dateFormatted}
-                      </span>
+                      <span className="tabular-nums opacity-60">{dateFormatted}</span>
                     </div>
                   </div>
                 </div>
@@ -192,7 +178,7 @@ export function QuickGlanceDialog({
                     unoptimized
                     className="object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
+                      ;(e.target as HTMLImageElement).style.display = "none"
                     }}
                   />
                 ) : (
@@ -249,9 +235,7 @@ export function QuickGlanceDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -262,5 +246,5 @@ export function QuickGlanceDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

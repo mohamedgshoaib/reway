@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
 import {
   AlertDialog,
@@ -18,15 +18,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 
 interface FloatingActionBarProps {
-  selectedCount: number;
-  groups: { id: string; name: string }[];
-  onOpenSelected: () => void;
-  onBulkDelete: () => void;
-  onMoveSelectedToGroup: (groupId: string | null) => Promise<void>;
-  onCancelSelection: () => void;
+  selectedCount: number
+  groups: { id: string; name: string }[]
+  onOpenSelected: () => void
+  onBulkDelete: () => void
+  onMoveSelectedToGroup: (groupId: string | null) => Promise<void>
+  onCancelSelection: () => void
 }
 
 export function FloatingActionBar({
@@ -37,16 +37,16 @@ export function FloatingActionBar({
   onMoveSelectedToGroup,
   onCancelSelection,
 }: FloatingActionBarProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [moveValue, setMoveValue] = useState<string | undefined>(undefined);
-  const [isMoving, setIsMoving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [moveValue, setMoveValue] = useState<string | undefined>(undefined)
+  const [isMoving, setIsMoving] = useState(false)
 
   const moveOptions = [
     { id: "no-group", name: "No Group" },
     ...groups
       .filter((group) => group.id !== "no-group")
       .map((group) => ({ id: group.id, name: group.name })),
-  ];
+  ]
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -70,16 +70,14 @@ export function FloatingActionBar({
           <Select
             value={moveValue}
             onValueChange={async (value) => {
-              if (isMoving) return;
-              setMoveValue(value);
-              setIsMoving(true);
+              if (isMoving) return
+              setMoveValue(value)
+              setIsMoving(true)
               try {
-                await onMoveSelectedToGroup(
-                  value === "no-group" ? null : value,
-                );
+                await onMoveSelectedToGroup(value === "no-group" ? null : value)
               } finally {
-                setIsMoving(false);
-                setMoveValue(undefined);
+                setIsMoving(false)
+                setMoveValue(undefined)
               }
             }}
             disabled={isMoving}
@@ -126,15 +124,13 @@ export function FloatingActionBar({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
             onClick={() => {
-              onBulkDelete();
-              setDeleteDialogOpen(false);
+              onBulkDelete()
+              setDeleteDialogOpen(false)
             }}
           >
             Delete
@@ -142,5 +138,5 @@ export function FloatingActionBar({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

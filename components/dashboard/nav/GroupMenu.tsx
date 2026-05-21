@@ -1,74 +1,69 @@
-"use client";
+"use client"
 
-import {
-  Folder01Icon,
-  RepeatIcon,
-} from "@hugeicons/core-free-icons";
-import { type IconSvgElement } from "@hugeicons/react";
+import { Folder01Icon, RepeatIcon } from "@hugeicons/core-free-icons"
+import { type IconSvgElement } from "@hugeicons/react"
+import dynamic from "next/dynamic"
+import { useEffect, useState } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import type { GroupRow as GroupRowType } from "@/lib/supabase/queries";
-import type { IconPickerPopoverProps } from "../IconPickerPopover";
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { GroupMenuTrigger } from "./group-menu/GroupMenuTrigger";
-import { AllBookmarksItem } from "./group-menu/AllBookmarksItem";
-import { NoGroupItem } from "./group-menu/NoGroupItem";
-import { SelectionModeHeader } from "./group-menu/SelectionModeHeader";
-import { GroupRow } from "./group-menu/GroupRow";
-import { GroupEditRow } from "./group-menu/GroupEditRow";
-import { GroupCreateRow } from "./group-menu/GroupCreateRow";
-import { GroupDeleteDialogs } from "./group-menu/GroupDeleteDialogs";
+} from "@/components/ui/dropdown-menu"
+import type { GroupRow as GroupRowType } from "@/lib/supabase/queries"
 import {
   ALL_BOOKMARKS_GROUP_ID,
   ALL_BOOKMARKS_GROUP_NAME,
   MOST_VISITED_GROUP_ID,
   MOST_VISITED_GROUP_NAME,
   NO_GROUP_ID,
-} from "@/lib/system-groups";
+} from "@/lib/system-groups"
+import type { IconPickerPopoverProps } from "../IconPickerPopover"
+import { AllBookmarksItem } from "./group-menu/AllBookmarksItem"
+import { GroupCreateRow } from "./group-menu/GroupCreateRow"
+import { GroupDeleteDialogs } from "./group-menu/GroupDeleteDialogs"
+import { GroupEditRow } from "./group-menu/GroupEditRow"
+import { GroupMenuTrigger } from "./group-menu/GroupMenuTrigger"
+import { GroupRow } from "./group-menu/GroupRow"
+import { NoGroupItem } from "./group-menu/NoGroupItem"
+import { SelectionModeHeader } from "./group-menu/SelectionModeHeader"
 
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
   {
-    loading: () => (
-      <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/10" />
-    ),
+    loading: () => <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/10" />,
     ssr: false,
   },
-);
+)
 
 interface GroupMenuProps {
-  groups: GroupRowType[];
-  activeGroupId: string;
-  groupCounts?: Record<string, number>;
-  onGroupSelect: (id: string) => void;
-  onGroupOpen?: (id: string) => void;
-  onDeleteGroupClick: (id: string) => void;
-  editingGroupId: string | null;
-  editGroupName: string;
-  setEditGroupName: (value: string) => void;
-  editGroupIcon: string;
-  setEditGroupIcon: (value: string) => void;
-  editGroupColor: string | null;
-  setEditGroupColor: (value: string | null) => void;
-  isUpdating: boolean;
-  onUpdateGroup: (id: string, onError?: () => void) => void;
-  isInlineCreating: boolean;
-  setIsInlineCreating: (value: boolean) => void;
-  newGroupName: string;
-  setNewGroupName: (value: string) => void;
-  newGroupIcon: string;
-  setNewGroupIcon: (value: string) => void;
-  newGroupColor: string | null;
-  setNewGroupColor: (value: string | null) => void;
-  isCreating: boolean;
-  onInlineCreate: (onError?: () => void) => void;
-  onInlineCreateCancel: () => void;
-  setEditingGroupId: (value: string | null) => void;
+  groups: GroupRowType[]
+  activeGroupId: string
+  groupCounts?: Record<string, number>
+  onGroupSelect: (id: string) => void
+  onGroupOpen?: (id: string) => void
+  onDeleteGroupClick: (id: string) => void
+  editingGroupId: string | null
+  editGroupName: string
+  setEditGroupName: (value: string) => void
+  editGroupIcon: string
+  setEditGroupIcon: (value: string) => void
+  editGroupColor: string | null
+  setEditGroupColor: (value: string | null) => void
+  isUpdating: boolean
+  onUpdateGroup: (id: string, onError?: () => void) => void
+  isInlineCreating: boolean
+  setIsInlineCreating: (value: boolean) => void
+  newGroupName: string
+  setNewGroupName: (value: string) => void
+  newGroupIcon: string
+  setNewGroupIcon: (value: string) => void
+  newGroupColor: string | null
+  setNewGroupColor: (value: string | null) => void
+  isCreating: boolean
+  onInlineCreate: (onError?: () => void) => void
+  onInlineCreateCancel: () => void
+  setEditingGroupId: (value: string | null) => void
 }
 
 export function GroupMenu({
@@ -100,56 +95,51 @@ export function GroupMenu({
   onInlineCreateCancel,
   setEditingGroupId,
 }: GroupMenuProps) {
-  void groupCounts;
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [iconsMap, setIconsMap] = useState<Record<
-    string,
-    IconSvgElement
-  > | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<GroupRowType | null>(null);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  void groupCounts
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [iconsMap, setIconsMap] = useState<Record<string, IconSvgElement> | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<GroupRowType | null>(null)
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(() => new Set())
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
     import("@/lib/hugeicons-list")
       .then((mod) => {
-        if (cancelled) return;
-        setIconsMap(mod.ALL_ICONS_MAP as Record<string, IconSvgElement>);
+        if (cancelled) return
+        setIconsMap(mod.ALL_ICONS_MAP as Record<string, IconSvgElement>)
       })
       .catch(() => {
-        if (cancelled) return;
-        setIconsMap(null);
-      });
+        if (cancelled) return
+        setIconsMap(null)
+      })
     return () => {
-      cancelled = true;
-    };
-  }, []);
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
-    const openHandler = () => setMenuOpen(true);
-    const closeHandler = () => setMenuOpen(false);
-    window.addEventListener("reway:open-groups-menu", openHandler);
-    window.addEventListener("reway:close-groups-menu", closeHandler);
+    const openHandler = () => setMenuOpen(true)
+    const closeHandler = () => setMenuOpen(false)
+    window.addEventListener("reway:open-groups-menu", openHandler)
+    window.addEventListener("reway:close-groups-menu", closeHandler)
     return () => {
-      window.removeEventListener("reway:open-groups-menu", openHandler);
-      window.removeEventListener("reway:close-groups-menu", closeHandler);
-    };
-  }, []);
+      window.removeEventListener("reway:open-groups-menu", openHandler)
+      window.removeEventListener("reway:close-groups-menu", closeHandler)
+    }
+  }, [])
 
   const activeGroup =
     activeGroupId === ALL_BOOKMARKS_GROUP_ID
       ? { name: ALL_BOOKMARKS_GROUP_NAME, color: null }
       : activeGroupId === MOST_VISITED_GROUP_ID
         ? { name: MOST_VISITED_GROUP_NAME, color: null }
-      : groups.find((g) => g.id === activeGroupId) || {
-          name: "Unknown",
-          color: null,
-        };
+        : groups.find((g) => g.id === activeGroupId) || {
+            name: "Unknown",
+            color: null,
+          }
 
   const ActiveIcon =
     activeGroupId === ALL_BOOKMARKS_GROUP_ID
@@ -157,67 +147,64 @@ export function GroupMenu({
       : activeGroupId === MOST_VISITED_GROUP_ID
         ? RepeatIcon
         : (() => {
-            const activeGroupRow = groups.find((g) => g.id === activeGroupId);
+            const activeGroupRow = groups.find((g) => g.id === activeGroupId)
             return activeGroupRow?.icon
               ? (iconsMap?.[activeGroupRow.icon] ?? Folder01Icon)
-              : Folder01Icon;
-          })();
+              : Folder01Icon
+          })()
 
   const openDeleteDialog = (group: GroupRowType) => {
-    setDeleteTarget(group);
-    setDeleteDialogOpen(true);
-  };
+    setDeleteTarget(group)
+    setDeleteDialogOpen(true)
+  }
 
   const enterSelectionMode = () => {
-    setSelectionMode(true);
-    setSelectedGroupIds(new Set());
-  };
+    setSelectionMode(true)
+    setSelectedGroupIds(new Set())
+  }
 
   const exitSelectionMode = () => {
-    setSelectionMode(false);
-    setSelectedGroupIds(new Set());
-  };
+    setSelectionMode(false)
+    setSelectedGroupIds(new Set())
+  }
 
   const toggleSelected = (groupId: string) => {
     setSelectedGroupIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupId)) next.delete(groupId);
-      else next.add(groupId);
-      return next;
-    });
-  };
+      const next = new Set(prev)
+      if (next.has(groupId)) next.delete(groupId)
+      else next.add(groupId)
+      return next
+    })
+  }
 
-  const selectedCount = selectedGroupIds.size;
+  const selectedCount = selectedGroupIds.size
 
   const handleDeleteConfirm = () => {
     if (deleteTarget) {
-      onDeleteGroupClick(deleteTarget.id);
+      onDeleteGroupClick(deleteTarget.id)
     }
-    setDeleteDialogOpen(false);
-    setDeleteTarget(null);
-  };
+    setDeleteDialogOpen(false)
+    setDeleteTarget(null)
+  }
 
   const handleBulkDelete = () => {
-    if (selectedCount === 0) return;
-    setBulkDeleteDialogOpen(true);
-  };
+    if (selectedCount === 0) return
+    setBulkDeleteDialogOpen(true)
+  }
 
   const handleConfirmBulkDelete = () => {
-    if (selectedGroupIds.size === 0) return;
-    Array.from(selectedGroupIds).forEach((id) => onDeleteGroupClick(id));
-    setBulkDeleteDialogOpen(false);
-    exitSelectionMode();
-    setMenuOpen(false);
-  };
+    if (selectedGroupIds.size === 0) return
+    Array.from(selectedGroupIds).forEach((id) => onDeleteGroupClick(id))
+    setBulkDeleteDialogOpen(false)
+    exitSelectionMode()
+    setMenuOpen(false)
+  }
 
   return (
     <div className="min-[1200px]:hidden">
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <GroupMenuTrigger
-            activeGroup={activeGroup}
-            ActiveIcon={ActiveIcon}
-          />
+          <GroupMenuTrigger activeGroup={activeGroup} ActiveIcon={ActiveIcon} />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
@@ -229,14 +216,14 @@ export function GroupMenu({
               selectedCount={selectedCount}
               disableDelete={selectedCount === 0}
               onCancel={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                exitSelectionMode();
+                e.preventDefault()
+                e.stopPropagation()
+                exitSelectionMode()
               }}
               onDelete={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleBulkDelete();
+                e.preventDefault()
+                e.stopPropagation()
+                handleBulkDelete()
               }}
             />
           ) : null}
@@ -245,8 +232,8 @@ export function GroupMenu({
             active={activeGroupId === ALL_BOOKMARKS_GROUP_ID}
             selectionMode={selectionMode}
             onSelectAll={() => {
-              onGroupSelect(ALL_BOOKMARKS_GROUP_ID);
-              setMenuOpen(false);
+              onGroupSelect(ALL_BOOKMARKS_GROUP_ID)
+              setMenuOpen(false)
             }}
           />
 
@@ -254,8 +241,8 @@ export function GroupMenu({
             active={activeGroupId === MOST_VISITED_GROUP_ID}
             selectionMode={selectionMode}
             onSelectAll={() => {
-              onGroupSelect(MOST_VISITED_GROUP_ID);
-              setMenuOpen(false);
+              onGroupSelect(MOST_VISITED_GROUP_ID)
+              setMenuOpen(false)
             }}
             label={MOST_VISITED_GROUP_NAME}
             icon={RepeatIcon}
@@ -264,17 +251,15 @@ export function GroupMenu({
           {groups.length > 0 ? (
             <div
               className={`max-h-75 overflow-y-auto ${
-                groups.length > 1
-                  ? "border-t border-border/50 my-1 pt-1"
-                  : "mt-1"
+                groups.length > 1 ? "border-t border-border/50 my-1 pt-1" : "mt-1"
               }`}
             >
               {groups.map((group) => {
                 const GroupIcon = group.icon
                   ? (iconsMap?.[group.icon] ?? Folder01Icon)
-                  : Folder01Icon;
-                const isEditing = editingGroupId === group.id;
-                const isNoGroup = group.id === NO_GROUP_ID;
+                  : Folder01Icon
+                const isEditing = editingGroupId === group.id
+                const isNoGroup = group.id === NO_GROUP_ID
 
                 if (isNoGroup) {
                   return (
@@ -285,11 +270,11 @@ export function GroupMenu({
                       selectionMode={selectionMode}
                       GroupIcon={GroupIcon}
                       onSelect={(id) => {
-                        onGroupSelect(id);
-                        setMenuOpen(false);
+                        onGroupSelect(id)
+                        setMenuOpen(false)
                       }}
                     />
-                  );
+                  )
                 }
 
                 if (isEditing) {
@@ -309,7 +294,7 @@ export function GroupMenu({
                       isUpdating={isUpdating}
                       setEditingGroupId={setEditingGroupId}
                     />
-                  );
+                  )
                 }
 
                 return (
@@ -322,30 +307,28 @@ export function GroupMenu({
                     selected={selectedGroupIds.has(group.id)}
                     onToggleSelected={() => toggleSelected(group.id)}
                     onSelectGroup={() => {
-                      onGroupSelect(group.id);
-                      setMenuOpen(false);
+                      onGroupSelect(group.id)
+                      setMenuOpen(false)
                     }}
-                    onOpenGroup={
-                      onGroupOpen ? () => onGroupOpen(group.id) : undefined
-                    }
+                    onOpenGroup={onGroupOpen ? () => onGroupOpen(group.id) : undefined}
                     onEnterSelectionModeAndToggle={() => {
-                      enterSelectionMode();
-                      toggleSelected(group.id);
+                      enterSelectionMode()
+                      toggleSelected(group.id)
                     }}
                     onToggleInSelectionMode={() => {
-                      toggleSelected(group.id);
+                      toggleSelected(group.id)
                     }}
                     onEditGroup={() => {
-                      setEditingGroupId(group.id);
-                      setEditGroupName(group.name);
-                      setEditGroupIcon(group.icon || "folder");
-                      setEditGroupColor(group.color || "#6366f1");
+                      setEditingGroupId(group.id)
+                      setEditGroupName(group.name)
+                      setEditGroupIcon(group.icon || "folder")
+                      setEditGroupColor(group.color || "#6366f1")
                     }}
                     onDeleteGroup={() => {
-                      openDeleteDialog(group);
+                      openDeleteDialog(group)
                     }}
                   />
-                );
+                )
               })}
             </div>
           ) : null}
@@ -373,9 +356,9 @@ export function GroupMenu({
       <GroupDeleteDialogs
         deleteDialogOpen={deleteDialogOpen}
         onDeleteDialogOpenChange={(open) => {
-          setDeleteDialogOpen(open);
+          setDeleteDialogOpen(open)
           if (!open) {
-            setDeleteTarget(null);
+            setDeleteTarget(null)
           }
         }}
         deleteTarget={deleteTarget}
@@ -386,5 +369,5 @@ export function GroupMenu({
         onConfirmBulkDelete={handleConfirmBulkDelete}
       />
     </div>
-  );
+  )
 }

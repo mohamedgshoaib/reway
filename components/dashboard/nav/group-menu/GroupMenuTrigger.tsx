@@ -1,18 +1,15 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { ArrowDown01Icon, Folder01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Folder01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import React from "react"
+import { Button } from "@/components/ui/button"
 
 export const GroupMenuTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof Button> & {
-    activeGroup: { name: string; color: string | null };
-    ActiveIcon: IconSvgElement;
+    activeGroup: { name: string; color: string | null }
+    ActiveIcon: IconSvgElement
   }
->(function GroupMenuTrigger(
-  { activeGroup, ActiveIcon, className, ...props },
-  ref,
-) {
+>(function GroupMenuTrigger({ activeGroup, ActiveIcon, className, ...props }, ref) {
   return (
     <Button
       ref={ref}
@@ -36,11 +33,7 @@ export const GroupMenuTrigger = React.forwardRef<
         ) : null}
       </div>
       <span className="truncate max-w-32">{activeGroup.name}</span>
-      <HugeiconsIcon
-        icon={ArrowDown01Icon}
-        size={14}
-        className="text-muted-foreground/30"
-      />
+      <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="text-muted-foreground/30" />
     </Button>
-  );
-});
+  )
+})

@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,8 +8,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import type { GroupRow } from "@/lib/supabase/queries";
+} from "@/components/ui/alert-dialog"
+import type { GroupRow } from "@/lib/supabase/queries"
 
 export function GroupDeleteDialogs({
   deleteDialogOpen,
@@ -21,14 +21,14 @@ export function GroupDeleteDialogs({
   selectedCount,
   onConfirmBulkDelete,
 }: {
-  deleteDialogOpen: boolean;
-  onDeleteDialogOpenChange: (open: boolean) => void;
-  deleteTarget: GroupRow | null;
-  onConfirmDelete: () => void;
-  bulkDeleteDialogOpen: boolean;
-  onBulkDeleteDialogOpenChange: (open: boolean) => void;
-  selectedCount: number;
-  onConfirmBulkDelete: () => void;
+  deleteDialogOpen: boolean
+  onDeleteDialogOpenChange: (open: boolean) => void
+  deleteTarget: GroupRow | null
+  onConfirmDelete: () => void
+  bulkDeleteDialogOpen: boolean
+  onBulkDeleteDialogOpenChange: (open: boolean) => void
+  selectedCount: number
+  onConfirmBulkDelete: () => void
 }) {
   return (
     <>
@@ -43,9 +43,7 @@ export function GroupDeleteDialogs({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-4xl cursor-pointer">
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               className="rounded-4xl cursor-pointer"
@@ -57,21 +55,17 @@ export function GroupDeleteDialogs({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={onBulkDeleteDialogOpenChange}
-      >
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={onBulkDeleteDialogOpenChange}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete selected groups?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete {selectedCount} group{selectedCount === 1 ? "" : "s"} and their bookmarks.
+              This will delete {selectedCount} group{selectedCount === 1 ? "" : "s"} and their
+              bookmarks.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-4xl cursor-pointer">
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               className="rounded-4xl cursor-pointer"
@@ -83,5 +77,5 @@ export function GroupDeleteDialogs({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }

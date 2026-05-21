@@ -1,13 +1,13 @@
-import { cn } from "@/lib/utils";
-import { NOTE_COLORS, priorityConfig } from "./config";
-import type { TodoPriority } from "./types";
+import { cn } from "@/lib/utils"
+import { NOTE_COLORS, priorityConfig } from "./config"
+import type { TodoPriority } from "./types"
 
 export function ColorPicker({
   value,
   onChange,
 }: {
-  value: string | null;
-  onChange: (v: string) => void;
+  value: string | null
+  onChange: (v: string) => void
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -25,21 +25,21 @@ export function ColorPicker({
         />
       ))}
     </div>
-  );
+  )
 }
 
 export function PriorityPicker({
   value,
   onChange,
 }: {
-  value: TodoPriority;
-  onChange: (v: TodoPriority) => void;
+  value: TodoPriority
+  onChange: (v: TodoPriority) => void
 }) {
   return (
     <div className="flex items-center gap-2">
       {(Object.keys(priorityConfig) as TodoPriority[]).map((p) => {
-        const cfg = priorityConfig[p];
-        const active = p === value;
+        const cfg = priorityConfig[p]
+        const active = p === value
         return (
           <button
             key={p}
@@ -52,13 +52,11 @@ export function PriorityPicker({
             )}
             onClick={() => onChange(p)}
           >
-            <span className={cn("font-semibold", cfg.colorClass)}>
-              {cfg.letter}
-            </span>
+            <span className={cn("font-semibold", cfg.colorClass)}>{cfg.letter}</span>
             <span className="ml-1">{cfg.label}</span>
           </button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

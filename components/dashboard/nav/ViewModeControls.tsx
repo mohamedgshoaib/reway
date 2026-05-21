@@ -1,46 +1,30 @@
-"use client";
+"use client"
 
-import {
-  Folder01Icon,
-  Menu01Icon,
-  SquareIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Folder01Icon, Menu01Icon, SquareIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ViewModeControlsProps {
-  viewMode: "list" | "card" | "folders";
-  setViewMode: (value: "list" | "card" | "folders") => void;
+  viewMode: "list" | "card" | "folders"
+  setViewMode: (value: "list" | "card" | "folders") => void
 }
 
-export function ViewModeControls({
-  viewMode,
-  setViewMode,
-}: ViewModeControlsProps) {
+export function ViewModeControls({ viewMode, setViewMode }: ViewModeControlsProps) {
   const activeIcon =
-    viewMode === "list"
-      ? Menu01Icon
-      : viewMode === "card"
-        ? SquareIcon
-        : Folder01Icon;
+    viewMode === "list" ? Menu01Icon : viewMode === "card" ? SquareIcon : Folder01Icon
 
   const viewOptions = [
     { value: "folders", label: "Folders", icon: Folder01Icon },
     { value: "list", label: "List", icon: Menu01Icon },
     { value: "card", label: "Card", icon: SquareIcon },
-  ] as const;
+  ] as const
 
   return (
     <>
@@ -60,17 +44,10 @@ export function ViewModeControls({
                     className="size-8 rounded-full transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     aria-label="Change view mode"
                   >
-                    <HugeiconsIcon
-                      icon={activeIcon}
-                      size={16}
-                      strokeWidth={2}
-                    />
+                    <HugeiconsIcon icon={activeIcon} size={16} strokeWidth={2} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent
-                  className="rounded-lg font-medium"
-                  side="bottom"
-                >
+                <TooltipContent className="rounded-lg font-medium" side="bottom">
                   View mode
                 </TooltipContent>
               </Tooltip>
@@ -85,9 +62,7 @@ export function ViewModeControls({
                 key={option.value}
                 suppressHydrationWarning
                 className={`rounded-lg flex items-center gap-2 cursor-pointer ${
-                  viewMode === option.value
-                    ? "bg-muted text-foreground font-medium"
-                    : ""
+                  viewMode === option.value ? "bg-muted text-foreground font-medium" : ""
                 }`}
                 onClick={() => setViewMode(option.value)}
               >
@@ -99,5 +74,5 @@ export function ViewModeControls({
         </DropdownMenu>
       </TooltipProvider>
     </>
-  );
+  )
 }

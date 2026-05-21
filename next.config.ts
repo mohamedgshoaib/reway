@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
@@ -30,8 +30,8 @@ const nextConfig: NextConfig = {
         source: "/metrics/api/send",
         destination: "https://cloud.umami.is/api/send",
       },
-    ];
+    ]
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

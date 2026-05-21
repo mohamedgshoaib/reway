@@ -1,22 +1,22 @@
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, SVGProps } from "react"
 
-import { cn } from "@/lib/utils";
-import type { DashboardPaletteTheme } from "@/lib/themes";
+import type { DashboardPaletteTheme } from "@/lib/themes"
+import { cn } from "@/lib/utils"
 
-import { ClaudeAI } from "./claude";
-import Cyberpunk from "./cyberpunk";
-import Default from "./default";
-import LouisVuitton from "./louis-vuitton";
-import Milka from "./milka";
-import { PerplexityAI } from "./perplexity";
-import { Prettier } from "./prettier";
-import { Supabase } from "./supabase";
-import { T3Stack } from "./t3-chat";
-import { Twitter } from "./twitter";
-import { Vercel } from "./vercel";
-import { Zed } from "./zed";
+import { ClaudeAI } from "./claude"
+import Cyberpunk from "./cyberpunk"
+import Default from "./default"
+import LouisVuitton from "./louis-vuitton"
+import Milka from "./milka"
+import { PerplexityAI } from "./perplexity"
+import { Prettier } from "./prettier"
+import { Supabase } from "./supabase"
+import { T3Stack } from "./t3-chat"
+import { Twitter } from "./twitter"
+import { Vercel } from "./vercel"
+import { Zed } from "./zed"
 
-type ThemeIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
+type ThemeIconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
 const THEME_ICONS: Record<DashboardPaletteTheme, ThemeIconComponent> = {
   default: Default,
@@ -31,25 +31,22 @@ const THEME_ICONS: Record<DashboardPaletteTheme, ThemeIconComponent> = {
   prettier: Prettier,
   vercel: Vercel,
   "louis-vuitton": LouisVuitton,
-};
+}
 
 interface ThemeIconProps {
-  theme: DashboardPaletteTheme;
-  className?: string;
+  theme: DashboardPaletteTheme
+  className?: string
 }
 
 export function ThemeIcon({ theme, className }: ThemeIconProps) {
-  const Icon = THEME_ICONS[theme];
+  const Icon = THEME_ICONS[theme]
 
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        "flex size-4 shrink-0 items-center justify-center overflow-hidden",
-        className,
-      )}
+      className={cn("flex size-4 shrink-0 items-center justify-center overflow-hidden", className)}
     >
       <Icon className="size-full" />
     </span>
-  );
+  )
 }

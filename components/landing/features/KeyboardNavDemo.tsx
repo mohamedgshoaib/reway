@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
 export function KeyboardNavDemo() {
   return (
@@ -14,16 +14,10 @@ export function KeyboardNavDemo() {
           { label: "Bulk Delete", keys: ["Shift", "Click"] },
           { label: "Copy", keys: ["⏎"] },
         ].map((shortcut) => (
-          <div
-            key={shortcut.label}
-            className="flex flex-col items-center gap-2"
-          >
+          <div key={shortcut.label} className="flex flex-col items-center gap-2">
             <KbdGroup className="gap-1">
               {shortcut.keys.map((key) => (
-                <Kbd
-                  key={key}
-                  className="h-5.5 min-w-5.5 px-1 text-[9px] font-sans"
-                >
+                <Kbd key={key} className="h-5.5 min-w-5.5 px-1 text-[9px] font-sans">
                   {key}
                 </Kbd>
               ))}
@@ -35,5 +29,5 @@ export function KeyboardNavDemo() {
         ))}
       </div>
     </div>
-  );
+  )
 }

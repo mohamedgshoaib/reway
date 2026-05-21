@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { Folder01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Folder01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 
 export function EmptyFolder() {
   return (
@@ -9,5 +9,5 @@ export function EmptyFolder() {
       <HugeiconsIcon icon={Folder01Icon} size={14} />
       <span>No bookmarks yet</span>
     </div>
-  );
+  )
 }

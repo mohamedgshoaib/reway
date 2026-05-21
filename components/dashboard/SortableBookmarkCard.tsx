@@ -1,19 +1,18 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import {
   ArrowUpRight03Icon,
   Copy01Icon,
   Delete02Icon,
   PencilEdit01Icon,
   Tick01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { toast } from "sonner";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState } from "react"
+import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,35 +22,36 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Favicon } from "./Favicon";
-import { GroupRow } from "@/lib/supabase/queries";
-import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu";
-import { recordBookmarkVisit } from "@/lib/bookmark-visits";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { recordBookmarkVisit } from "@/lib/bookmark-visits"
+import { GroupRow } from "@/lib/supabase/queries"
+import { Favicon } from "./Favicon"
+import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu"
 
 interface SortableBookmarkCardProps {
-  id: string;
-  title: string;
-  url: string;
-  domain: string;
-  favicon?: string;
-  isEnriching?: boolean;
-  createdAt: string;
-  groupId: string;
-  rowContent?: "date" | "group";
-  groupsMap?: Map<string, GroupRow>;
-  activeGroupId?: string;
-  isSelected?: boolean;
-  selectionMode?: boolean;
-  isSelectionChecked?: boolean;
-  onToggleSelection?: (id: string) => void;
-  onEnterSelectionMode?: () => void;
-  onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
-  onPreview?: (id: string) => void;
-  dragDimmed?: boolean;
-  dragDisabled?: boolean;
+  id: string
+  title: string
+  url: string
+  domain: string
+  favicon?: string
+  isEnriching?: boolean
+  createdAt: string
+  groupId: string
+  rowContent?: "date" | "group"
+  groupsMap?: Map<string, GroupRow>
+  activeGroupId?: string
+  isSelected?: boolean
+  selectionMode?: boolean
+  isSelectionChecked?: boolean
+  onToggleSelection?: (id: string) => void
+  onEnterSelectionMode?: () => void
+  onDelete?: (id: string) => void
+  onEdit?: (id: string) => void
+  onPreview?: (id: string) => void
+  dragDimmed?: boolean
+  dragDisabled?: boolean
 }
 
 export function SortableBookmarkCard({
@@ -77,89 +77,83 @@ export function SortableBookmarkCard({
   dragDimmed = false,
   dragDisabled = false,
 }: SortableBookmarkCardProps) {
-  const [isCopied, setIsCopied] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled: dragDisabled });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: dragDisabled,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0 : 1,
     touchAction: selectionMode ? "auto" : "manipulation",
-  };
+  }
 
   const metaLabel =
-    rowContent === "group" &&
-    activeGroupId !== "all" &&
-    activeGroupId === groupId
+    rowContent === "group" && activeGroupId !== "all" && activeGroupId === groupId
       ? createdAt
       : rowContent === "group"
         ? groupsMap?.get(groupId)?.name || "No Group"
-        : createdAt;
+        : createdAt
 
   const handleOpen = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    recordBookmarkVisit(id);
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+    e?.stopPropagation()
+    recordBookmarkVisit(id)
+    window.open(url, "_blank", "noopener,noreferrer")
+  }
 
   const handleAnchorClick = (event: React.MouseEvent) => {
     if (event.shiftKey && !selectionMode) {
-      event.preventDefault();
-      event.stopPropagation();
-      onEnterSelectionMode?.();
-      onToggleSelection?.(id);
-      return;
+      event.preventDefault()
+      event.stopPropagation()
+      onEnterSelectionMode?.()
+      onToggleSelection?.(id)
+      return
     }
 
-    recordBookmarkVisit(id);
-  };
+    recordBookmarkVisit(id)
+  }
 
   const handleCopy = async (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+    e?.stopPropagation()
     try {
-      await navigator.clipboard.writeText(url);
-      setIsCopied(true);
-      toast.success("URL copied to clipboard");
-      setTimeout(() => setIsCopied(false), 2000);
+      await navigator.clipboard.writeText(url)
+      setIsCopied(true)
+      toast.success("URL copied to clipboard")
+      setTimeout(() => setIsCopied(false), 2000)
     } catch {
-      toast.error("Failed to copy URL");
+      toast.error("Failed to copy URL")
     }
-  };
+  }
 
   const handleDeleteRequest = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setDeleteDialogOpen(true);
-  };
+    e?.stopPropagation()
+    setDeleteDialogOpen(true)
+  }
 
   const handleDeleteConfirm = () => {
-    onDelete?.(id);
-    setDeleteDialogOpen(false);
-  };
+    onDelete?.(id)
+    setDeleteDialogOpen(false)
+  }
 
   const handleBulkSelect = () => {
-    if (selectionMode) return;
-    onEnterSelectionMode?.();
-    onToggleSelection?.(id);
-  };
+    if (selectionMode) return
+    onEnterSelectionMode?.()
+    onToggleSelection?.(id)
+  }
 
   const handleEdit = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onEdit?.(id);
-  };
+    e?.stopPropagation()
+    onEdit?.(id)
+  }
 
   const handlePreview = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onPreview?.(id);
-  };
+    e?.stopPropagation()
+    onPreview?.(id)
+  }
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -177,26 +171,22 @@ export function SortableBookmarkCard({
                 : dragDisabled
                   ? "cursor-default"
                   : isDragging
-                  ? "cursor-grabbing"
-                  : "cursor-grab"
+                    ? "cursor-grabbing"
+                    : "cursor-grab"
             } ${
               isSelectionChecked || isSelected ? "ring-2 ring-primary/30" : ""
-            } ${dragDimmed ? "opacity-40 saturate-0" : ""} ${
-              isDragging ? "opacity-0" : ""
-            }`}
+            } ${dragDimmed ? "opacity-40 saturate-0" : ""} ${isDragging ? "opacity-0" : ""}`}
           >
             <div className="flex items-center gap-3 min-w-0">
               {selectionMode ? (
                 <button
                   type="button"
                   onClick={(event) => {
-                    event.stopPropagation();
-                    onToggleSelection?.(id);
+                    event.stopPropagation()
+                    onToggleSelection?.(id)
                   }}
                   className="size-9 shrink-0 flex items-center justify-center rounded-xl border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
-                  aria-label={
-                    isSelectionChecked ? "Deselect bookmark" : "Select bookmark"
-                  }
+                  aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
                 >
                   <div
                     className={`size-4 rounded border-2 flex items-center justify-center ${
@@ -232,13 +222,13 @@ export function SortableBookmarkCard({
                   rel="noreferrer"
                   onClick={handleAnchorClick}
                   onPointerDown={(event) => {
-                    event.stopPropagation();
+                    event.stopPropagation()
                   }}
                   onMouseDown={(event) => {
-                    event.stopPropagation();
+                    event.stopPropagation()
                   }}
                   onTouchStart={(event) => {
-                    event.stopPropagation();
+                    event.stopPropagation()
                   }}
                   aria-label="Open bookmark"
                 >
@@ -261,13 +251,13 @@ export function SortableBookmarkCard({
                     rel="noreferrer"
                     onClick={handleAnchorClick}
                     onPointerDown={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation()
                     }}
                     onMouseDown={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation()
                     }}
                     onTouchStart={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation()
                     }}
                     aria-label="Open bookmark"
                   >
@@ -282,13 +272,13 @@ export function SortableBookmarkCard({
                     rel="noreferrer"
                     onClick={handleAnchorClick}
                     onPointerDown={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation()
                     }}
                     onMouseDown={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation()
                     }}
                     onTouchStart={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation()
                     }}
                     aria-label="Open bookmark"
                   >
@@ -376,9 +366,7 @@ export function SortableBookmarkCard({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -389,5 +377,5 @@ export function SortableBookmarkCard({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

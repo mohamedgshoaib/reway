@@ -1,14 +1,14 @@
-import React from "react";
-import type { IconSvgElement } from "@hugeicons/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Folder01Icon } from "@hugeicons/core-free-icons";
-import type { GroupRow } from "@/lib/supabase/queries";
-import type { IconPickerPopoverProps } from "../../IconPickerPopover";
-import { Input } from "@/components/ui/input";
-import { Button as UIButton } from "@/components/ui/button";
-import { CharacterCount } from "./CharacterCount";
+import { Folder01Icon } from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import React from "react"
+import { Button as UIButton } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import type { GroupRow } from "@/lib/supabase/queries"
+import type { IconPickerPopoverProps } from "../../IconPickerPopover"
+import { CharacterCount } from "./CharacterCount"
 
-const MAX_GROUP_NAME_LENGTH = 18;
+const MAX_GROUP_NAME_LENGTH = 18
 
 export function GroupEditRow({
   group,
@@ -24,18 +24,18 @@ export function GroupEditRow({
   isUpdating,
   setEditingGroupId,
 }: {
-  group: GroupRow;
-  iconsMap: Record<string, IconSvgElement> | null;
-  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>;
-  editGroupName: string;
-  setEditGroupName: (value: string) => void;
-  editGroupIcon: string;
-  setEditGroupIcon: (value: string) => void;
-  editGroupColor: string | null;
-  setEditGroupColor: (value: string | null) => void;
-  onUpdateGroup: (id: string, onError?: () => void) => void;
-  isUpdating: boolean;
-  setEditingGroupId: (value: string | null) => void;
+  group: GroupRow
+  iconsMap: Record<string, IconSvgElement> | null
+  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
+  editGroupName: string
+  setEditGroupName: (value: string) => void
+  editGroupIcon: string
+  setEditGroupIcon: (value: string) => void
+  editGroupColor: string | null
+  setEditGroupColor: (value: string | null) => void
+  onUpdateGroup: (id: string, onError?: () => void) => void
+  isUpdating: boolean
+  setEditingGroupId: (value: string | null) => void
 }) {
   return (
     <div
@@ -55,11 +55,7 @@ export function GroupEditRow({
             aria-label="Select group icon"
           >
             <HugeiconsIcon
-              icon={
-                iconsMap?.[editGroupIcon] ??
-                iconsMap?.["folder"] ??
-                Folder01Icon
-              }
+              icon={iconsMap?.[editGroupIcon] ?? iconsMap?.["folder"] ?? Folder01Icon}
               size={16}
               strokeWidth={2}
               style={{ color: editGroupColor || "#6366f1" }}
@@ -70,18 +66,18 @@ export function GroupEditRow({
         <Input
           value={editGroupName}
           onChange={(e) => {
-            setEditGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH));
+            setEditGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH))
           }}
           placeholder="Group name"
           className="h-8 flex-1 text-sm rounded-lg"
           maxLength={MAX_GROUP_NAME_LENGTH}
           autoFocus
           onKeyDown={(e) => {
-            e.stopPropagation();
+            e.stopPropagation()
             if (e.key === "Enter") {
-              onUpdateGroup(group.id);
+              onUpdateGroup(group.id)
             } else if (e.key === "Escape") {
-              setEditingGroupId(null);
+              setEditingGroupId(null)
             }
           }}
         />
@@ -92,8 +88,8 @@ export function GroupEditRow({
           variant="secondary"
           className="h-7 px-3 text-xs rounded-4xl font-bold"
           onClick={(e) => {
-            e.stopPropagation();
-            setEditingGroupId(null);
+            e.stopPropagation()
+            setEditingGroupId(null)
           }}
         >
           Cancel
@@ -111,5 +107,5 @@ export function GroupEditRow({
         </div>
       </div>
     </div>
-  );
+  )
 }

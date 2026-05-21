@@ -1,27 +1,27 @@
-import { useState } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CheckmarkSquare02Icon,
   Delete02Icon,
   MoreVerticalIcon,
   PencilEdit01Icon,
-} from "@hugeicons/core-free-icons";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useState } from "react"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { cn } from "@/lib/utils";
-import type { TodoRow as TodoRowType } from "@/lib/supabase/queries";
-import { normalizePriority, priorityConfig } from "./config";
+} from "@/components/ui/context-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { TodoRow as TodoRowType } from "@/lib/supabase/queries"
+import { cn } from "@/lib/utils"
+import { normalizePriority, priorityConfig } from "./config"
 
 export function TodoRow({
   todo,
@@ -38,26 +38,26 @@ export function TodoRow({
   variant = "app",
   onActionMenuOpenChange,
 }: {
-  todo: TodoRowType;
-  expanded: boolean;
-  onToggleExpanded: () => void;
-  selectionMode: boolean;
-  selected: boolean;
-  onToggleSelected: () => void;
-  onEnterSelectionMode: () => void;
-  onToggleCompleted: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  showActions?: boolean;
-  variant?: "demo" | "app";
-  onActionMenuOpenChange?: (open: boolean) => void;
+  todo: TodoRowType
+  expanded: boolean
+  onToggleExpanded: () => void
+  selectionMode: boolean
+  selected: boolean
+  onToggleSelected: () => void
+  onEnterSelectionMode: () => void
+  onToggleCompleted: () => void
+  onEdit: () => void
+  onDelete: () => void
+  showActions?: boolean
+  variant?: "demo" | "app"
+  onActionMenuOpenChange?: (open: boolean) => void
 }) {
-  const priority = normalizePriority(todo.priority);
-  const pCfg = priorityConfig[priority];
+  const priority = normalizePriority(todo.priority)
+  const pCfg = priorityConfig[priority]
 
-  const checkboxMarginTop = variant === "demo" ? "mt-[0.5px]" : "mt-[2.7px]";
-  const priorityMarginTop = variant === "demo" ? "mt-[2.5px]" : "mt-[5.5px]";
-  const [checkboxHovered, setCheckboxHovered] = useState(false);
+  const checkboxMarginTop = variant === "demo" ? "mt-[0.5px]" : "mt-[2.7px]"
+  const priorityMarginTop = variant === "demo" ? "mt-[2.5px]" : "mt-[5.5px]"
+  const [checkboxHovered, setCheckboxHovered] = useState(false)
 
   const Row = (
     <div
@@ -65,18 +65,18 @@ export function TodoRow({
       tabIndex={0}
       onClick={() => {
         if (selectionMode) {
-          onToggleSelected();
+          onToggleSelected()
         } else {
-          onToggleExpanded();
+          onToggleExpanded()
         }
       }}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
+          event.preventDefault()
           if (selectionMode) {
-            onToggleSelected();
+            onToggleSelected()
           } else {
-            onToggleExpanded();
+            onToggleExpanded()
           }
         }
       }}
@@ -99,13 +99,7 @@ export function TodoRow({
                 onCheckedChange={onToggleSelected}
               />
             </div>
-            <span
-              className={cn(
-                "text-xs font-semibold leading-none",
-                pCfg.colorClass,
-                "mt-px",
-              )}
-            >
+            <span className={cn("text-xs font-semibold leading-none", pCfg.colorClass, "mt-px")}>
               {pCfg.letter}
             </span>
             <span
@@ -177,9 +171,9 @@ export function TodoRow({
             <DropdownMenuItem
               onSelect={() => {
                 if (selectionMode) {
-                  onToggleSelected();
+                  onToggleSelected()
                 } else {
-                  onEnterSelectionMode();
+                  onEnterSelectionMode()
                 }
               }}
               className="gap-2 text-xs cursor-pointer"
@@ -187,17 +181,11 @@ export function TodoRow({
               <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
               {selectionMode ? "Toggle selection" : "Select todos"}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={onToggleCompleted}
-              className="gap-2 text-xs cursor-pointer"
-            >
+            <DropdownMenuItem onSelect={onToggleCompleted} className="gap-2 text-xs cursor-pointer">
               <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
               {todo.completed ? "Mark as active" : "Mark as completed"}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={onEdit}
-              className="gap-2 text-xs cursor-pointer"
-            >
+            <DropdownMenuItem onSelect={onEdit} className="gap-2 text-xs cursor-pointer">
               <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
               Edit todo
             </DropdownMenuItem>
@@ -213,10 +201,10 @@ export function TodoRow({
         </DropdownMenu>
       ) : null}
     </div>
-  );
+  )
 
   if (!showActions) {
-    return Row;
+    return Row
   }
 
   return (
@@ -227,9 +215,9 @@ export function TodoRow({
         <ContextMenuItem
           onSelect={() => {
             if (selectionMode) {
-              onToggleSelected();
+              onToggleSelected()
             } else {
-              onEnterSelectionMode();
+              onEnterSelectionMode()
             }
           }}
           className="gap-2 text-xs cursor-pointer"
@@ -237,17 +225,11 @@ export function TodoRow({
           <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
           {selectionMode ? "Toggle selection" : "Select todos"}
         </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={onToggleCompleted}
-          className="gap-2 text-xs cursor-pointer"
-        >
+        <ContextMenuItem onSelect={onToggleCompleted} className="gap-2 text-xs cursor-pointer">
           <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
           {todo.completed ? "Mark as active" : "Mark as completed"}
         </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={onEdit}
-          className="gap-2 text-xs cursor-pointer"
-        >
+        <ContextMenuItem onSelect={onEdit} className="gap-2 text-xs cursor-pointer">
           <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
           Edit todo
         </ContextMenuItem>
@@ -261,5 +243,5 @@ export function TodoRow({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  );
+  )
 }

@@ -1,48 +1,43 @@
-"use client";
+"use client"
 
-import React, { useCallback, useEffect, useRef } from "react";
-import {
-  BookmarkRow,
-  GroupRow,
-  NoteRow,
-  TodoRow,
-} from "@/lib/supabase/queries";
-import type { User } from "@/components/dashboard/nav/types";
-import { useIsMac } from "@/hooks/useIsMac";
-import { toast } from "sonner";
-import { useDashboardRealtime } from "./content/useDashboardRealtime";
-import { useImportHandlers } from "./content/useImportHandlers";
-import { useExportHandlers } from "./content/useExportHandlers";
-import { useGroupShortcuts } from "./content/useGroupShortcuts";
-import { useGroupActions } from "./content/useGroupActions";
-import { useSelectionActions } from "./content/useSelectionActions";
-import { useBookmarkActions } from "./content/useBookmarkActions";
-import { useOpenGroup } from "./content/useOpenGroup";
-import { useCommandMode } from "./content/useCommandMode";
-import { useDashboardDerived } from "./content/useDashboardDerived";
-import { type DashboardPaletteTheme } from "@/lib/themes";
-import { useDashboardPreferences } from "./content/useDashboardPreferences";
-import { useNotesTodosActions } from "./content/useNotesTodosActions";
-import { useDashboardState } from "./content/useDashboardState";
-import { DashboardLayout } from "./DashboardLayout";
-import { NO_GROUP_ID } from "@/lib/system-groups";
+import React, { useCallback, useEffect, useRef } from "react"
+import { toast } from "sonner"
+import type { User } from "@/components/dashboard/nav/types"
+import { useIsMac } from "@/hooks/useIsMac"
+import { BookmarkRow, GroupRow, NoteRow, TodoRow } from "@/lib/supabase/queries"
+import { NO_GROUP_ID } from "@/lib/system-groups"
+import { type DashboardPaletteTheme } from "@/lib/themes"
+import { useBookmarkActions } from "./content/useBookmarkActions"
+import { useCommandMode } from "./content/useCommandMode"
+import { useDashboardDerived } from "./content/useDashboardDerived"
+import { useDashboardPreferences } from "./content/useDashboardPreferences"
+import { useDashboardRealtime } from "./content/useDashboardRealtime"
+import { useDashboardState } from "./content/useDashboardState"
+import { useExportHandlers } from "./content/useExportHandlers"
+import { useGroupActions } from "./content/useGroupActions"
+import { useGroupShortcuts } from "./content/useGroupShortcuts"
+import { useImportHandlers } from "./content/useImportHandlers"
+import { useNotesTodosActions } from "./content/useNotesTodosActions"
+import { useOpenGroup } from "./content/useOpenGroup"
+import { useSelectionActions } from "./content/useSelectionActions"
+import { DashboardLayout } from "./DashboardLayout"
 
-let resumePendingEnrichmentTask: Promise<void> | null = null;
+let resumePendingEnrichmentTask: Promise<void> | null = null
 
 interface DashboardContentProps {
-  user: User;
-  initialBookmarks: BookmarkRow[];
-  initialGroups: GroupRow[];
-  initialNotes: NoteRow[];
-  initialTodos: TodoRow[];
-  initialViewModeAll?: "list" | "card" | "folders";
-  initialViewModeGroups?: "list" | "card" | "folders";
-  initialLayoutDensity?: "compact" | "extended";
-  initialRowContent?: "date" | "group";
-  initialCommandMode?: "add" | "search";
-  initialShowNotesTodos?: boolean;
-  initialPaletteTheme?: DashboardPaletteTheme;
-  initialFolderHeaderTint?: "off" | "low" | "medium" | "high";
+  user: User
+  initialBookmarks: BookmarkRow[]
+  initialGroups: GroupRow[]
+  initialNotes: NoteRow[]
+  initialTodos: TodoRow[]
+  initialViewModeAll?: "list" | "card" | "folders"
+  initialViewModeGroups?: "list" | "card" | "folders"
+  initialLayoutDensity?: "compact" | "extended"
+  initialRowContent?: "date" | "group"
+  initialCommandMode?: "add" | "search"
+  initialShowNotesTodos?: boolean
+  initialPaletteTheme?: DashboardPaletteTheme
+  initialFolderHeaderTint?: "off" | "low" | "medium" | "high"
 }
 
 import {
@@ -54,14 +49,14 @@ import {
   restoreBookmark as restoreAction,
   updateBookmark as updateBookmarkAction,
   updateBookmarksOrder,
-} from "@/app/dashboard/actions/bookmarks";
+} from "@/app/dashboard/actions/bookmarks"
 import {
   createGroup,
   deleteGroup as deleteGroupAction,
   restoreGroup as restoreGroupAction,
   updateGroupsOrder,
   updateGroup as updateGroupAction,
-} from "@/app/dashboard/actions/groups";
+} from "@/app/dashboard/actions/groups"
 
 export function DashboardContent({
   user,
@@ -91,18 +86,18 @@ export function DashboardContent({
     initialShowNotesTodos,
     initialPaletteTheme,
     initialFolderHeaderTint,
-  });
+  })
 
   const handleOptimisticRemoveBookmarks = useCallback(
     (ids: string[]) => {
-      if (!ids || ids.length === 0) return;
-      const idSet = new Set(ids);
-      dashboard.setBookmarks((prev) => prev.filter((b) => !idSet.has(b.id)));
+      if (!ids || ids.length === 0) return
+      const idSet = new Set(ids)
+      dashboard.setBookmarks((prev) => prev.filter((b) => !idSet.has(b.id)))
     },
     [dashboard],
-  );
+  )
 
-  const isMac = useIsMac();
+  const isMac = useIsMac()
 
   useDashboardPreferences({
     viewModeAll: dashboard.viewModeAll,
@@ -113,7 +108,7 @@ export function DashboardContent({
     commandMode: dashboard.commandMode,
     paletteTheme: dashboard.paletteTheme,
     folderHeaderTint: dashboard.folderHeaderTint,
-  });
+  })
 
   useDashboardRealtime({
     userId: user.id,
@@ -121,7 +116,7 @@ export function DashboardContent({
     sortGroups: dashboard.sortGroups,
     setBookmarks: dashboard.setBookmarks,
     setGroups: dashboard.setGroups,
-  });
+  })
 
   const {
     addOptimisticBookmark,
@@ -141,32 +136,32 @@ export function DashboardContent({
     restoreBookmark: restoreAction,
     updateBookmark: updateBookmarkAction,
     lastDeletedRef: dashboard.lastDeletedRef,
-  });
+  })
 
-  const inflightEnrichmentRef = useRef<Set<string>>(new Set());
-  const { bookmarks, setBookmarks } = dashboard;
+  const inflightEnrichmentRef = useRef<Set<string>>(new Set())
+  const { bookmarks, setBookmarks } = dashboard
 
-  const bookmarksRef = useRef(bookmarks);
+  const bookmarksRef = useRef(bookmarks)
   useEffect(() => {
-    bookmarksRef.current = bookmarks;
-  }, [bookmarks]);
+    bookmarksRef.current = bookmarks
+  }, [bookmarks])
 
   useEffect(() => {
     const hasPending = bookmarks.some(
       (b) => b?.id && b?.url && b.status === "pending" && !b.last_fetched_at,
-    );
-    if (!hasPending) return;
+    )
+    if (!hasPending) return
 
-    if (resumePendingEnrichmentTask) return;
+    if (resumePendingEnrichmentTask) return
 
-    let cancelled = false;
+    let cancelled = false
 
-    const CONCURRENCY = 2;
+    const CONCURRENCY = 2
 
     resumePendingEnrichmentTask = (async () => {
       try {
         while (true) {
-          if (cancelled) return;
+          if (cancelled) return
           const pendingNow = bookmarksRef.current.filter(
             (b) =>
               b?.id &&
@@ -174,52 +169,44 @@ export function DashboardContent({
               b.status === "pending" &&
               !b.last_fetched_at &&
               !inflightEnrichmentRef.current.has(b.id),
-          );
-          if (pendingNow.length === 0) return;
+          )
+          if (pendingNow.length === 0) return
 
-          let index = 0;
+          let index = 0
           const worker = async () => {
             while (true) {
-              if (cancelled) return;
-              const current = pendingNow[index];
-              index += 1;
-              if (!current) return;
+              if (cancelled) return
+              const current = pendingNow[index]
+              index += 1
+              if (!current) return
 
-              if (!current.id || !current.url) continue;
-              if (inflightEnrichmentRef.current.has(current.id)) continue;
-              inflightEnrichmentRef.current.add(current.id);
+              if (!current.id || !current.url) continue
+              if (inflightEnrichmentRef.current.has(current.id)) continue
+              inflightEnrichmentRef.current.add(current.id)
 
               if (!cancelled) {
                 setBookmarks((prev) =>
                   prev.map((item) =>
-                    item.id === current.id
-                      ? { ...item, is_enriching: true }
-                      : item,
+                    item.id === current.id ? { ...item, is_enriching: true } : item,
                   ),
-                );
+                )
               }
 
               try {
                 const timeoutPromise = new Promise<never>((_, reject) => {
-                  setTimeout(
-                    () => reject(new Error("Enrichment timeout")),
-                    45000,
-                  );
-                });
-                const enrichmentPromise = enrichCreatedBookmark(
-                  current.id,
-                  current.url,
-                );
+                  setTimeout(() => reject(new Error("Enrichment timeout")), 45000)
+                })
+                const enrichmentPromise = enrichCreatedBookmark(current.id, current.url)
                 const enrichment = (await Promise.race([
                   enrichmentPromise,
                   timeoutPromise,
-                ])) as Awaited<ReturnType<typeof enrichCreatedBookmark>>;
+                ])) as Awaited<ReturnType<typeof enrichCreatedBookmark>>
 
-                if (cancelled) return;
-                applyEnrichment(current.id, enrichment);
+                if (cancelled) return
+                applyEnrichment(current.id, enrichment)
               } catch (error) {
-                console.error("Resume enrichment failed:", error);
-                const attemptedAt = new Date().toISOString();
+                console.error("Resume enrichment failed:", error)
+                const attemptedAt = new Date().toISOString()
                 if (!cancelled) {
                   setBookmarks((prev) =>
                     prev.map((item) =>
@@ -229,51 +216,45 @@ export function DashboardContent({
                             status: "failed",
                             is_enriching: false,
                             error_reason:
-                              error instanceof Error
-                                ? error.message
-                                : "Enrichment failed",
+                              error instanceof Error ? error.message : "Enrichment failed",
                             last_fetched_at: attemptedAt,
                           }
                         : item,
                     ),
-                  );
+                  )
                 }
               } finally {
-                inflightEnrichmentRef.current.delete(current.id);
+                inflightEnrichmentRef.current.delete(current.id)
               }
             }
-          };
+          }
 
           await Promise.all(
-            Array.from(
-              { length: Math.min(CONCURRENCY, pendingNow.length) },
-              () => worker(),
-            ),
-          );
+            Array.from({ length: Math.min(CONCURRENCY, pendingNow.length) }, () => worker()),
+          )
         }
       } finally {
-        resumePendingEnrichmentTask = null;
+        resumePendingEnrichmentTask = null
       }
-    })();
+    })()
 
     return () => {
-      cancelled = true;
-    };
-  }, [applyEnrichment, bookmarks, setBookmarks]);
+      cancelled = true
+    }
+  }, [applyEnrichment, bookmarks, setBookmarks])
 
-  const { filteredBookmarks, groupCounts, exportGroupOptions } =
-    useDashboardDerived({
-      bookmarks: dashboard.bookmarks,
-      groups: dashboard.groups,
-      activeGroupId: dashboard.activeGroupId,
-      deferredSearchQuery: dashboard.deferredSearchQuery,
-    });
-  const isFilteredSearch = dashboard.deferredSearchQuery.trim().length > 0;
+  const { filteredBookmarks, groupCounts, exportGroupOptions } = useDashboardDerived({
+    bookmarks: dashboard.bookmarks,
+    groups: dashboard.groups,
+    activeGroupId: dashboard.activeGroupId,
+    deferredSearchQuery: dashboard.deferredSearchQuery,
+  })
+  const isFilteredSearch = dashboard.deferredSearchQuery.trim().length > 0
 
   useGroupShortcuts({
     groups: dashboard.groups,
     setActiveGroupId: dashboard.setActiveGroupId,
-  });
+  })
 
   const {
     handleGroupCreated,
@@ -315,34 +296,34 @@ export function DashboardContent({
     setNewGroupColor: dashboard.setNewGroupColor,
     isCreatingGroup: dashboard.isCreatingGroup,
     setIsCreatingGroup: dashboard.setIsCreatingGroup,
-  });
+  })
 
   const handleGroupsReorder = useCallback(
     async (newOrder: GroupRow[]) => {
-      const reorderableOrder = newOrder.filter((g) => g.id !== NO_GROUP_ID);
-      const prev = dashboard.groups;
+      const reorderableOrder = newOrder.filter((g) => g.id !== NO_GROUP_ID)
+      const prev = dashboard.groups
       dashboard.setGroups(
         reorderableOrder.map((group, index) => ({
           ...group,
           order_index: index,
         })),
-      );
+      )
 
       const updates = reorderableOrder.map((group, index) => ({
         id: group.id,
         order_index: index,
-      }));
+      }))
 
       try {
-        await updateGroupsOrder(updates);
+        await updateGroupsOrder(updates)
       } catch (error) {
-        console.error("Reorder groups failed:", error);
-        toast.error("Failed to reorder groups");
-        dashboard.setGroups(prev);
+        console.error("Reorder groups failed:", error)
+        toast.error("Failed to reorder groups")
+        dashboard.setGroups(prev)
       }
     },
     [dashboard],
-  );
+  )
 
   const {
     importPreview,
@@ -366,23 +347,22 @@ export function DashboardContent({
     checkDuplicateBookmarks,
     setBookmarks: dashboard.setBookmarks,
     setGroups: dashboard.setGroups,
-  });
+  })
 
-  const { exportProgress, handleExportBookmarks, resetExportProgress } =
-    useExportHandlers({
-      bookmarks: dashboard.bookmarks,
-      groups: dashboard.groups,
-    });
+  const { exportProgress, handleExportBookmarks, resetExportProgress } = useExportHandlers({
+    bookmarks: dashboard.bookmarks,
+    groups: dashboard.groups,
+  })
 
   const handleResolveConflicts = useCallback(
     async (action: "skip" | "override") => {
-      void action;
+      void action
       if (importPreview) {
-        handleUpdateImportAction(action);
+        handleUpdateImportAction(action)
       }
     },
     [importPreview, handleUpdateImportAction],
-  );
+  )
 
   const {
     handleToggleSelection,
@@ -401,16 +381,16 @@ export function DashboardContent({
     restoreBookmark: restoreAction,
     moveBookmarksToGroup,
     lastBulkDeletedRef: dashboard.lastBulkDeletedRef,
-  });
+  })
 
   const { handleOpenGroup } = useOpenGroup({
     bookmarks: dashboard.bookmarks,
     deferredSearchQuery: dashboard.deferredSearchQuery,
-  });
+  })
 
   const { handleCommandModeChange } = useCommandMode({
     setCommandMode: dashboard.setCommandMode,
-  });
+  })
 
   const {
     handleCreateNote,
@@ -435,7 +415,7 @@ export function DashboardContent({
     lastBulkDeletedNotesRef: dashboard.lastBulkDeletedNotesRef,
     lastDeletedTodoRef: dashboard.lastDeletedTodoRef,
     lastBulkDeletedTodosRef: dashboard.lastBulkDeletedTodosRef,
-  });
+  })
 
   return (
     <DashboardLayout
@@ -491,5 +471,5 @@ export function DashboardContent({
       handleCancelSelection={handleCancelSelection}
       isFilteredSearch={isFilteredSearch}
     />
-  );
+  )
 }

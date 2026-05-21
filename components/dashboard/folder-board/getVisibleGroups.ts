@@ -1,54 +1,42 @@
-import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
+import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import {
   createNoGroupRow,
   isAllBookmarksGroupId,
   isMostVisitedGroupId,
   NO_GROUP_ID,
-} from "@/lib/system-groups";
+} from "@/lib/system-groups"
 
 export function getVisibleGroups(options: {
-  groups: GroupRow[];
-  bookmarks: BookmarkRow[];
-  activeGroupId: string;
-  isFiltered: boolean;
+  groups: GroupRow[]
+  bookmarks: BookmarkRow[]
+  activeGroupId: string
+  isFiltered: boolean
 }) {
-  const { groups, bookmarks, activeGroupId, isFiltered } = options;
+  const { groups, bookmarks, activeGroupId, isFiltered } = options
 
   if (isMostVisitedGroupId(activeGroupId)) {
-    const groupIds = new Set(
-      bookmarks.map((bookmark) => bookmark.group_id ?? NO_GROUP_ID),
-    );
-    const visibleGroups = groups.filter((group) => groupIds.has(group.id));
-    if (!groupIds.has(NO_GROUP_ID)) return visibleGroups;
+    const groupIds = new Set(bookmarks.map((bookmark) => bookmark.group_id ?? NO_GROUP_ID))
+    const visibleGroups = groups.filter((group) => groupIds.has(group.id))
+    if (!groupIds.has(NO_GROUP_ID)) return visibleGroups
 
-    return [...visibleGroups, createNoGroupRow()];
+    return [...visibleGroups, createNoGroupRow()]
   }
 
   if (!isAllBookmarksGroupId(activeGroupId)) {
-    return groups.filter((group) => group.id === activeGroupId);
+    return groups.filter((group) => group.id === activeGroupId)
   }
 
   if (isFiltered) {
-    const groupIds = new Set(
-      bookmarks.map((bookmark) => bookmark.group_id ?? NO_GROUP_ID),
-    );
-    const filtered = groups.filter((group) => groupIds.has(group.id));
-    if (!groupIds.has(NO_GROUP_ID)) return filtered;
+    const groupIds = new Set(bookmarks.map((bookmark) => bookmark.group_id ?? NO_GROUP_ID))
+    const filtered = groups.filter((group) => groupIds.has(group.id))
+    if (!groupIds.has(NO_GROUP_ID)) return filtered
 
-    return [
-      ...filtered,
-      createNoGroupRow(),
-    ];
+    return [...filtered, createNoGroupRow()]
   }
 
-  const groupsVisibleInAll = groups.filter(
-    (group) => !group.hide_from_all_bookmarks,
-  );
-  const hasUngrouped = bookmarks.some((bookmark) => !bookmark.group_id);
-  if (!hasUngrouped) return groupsVisibleInAll;
+  const groupsVisibleInAll = groups.filter((group) => !group.hide_from_all_bookmarks)
+  const hasUngrouped = bookmarks.some((bookmark) => !bookmark.group_id)
+  if (!hasUngrouped) return groupsVisibleInAll
 
-  return [
-    ...groupsVisibleInAll,
-    createNoGroupRow(),
-  ];
+  return [...groupsVisibleInAll, createNoGroupRow()]
 }

@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { SVGProps } from "react"
 
 const Default = (props: SVGProps<SVGSVGElement>) => (
   <svg
@@ -40,5 +40,5 @@ const Default = (props: SVGProps<SVGSVGElement>) => (
       />
     </g>
   </svg>
-);
-export default Default;
+)
+export default Default

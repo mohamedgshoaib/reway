@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Sun01Icon, Moon02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
+import { Sun01Icon, Moon02Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useTheme } from "next-themes"
+import * as React from "react"
+import { Button } from "@/components/ui/button"
 
 export function ModeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme()
 
   return (
     <Button
@@ -28,5 +28,5 @@ export function ModeToggle() {
       />
       <span className="sr-only">Toggle theme</span>
     </Button>
-  );
+  )
 }

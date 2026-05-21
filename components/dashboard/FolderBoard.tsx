@@ -1,59 +1,51 @@
-"use client";
+"use client"
 
-import React, { memo, useEffect, useId, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import {
-  DndContext,
-  DragOverlay,
-  defaultDropAnimationSideEffects,
-} from "@dnd-kit/core";
-import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { BookmarkRow, GroupRow } from "@/lib/supabase/queries";
-import { SortableBookmarkIcon } from "./SortableBookmarkIcon";
-import { getDisplayTitle, getDomain } from "@/lib/utils";
-import { QuickGlanceDialog } from "./QuickGlanceDialog";
-import { BookmarkEditSheet } from "./BookmarkEditSheet";
-import { FolderHeader } from "./folder-board/FolderHeader";
-import { EmptyFolder } from "./folder-board/EmptyFolder";
-import { FolderDragOverlay } from "./folder-board/FolderDragOverlay";
-import { useBookmarkBuckets } from "./folder-board/useBookmarkBuckets";
-import { useFolderKeyboardNav } from "./folder-board/useFolderKeyboardNav";
-import { getVisibleGroups } from "./folder-board/getVisibleGroups";
-import { useFolderCollapseState } from "./folder-board/useFolderCollapseState";
-import { useFolderGridColumns } from "./folder-board/useFolderGridColumns";
-import { useFolderDnd } from "./folder-board/useFolderDnd";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-} from "@/components/ui/accordion";
-import { isMostVisitedGroupId } from "@/lib/system-groups";
+import { DndContext, DragOverlay, defaultDropAnimationSideEffects } from "@dnd-kit/core"
+import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable"
+import React, { memo, useEffect, useId, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
+import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion"
+import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
+import { isMostVisitedGroupId } from "@/lib/system-groups"
+import { getDisplayTitle, getDomain } from "@/lib/utils"
+import { BookmarkEditSheet } from "./BookmarkEditSheet"
+import { EmptyFolder } from "./folder-board/EmptyFolder"
+import { FolderDragOverlay } from "./folder-board/FolderDragOverlay"
+import { FolderHeader } from "./folder-board/FolderHeader"
+import { getVisibleGroups } from "./folder-board/getVisibleGroups"
+import { useBookmarkBuckets } from "./folder-board/useBookmarkBuckets"
+import { useFolderCollapseState } from "./folder-board/useFolderCollapseState"
+import { useFolderDnd } from "./folder-board/useFolderDnd"
+import { useFolderGridColumns } from "./folder-board/useFolderGridColumns"
+import { useFolderKeyboardNav } from "./folder-board/useFolderKeyboardNav"
+import { QuickGlanceDialog } from "./QuickGlanceDialog"
+import { SortableBookmarkIcon } from "./SortableBookmarkIcon"
 
 interface FolderBoardProps {
-  bookmarks: BookmarkRow[];
-  groups: GroupRow[];
-  activeGroupId: string;
-  onReorder: (groupId: string, newOrder: BookmarkRow[]) => void;
-  onDeleteBookmark: (id: string) => void;
+  bookmarks: BookmarkRow[]
+  groups: GroupRow[]
+  activeGroupId: string
+  onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  onDeleteBookmark: (id: string) => void
   onEditBookmark: (
     id: string,
     data: {
-      title: string;
-      url: string;
-      description?: string;
-      favicon_url?: string;
-      group_id?: string;
-      applyFaviconToDomain?: boolean;
+      title: string
+      url: string
+      description?: string
+      favicon_url?: string
+      group_id?: string
+      applyFaviconToDomain?: boolean
     },
-  ) => Promise<void>;
-  selectionMode?: boolean;
-  selectedIds?: Set<string>;
-  onToggleSelection?: (id: string) => void;
-  onEnterSelectionMode?: () => void;
-  onKeyboardContextChange?: (context: "folder" | "bookmark") => void;
-  isFiltered?: boolean;
-  layoutDensity?: "compact" | "extended";
-  folderHeaderTint?: "off" | "low" | "medium" | "high";
+  ) => Promise<void>
+  selectionMode?: boolean
+  selectedIds?: Set<string>
+  onToggleSelection?: (id: string) => void
+  onEnterSelectionMode?: () => void
+  onKeyboardContextChange?: (context: "folder" | "bookmark") => void
+  isFiltered?: boolean
+  layoutDensity?: "compact" | "extended"
+  folderHeaderTint?: "off" | "low" | "medium" | "high"
 }
 
 export const FolderBoard = memo(function FolderBoard({
@@ -72,31 +64,24 @@ export const FolderBoard = memo(function FolderBoard({
   layoutDensity = "compact",
   folderHeaderTint = "medium",
 }: FolderBoardProps) {
-  const stableSelectedIds = useMemo(
-    () => selectedIds ?? new Set<string>(),
-    [selectedIds],
-  );
+  const stableSelectedIds = useMemo(() => selectedIds ?? new Set<string>(), [selectedIds])
 
-  const { collapsedGroups, setCollapsedGroups } = useFolderCollapseState();
+  const { collapsedGroups, setCollapsedGroups } = useFolderCollapseState()
 
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [selectedBookmarkIndex, setSelectedBookmarkIndex] =
-    useState<number>(-1);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  const [selectedBookmarkIndex, setSelectedBookmarkIndex] = useState<number>(-1)
 
-  const [hasKeyboardFocus, setHasKeyboardFocus] = useState(false);
-  const dndContextBaseId = useId();
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewBookmark, setPreviewBookmark] = useState<BookmarkRow | null>(
-    null,
-  );
-  const [mounted, setMounted] = useState(false);
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [editSheetBookmark, setEditSheetBookmark] =
-    useState<BookmarkRow | null>(null);
+  const [hasKeyboardFocus, setHasKeyboardFocus] = useState(false)
+  const dndContextBaseId = useId()
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewBookmark, setPreviewBookmark] = useState<BookmarkRow | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false)
+  const [editSheetBookmark, setEditSheetBookmark] = useState<BookmarkRow | null>(null)
 
   useEffect(() => {
-    queueMicrotask(() => setMounted(true));
-  }, []);
+    queueMicrotask(() => setMounted(true))
+  }, [])
 
   const visibleGroups = useMemo(() => {
     return getVisibleGroups({
@@ -104,110 +89,93 @@ export const FolderBoard = memo(function FolderBoard({
       bookmarks,
       activeGroupId,
       isFiltered,
-    });
-  }, [activeGroupId, bookmarks, groups, isFiltered]);
+    })
+  }, [activeGroupId, bookmarks, groups, isFiltered])
 
-  const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId);
+  const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId)
 
   const bookmarkBuckets = useBookmarkBuckets({
     bookmarks,
     visibleGroups,
     activeGroupId,
-  });
+  })
 
-  const { gridColumns, folderGridColumns, foldersGridRef, activeGridRef } =
-    useFolderGridColumns({
-      isExtendedFolderGrid: layoutDensity === "extended",
-      selectedFolderId,
-    });
+  const { gridColumns, folderGridColumns, foldersGridRef, activeGridRef } = useFolderGridColumns({
+    isExtendedFolderGrid: layoutDensity === "extended",
+    selectedFolderId,
+  })
 
-  const {
-    sensors,
-    collisionDetection,
-    activeBookmark,
-    handleDragStart,
-    handleDragEnd,
-  } = useFolderDnd({
-    bookmarks,
-    bookmarkBuckets,
-    onReorder,
-    disabled: isMostVisitedGroup,
-  });
-  const isExtendedFolderGrid = layoutDensity === "extended";
+  const { sensors, collisionDetection, activeBookmark, handleDragStart, handleDragEnd } =
+    useFolderDnd({
+      bookmarks,
+      bookmarkBuckets,
+      onReorder,
+      disabled: isMostVisitedGroup,
+    })
+  const isExtendedFolderGrid = layoutDensity === "extended"
 
   const openFolders = useMemo(
-    () =>
-      visibleGroups
-        .filter((group) => !collapsedGroups[group.id])
-        .map((group) => group.id),
+    () => visibleGroups.filter((group) => !collapsedGroups[group.id]).map((group) => group.id),
     [collapsedGroups, visibleGroups],
-  );
+  )
 
   const folderColumns = useMemo(() => {
-    if (!isExtendedFolderGrid) return [visibleGroups];
-    const cols = Math.max(1, folderGridColumns);
-    const result: GroupRow[][] = Array.from({ length: cols }, () => []);
+    if (!isExtendedFolderGrid) return [visibleGroups]
+    const cols = Math.max(1, folderGridColumns)
+    const result: GroupRow[][] = Array.from({ length: cols }, () => [])
     visibleGroups.forEach((group, index) => {
-      result[index % cols]?.push(group);
-    });
-    return result;
-  }, [folderGridColumns, isExtendedFolderGrid, visibleGroups]);
+      result[index % cols]?.push(group)
+    })
+    return result
+  }, [folderGridColumns, isExtendedFolderGrid, visibleGroups])
 
   const toggleCollapse = (groupId: string) => {
-    setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
-  };
+    setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }))
+  }
 
   const handleAccordionChange = (values: string[]) => {
     setCollapsedGroups((prev) => {
-      const next = { ...prev };
+      const next = { ...prev }
       visibleGroups.forEach((group) => {
-        next[group.id] = !values.includes(group.id);
-      });
-      return next;
-    });
+        next[group.id] = !values.includes(group.id)
+      })
+      return next
+    })
 
     if (selectedFolderId && !values.includes(selectedFolderId)) {
-      setSelectedBookmarkIndex(-1);
+      setSelectedBookmarkIndex(-1)
     }
-  };
+  }
 
   useEffect(() => {
     if (visibleGroups.length === 0) {
       queueMicrotask(() => {
-        setSelectedFolderId(null);
-        setSelectedBookmarkIndex(-1);
-        setHasKeyboardFocus(false);
-        onKeyboardContextChange?.("folder");
-      });
-      return;
+        setSelectedFolderId(null)
+        setSelectedBookmarkIndex(-1)
+        setHasKeyboardFocus(false)
+        onKeyboardContextChange?.("folder")
+      })
+      return
     }
 
-    if (
-      selectedFolderId &&
-      visibleGroups.some((g) => g.id === selectedFolderId)
-    ) {
-      return;
+    if (selectedFolderId && visibleGroups.some((g) => g.id === selectedFolderId)) {
+      return
     }
 
     if (hasKeyboardFocus) {
       queueMicrotask(() => {
-        setSelectedFolderId(visibleGroups[0]?.id ?? null);
-        setSelectedBookmarkIndex(-1);
-      });
+        setSelectedFolderId(visibleGroups[0]?.id ?? null)
+        setSelectedBookmarkIndex(-1)
+      })
     } else {
       queueMicrotask(() => {
-        setSelectedFolderId(null);
-        setSelectedBookmarkIndex(-1);
-      });
+        setSelectedFolderId(null)
+        setSelectedBookmarkIndex(-1)
+      })
     }
     // Issue: missing effect deps can call an outdated callback.
     // Fix: include `onKeyboardContextChange`.
-  }, [
-    hasKeyboardFocus,
-    onKeyboardContextChange,
-    selectedFolderId,
-    visibleGroups,
-  ]);
+  }, [hasKeyboardFocus, onKeyboardContextChange, selectedFolderId, visibleGroups])
 
   useFolderKeyboardNav({
     bookmarkBuckets,
@@ -223,11 +191,11 @@ export const FolderBoard = memo(function FolderBoard({
     setHasKeyboardFocus,
     onKeyboardContextChange,
     onPreview: (bookmark) => {
-      setPreviewBookmark(bookmark);
-      setIsPreviewOpen(true);
+      setPreviewBookmark(bookmark)
+      setIsPreviewOpen(true)
     },
     onToggleCollapse: toggleCollapse,
-  });
+  })
 
   return (
     <>
@@ -260,24 +228,18 @@ export const FolderBoard = memo(function FolderBoard({
           {folderColumns.map((columnGroups, columnIndex) => (
             <div
               key={`folder-col-${columnIndex}`}
-              className={
-                isExtendedFolderGrid
-                  ? "flex flex-col gap-5"
-                  : "flex flex-col gap-5"
-              }
+              className={isExtendedFolderGrid ? "flex flex-col gap-5" : "flex flex-col gap-5"}
             >
               {columnGroups.map((group) => {
-                const groupBookmarks = bookmarkBuckets[group.id] ?? [];
-                const isSelectedFolder = group.id === selectedFolderId;
+                const groupBookmarks = bookmarkBuckets[group.id] ?? []
+                const isSelectedFolder = group.id === selectedFolderId
 
                 return (
                   <AccordionItem
                     key={group.id}
                     value={group.id}
                     className={`rounded-3xl border-0 ring-1 ring-foreground/8 bg-background/30 [content-visibility:auto] ${
-                      hasKeyboardFocus &&
-                      isSelectedFolder &&
-                      selectedBookmarkIndex < 0
+                      hasKeyboardFocus && isSelectedFolder && selectedBookmarkIndex < 0
                         ? "ring-2 ring-primary/20"
                         : ""
                     } ${isExtendedFolderGrid ? "w-full" : ""}`}
@@ -303,9 +265,7 @@ export const FolderBoard = memo(function FolderBoard({
                         ) : (
                           <SortableContext
                             id={group.id}
-                            items={groupBookmarks.map(
-                              (bookmark) => bookmark.id,
-                            )}
+                            items={groupBookmarks.map((bookmark) => bookmark.id)}
                             strategy={rectSortingStrategy}
                           >
                             <div
@@ -325,34 +285,25 @@ export const FolderBoard = memo(function FolderBoard({
                                   url={bookmark.url}
                                   domain={getDomain(bookmark.url)}
                                   favicon={bookmark.favicon_url || ""}
-                                  isSelected={
-                                    isSelectedFolder &&
-                                    selectedBookmarkIndex === index
-                                  }
+                                  isSelected={isSelectedFolder && selectedBookmarkIndex === index}
                                   selectionMode={selectionMode}
-                                  isSelectionChecked={stableSelectedIds.has(
-                                    bookmark.id,
-                                  )}
+                                  isSelectionChecked={stableSelectedIds.has(bookmark.id)}
                                   dragDisabled={isMostVisitedGroup}
                                   onToggleSelection={onToggleSelection}
                                   onEnterSelectionMode={onEnterSelectionMode}
                                   onDelete={onDeleteBookmark}
                                   onEdit={(id: string) => {
-                                    const target = bookmarks.find(
-                                      (b) => b.id === id,
-                                    );
+                                    const target = bookmarks.find((b) => b.id === id)
                                     if (target) {
-                                      setEditSheetBookmark(target);
-                                      setIsEditSheetOpen(true);
+                                      setEditSheetBookmark(target)
+                                      setIsEditSheetOpen(true)
                                     }
                                   }}
                                   onPreview={(id: string) => {
-                                    const target = bookmarks.find(
-                                      (b) => b.id === id,
-                                    );
+                                    const target = bookmarks.find((b) => b.id === id)
                                     if (target) {
-                                      setPreviewBookmark(target);
-                                      setIsPreviewOpen(true);
+                                      setPreviewBookmark(target)
+                                      setIsPreviewOpen(true)
                                     }
                                   }}
                                 />
@@ -363,7 +314,7 @@ export const FolderBoard = memo(function FolderBoard({
                       </div>
                     </AccordionContent>
                   </AccordionItem>
-                );
+                )
               })}
             </div>
           ))}
@@ -391,13 +342,13 @@ export const FolderBoard = memo(function FolderBoard({
         open={isPreviewOpen}
         onOpenChange={setIsPreviewOpen}
         onEdit={(bookmark) => {
-          setIsPreviewOpen(false);
-          setEditSheetBookmark(bookmark);
-          setIsEditSheetOpen(true);
+          setIsPreviewOpen(false)
+          setEditSheetBookmark(bookmark)
+          setIsEditSheetOpen(true)
         }}
         onDelete={(id) => {
-          setIsPreviewOpen(false);
-          onDeleteBookmark(id);
+          setIsPreviewOpen(false)
+          onDeleteBookmark(id)
         }}
         groups={groups}
       />
@@ -410,5 +361,5 @@ export const FolderBoard = memo(function FolderBoard({
         onSave={onEditBookmark}
       />
     </>
-  );
-});
+  )
+})

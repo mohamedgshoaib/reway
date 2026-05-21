@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { Favicon } from "@/components/dashboard/Favicon";
-import { motion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowUpRight03Icon,
   Copy01Icon,
   Delete02Icon,
   PencilEdit01Icon,
   Tick01Icon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion } from "motion/react"
+import { Favicon } from "@/components/dashboard/Favicon"
 
-import type { HeroBookmark } from "./types";
-import TextShimmer from "@/components/ui/text-shimmer";
+import TextShimmer from "@/components/ui/text-shimmer"
+import type { HeroBookmark } from "./types"
 
 export function BookmarksGrid({
   stableBookmarkSlots,
@@ -22,13 +22,12 @@ export function BookmarksGrid({
   onEdit,
 }: {
   stableBookmarkSlots: Array<
-    | { kind: "bookmark"; value: HeroBookmark }
-    | { kind: "placeholder"; key: string }
-  >;
-  copiedIndex: number | null;
-  onCopy: (event: React.MouseEvent, bookmarkUrl: string, index: number) => void;
-  onOpen: (event: React.MouseEvent, bookmarkUrl: string) => void;
-  onEdit: (event: React.MouseEvent) => void;
+    { kind: "bookmark"; value: HeroBookmark } | { kind: "placeholder"; key: string }
+  >
+  copiedIndex: number | null
+  onCopy: (event: React.MouseEvent, bookmarkUrl: string, index: number) => void
+  onOpen: (event: React.MouseEvent, bookmarkUrl: string) => void
+  onEdit: (event: React.MouseEvent) => void
 }) {
   return (
     <div className="w-full grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-3 min-h-49">
@@ -75,17 +74,11 @@ export function BookmarksGrid({
                   {slot.value.title}
                 </p>
                 {slot.value.shimmerUrl ? (
-                  <TextShimmer
-                    as="p"
-                    className="block truncate text-xs font-medium"
-                    duration={2.5}
-                  >
+                  <TextShimmer as="p" className="block truncate text-xs font-medium" duration={2.5}>
                     {slot.value.url}
                   </TextShimmer>
                 ) : (
-                  <p className="truncate text-xs text-muted-foreground">
-                    {slot.value.domain}
-                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{slot.value.domain}</p>
                 )}
               </div>
             </a>
@@ -133,5 +126,5 @@ export function BookmarksGrid({
         ),
       )}
     </div>
-  );
+  )
 }

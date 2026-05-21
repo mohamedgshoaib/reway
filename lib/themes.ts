@@ -10,11 +10,11 @@ export type DashboardPaletteTheme =
   | "cyberpunk"
   | "prettier"
   | "vercel"
-  | "louis-vuitton";
+  | "louis-vuitton"
 
 export interface DashboardThemeDefinition {
-  value: DashboardPaletteTheme;
-  label: string;
+  value: DashboardPaletteTheme
+  label: string
 }
 
 export const DASHBOARD_THEMES: DashboardThemeDefinition[] = [
@@ -66,15 +66,13 @@ export const DASHBOARD_THEMES: DashboardThemeDefinition[] = [
     value: "louis-vuitton",
     label: "Louis Vuitton",
   },
-];
+]
 
-export function isDashboardPaletteTheme(
-  value: string,
-): value is DashboardPaletteTheme {
-  return DASHBOARD_THEMES.some((theme) => theme.value === value);
+export function isDashboardPaletteTheme(value: string): value is DashboardPaletteTheme {
+  return DASHBOARD_THEMES.some((theme) => theme.value === value)
 }
 
 export function getPaletteThemeClassName(theme: DashboardPaletteTheme) {
-  if (theme === "default") return "";
-  return `theme-${theme}`;
+  if (theme === "default") return ""
+  return `theme-${theme}`
 }

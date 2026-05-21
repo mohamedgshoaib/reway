@@ -1,22 +1,22 @@
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
   ArrowUpRight03Icon,
   CheckmarkSquare02Icon,
   Folder01Icon,
   MoreVerticalIcon,
-} from "@hugeicons/core-free-icons";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+} from "@/components/ui/context-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 
 export function AllBookmarksRow({
   active,
@@ -29,15 +29,15 @@ export function AllBookmarksRow({
   icon = Folder01Icon,
   onActionMenuOpenChange,
 }: {
-  active: boolean;
-  selectionMode: boolean;
-  onSelectAll: () => void;
-  onOpenAll: () => void;
-  onToggleSelectionMode: () => void;
-  label?: string;
-  openLabel?: string;
-  icon?: IconSvgElement;
-  onActionMenuOpenChange?: (open: boolean) => void;
+  active: boolean
+  selectionMode: boolean
+  onSelectAll: () => void
+  onOpenAll: () => void
+  onToggleSelectionMode: () => void
+  label?: string
+  openLabel?: string
+  icon?: IconSvgElement
+  onActionMenuOpenChange?: (open: boolean) => void
 }) {
   return (
     <ContextMenu onOpenChange={onActionMenuOpenChange}>
@@ -46,20 +46,16 @@ export function AllBookmarksRow({
           role="button"
           tabIndex={0}
           onClick={() => {
-            onSelectAll();
+            onSelectAll()
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              onSelectAll();
+              event.preventDefault()
+              onSelectAll()
             }
           }}
           className={`group flex items-center gap-3 px-2 py-1.5 transition-all duration-200 cursor-pointer active:scale-[0.97] outline-none ${
-            active
-              ? "text-primary font-semibold"
-              : selectionMode
-                ? ""
-                : "hover:text-primary"
+            active ? "text-primary font-semibold" : selectionMode ? "" : "hover:text-primary"
           }`}
         >
           <div className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer">
@@ -102,10 +98,7 @@ export function AllBookmarksRow({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-40">
-              <DropdownMenuItem
-                onClick={onOpenAll}
-                className="gap-2 text-xs cursor-pointer"
-              >
+              <DropdownMenuItem onClick={onOpenAll} className="gap-2 text-xs cursor-pointer">
                 <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
                 {openLabel}
               </DropdownMenuItem>
@@ -115,16 +108,13 @@ export function AllBookmarksRow({
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-44">
-        <ContextMenuItem
-          onClick={onOpenAll}
-          className="gap-2 text-xs cursor-pointer"
-        >
+        <ContextMenuItem onClick={onOpenAll} className="gap-2 text-xs cursor-pointer">
           <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
           {openLabel}
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() => {
-            onToggleSelectionMode();
+            onToggleSelectionMode()
           }}
           className="gap-2 text-xs cursor-pointer"
         >
@@ -133,5 +123,5 @@ export function AllBookmarksRow({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  );
+  )
 }

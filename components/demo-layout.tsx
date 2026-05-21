@@ -1,9 +1,9 @@
-import { HeroSection } from "@/components/landing/HeroSection";
-import { FeaturesSection } from "@/components/landing/FeaturesSection";
-import { DemoVideosSection } from "@/components/landing/DemoVideosSection";
-import { CallToAction } from "@/components/landing/CallToAction";
-import { LandingFooter } from "@/components/landing/LandingFooter";
-import { ScrollToTopButton } from "@/components/landing/ScrollToTopButton";
+import { CallToAction } from "@/components/landing/CallToAction"
+import { DemoVideosSection } from "@/components/landing/DemoVideosSection"
+import { FeaturesSection } from "@/components/landing/FeaturesSection"
+import { HeroSection } from "@/components/landing/HeroSection"
+import { LandingFooter } from "@/components/landing/LandingFooter"
+import { ScrollToTopButton } from "@/components/landing/ScrollToTopButton"
 
 export function DemoLayout() {
   return (
@@ -18,5 +18,5 @@ export function DemoLayout() {
       <ScrollToTopButton />
       <LandingFooter />
     </div>
-  );
+  )
 }

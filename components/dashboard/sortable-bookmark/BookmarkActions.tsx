@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import type { MouseEventHandler } from "react";
 import {
   ArrowUpRight03Icon,
   Copy01Icon,
   Delete02Icon,
   PencilEdit01Icon,
   Tick01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui/button";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type { MouseEventHandler } from "react"
+import { Button } from "@/components/ui/button"
 
 interface BookmarkActionsProps {
-  isCopied: boolean;
-  onEdit: MouseEventHandler<HTMLButtonElement>;
-  onCopyLink: MouseEventHandler<HTMLButtonElement>;
-  onOpen: MouseEventHandler<HTMLButtonElement>;
-  onDelete: MouseEventHandler<HTMLButtonElement>;
+  isCopied: boolean
+  onEdit: MouseEventHandler<HTMLButtonElement>
+  onCopyLink: MouseEventHandler<HTMLButtonElement>
+  onOpen: MouseEventHandler<HTMLButtonElement>
+  onDelete: MouseEventHandler<HTMLButtonElement>
 }
 
 export function BookmarkActions({
@@ -80,13 +80,10 @@ export function BookmarkActions({
         onClick={onDelete}
         aria-label="Delete bookmark"
       >
-        <div
-          className="transition-transform duration-200 ease-in-out"
-          key="delete"
-        >
+        <div className="transition-transform duration-200 ease-in-out" key="delete">
           <HugeiconsIcon icon={Delete02Icon} size={16} />
         </div>
       </Button>
     </div>
-  );
+  )
 }

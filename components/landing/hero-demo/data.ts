@@ -1,4 +1,4 @@
-import type { HeroBookmark, HeroGroup, HeroIcon } from "./types";
+import type { HeroBookmark, HeroGroup, HeroIcon } from "./types"
 
 export const PREVIEW_BOOKMARKS: Omit<HeroBookmark, "id">[] = [
   {
@@ -10,8 +10,7 @@ export const PREVIEW_BOOKMARKS: Omit<HeroBookmark, "id">[] = [
     group: "Research",
   },
   {
-    title:
-      "Vercel: Build and deploy the best web experiences with the AI Cloud – Vercel",
+    title: "Vercel: Build and deploy the best web experiences with the AI Cloud – Vercel",
     domain: "vercel.com",
     url: "https://vercel.com",
     date: "Sep 10",
@@ -55,8 +54,7 @@ export const PREVIEW_BOOKMARKS: Omit<HeroBookmark, "id">[] = [
     domain: "developer.mozilla.org",
     url: "https://developer.mozilla.org",
     date: "Sep 02",
-    favicon:
-      "https://www.google.com/s2/favicons?domain=developer.mozilla.org&sz=64",
+    favicon: "https://www.google.com/s2/favicons?domain=developer.mozilla.org&sz=64",
     group: "Learn",
   },
   {
@@ -72,17 +70,16 @@ export const PREVIEW_BOOKMARKS: Omit<HeroBookmark, "id">[] = [
     domain: "www.typescriptlang.org",
     url: "https://www.typescriptlang.org",
     date: "Aug 30",
-    favicon:
-      "https://www.google.com/s2/favicons?domain=www.typescriptlang.org&sz=64",
+    favicon: "https://www.google.com/s2/favicons?domain=www.typescriptlang.org&sz=64",
     group: "Learn",
   },
-];
+]
 
 export function getInitialHeroGroups(icons: {
-  folder: HeroIcon;
-  search: HeroIcon;
-  bulb: HeroIcon;
-  tools: HeroIcon;
+  folder: HeroIcon
+  search: HeroIcon
+  bulb: HeroIcon
+  tools: HeroIcon
 }): HeroGroup[] {
   return [
     { id: "all", label: "All Bookmarks", icon: icons.folder, color: null },
@@ -95,5 +92,5 @@ export function getInitialHeroGroups(icons: {
     },
     { id: "Build", label: "Build", icon: icons.tools, color: "#10b981" },
     { id: "Learn", label: "Learn", icon: icons.folder, color: "#8b5cf6" },
-  ];
+  ]
 }

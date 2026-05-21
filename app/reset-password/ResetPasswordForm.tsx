@@ -1,35 +1,28 @@
-"use client";
+"use client"
 
-import { useActionState } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { updatePasswordAction } from "./actions";
-import { ActionResponse } from "@/app/login/actions";
+import { motion, useReducedMotion } from "motion/react"
+import { useActionState } from "react"
+import { ActionResponse } from "@/app/login/actions"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { updatePasswordAction } from "./actions"
 
 const initialState: ActionResponse = {
   success: false,
   error: undefined,
   message: undefined,
-};
+}
 
 export function ResetPasswordForm() {
-  const shouldReduceMotion = useReducedMotion();
-  const [state, formAction, isPending] = useActionState(
-    updatePasswordAction,
-    initialState,
-  );
+  const shouldReduceMotion = useReducedMotion()
+  const [state, formAction, isPending] = useActionState(updatePasswordAction, initialState)
 
   return (
     <motion.div
       initial={{ opacity: 0, transform: "translateY(10px)" }}
       animate={{ opacity: 1, transform: "translateY(0px)" }}
-      transition={
-        shouldReduceMotion
-          ? { duration: 0 }
-          : { duration: 0.26, ease: "easeOut" }
-      }
+      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: "easeOut" }}
       suppressHydrationWarning
       className="space-y-8"
     >
@@ -86,5 +79,5 @@ export function ResetPasswordForm() {
         </Button>
       </form>
     </motion.div>
-  );
+  )
 }

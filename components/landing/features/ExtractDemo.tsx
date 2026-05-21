@@ -1,85 +1,81 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { Kbd } from "@/components/ui/kbd";
-import TextShimmer from "@/components/ui/text-shimmer";
-import { demoLinks } from "./demo-data";
+import { Add01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import Image from "next/image"
+import { useEffect, useMemo, useState } from "react"
+import { Kbd } from "@/components/ui/kbd"
+import TextShimmer from "@/components/ui/text-shimmer"
+import { demoLinks } from "./demo-data"
 
 export function ExtractDemo() {
-  const shouldReduceMotion = useReducedMotion();
-  const typingText = "check: linear.app, vercel.com, and ui.shadcn.com";
+  const shouldReduceMotion = useReducedMotion()
+  const typingText = "check: linear.app, vercel.com, and ui.shadcn.com"
 
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false)
 
-  const [phase, setPhase] = useState(0);
-  const [typedIndex, setTypedIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  const [phase, setPhase] = useState(0)
+  const [typedIndex, setTypedIndex] = useState(0)
 
   useEffect(() => {
-    if (!mounted) return;
-    if (!shouldReduceMotion) return;
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (!shouldReduceMotion) return
     const timer = setTimeout(() => {
-      setPhase(2);
-      setTypedIndex(typingText.length);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [mounted, shouldReduceMotion, typingText.length]);
+      setPhase(2)
+      setTypedIndex(typingText.length)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [mounted, shouldReduceMotion, typingText.length])
 
   useEffect(() => {
-    if (!mounted || shouldReduceMotion || phase !== 0) return undefined;
+    if (!mounted || shouldReduceMotion || phase !== 0) return undefined
 
-    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let intervalId: ReturnType<typeof setInterval> | null = null
 
     const resetTimer = setTimeout(() => {
-      setTypedIndex(0);
+      setTypedIndex(0)
       intervalId = setInterval(() => {
         setTypedIndex((prev) => {
           if (prev >= typingText.length) {
-            if (intervalId) clearInterval(intervalId);
-            setTimeout(() => setPhase(1), 400);
-            return prev;
+            if (intervalId) clearInterval(intervalId)
+            setTimeout(() => setPhase(1), 400)
+            return prev
           }
-          return prev + 1;
-        });
-      }, 28);
-    }, 0);
+          return prev + 1
+        })
+      }, 28)
+    }, 0)
 
     return () => {
-      clearTimeout(resetTimer);
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [mounted, phase, shouldReduceMotion, typingText]);
+      clearTimeout(resetTimer)
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [mounted, phase, shouldReduceMotion, typingText])
 
   useEffect(() => {
-    if (!mounted || shouldReduceMotion || phase !== 1) return undefined;
-    const timer = setTimeout(() => setPhase(2), 2600);
-    return () => clearTimeout(timer);
-  }, [mounted, phase, shouldReduceMotion]);
+    if (!mounted || shouldReduceMotion || phase !== 1) return undefined
+    const timer = setTimeout(() => setPhase(2), 2600)
+    return () => clearTimeout(timer)
+  }, [mounted, phase, shouldReduceMotion])
 
   useEffect(() => {
-    if (!mounted || shouldReduceMotion || phase !== 2) return undefined;
-    const timer = setTimeout(() => setPhase(0), 3200);
-    return () => clearTimeout(timer);
-  }, [mounted, phase, shouldReduceMotion]);
+    if (!mounted || shouldReduceMotion || phase !== 2) return undefined
+    const timer = setTimeout(() => setPhase(0), 3200)
+    return () => clearTimeout(timer)
+  }, [mounted, phase, shouldReduceMotion])
 
   const inputLinks = useMemo(
-    () => [
-      "https://linear.app/board",
-      "https://vercel.com/ideas",
-      "https://ui.shadcn.com",
-    ],
+    () => ["https://linear.app/board", "https://vercel.com/ideas", "https://ui.shadcn.com"],
     [],
-  );
+  )
 
-  const enableMotion = mounted && !shouldReduceMotion;
+  const enableMotion = mounted && !shouldReduceMotion
 
   return (
     <div className="w-full">
@@ -184,13 +180,9 @@ export function ExtractDemo() {
                         loading="lazy"
                         referrerPolicy="no-referrer"
                       />
-                      <span className="font-semibold text-foreground">
-                        {item.title}
-                      </span>
+                      <span className="font-semibold text-foreground">{item.title}</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {item.group}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground">{item.group}</span>
                   </div>
                 ))}
               </motion.div>
@@ -199,5 +191,5 @@ export function ExtractDemo() {
         </div>
       </div>
     </div>
-  );
+  )
 }

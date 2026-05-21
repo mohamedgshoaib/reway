@@ -1,22 +1,22 @@
-import { SupabaseClient, User } from "@supabase/supabase-js";
-import { Database } from "./database.types";
-import { normalizeUrl } from "@/lib/metadata";
-import { getDomain } from "@/lib/utils";
+import { SupabaseClient, User } from "@supabase/supabase-js"
+import { normalizeUrl } from "@/lib/metadata"
+import { getDomain } from "@/lib/utils"
+import { Database } from "./database.types"
 
 type SeedBookmark = {
-  url: string;
-  title: string;
-  description?: string;
-  favicon_url?: string;
-  og_image_url?: string;
-};
+  url: string
+  title: string
+  description?: string
+  favicon_url?: string
+  og_image_url?: string
+}
 
 type SeedGroup = {
-  name: string;
-  icon: string;
-  color: string;
-  bookmarks: SeedBookmark[];
-};
+  name: string
+  icon: string
+  color: string
+  bookmarks: SeedBookmark[]
+}
 
 export const DEMO_GROUPS: SeedGroup[] = [
   {
@@ -35,8 +35,7 @@ export const DEMO_GROUPS: SeedGroup[] = [
         url: "https://drive.google.com/file/d/10rypTtZMKT_IR53b5cS7epw7acEoC9WW/view?usp=sharing",
         title: "Download Reway Extension",
         description: "Our extension enables powerful features.",
-        favicon_url:
-          "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png",
+        favicon_url: "https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png",
       },
       {
         url: "https://github.com/mohamed-g-shoaib/reway",
@@ -84,8 +83,7 @@ export const DEMO_GROUPS: SeedGroup[] = [
         title: "DeepSeek",
         description: "Into the Unknown.",
         favicon_url: "https://cdn.deepseek.com/chat/icon.png",
-        og_image_url:
-          "https://cdn.deepseek.com/images/deepseek-chat-open-graph-image.jpeg",
+        og_image_url: "https://cdn.deepseek.com/images/deepseek-chat-open-graph-image.jpeg",
       },
       {
         url: "https://www.perplexity.ai/",
@@ -126,8 +124,7 @@ export const DEMO_GROUPS: SeedGroup[] = [
       {
         url: "https://www.smoothui.dev/",
         title: "Smooth UI",
-        description:
-          "Animated React Components for shadcn/ui | Motion & Tailwind.",
+        description: "Animated React Components for shadcn/ui | Motion & Tailwind.",
         favicon_url: "https://www.smoothui.dev/favicon.ico",
         og_image_url: "https://smoothui.dev/og-optimized.webp",
       },
@@ -140,7 +137,7 @@ export const DEMO_GROUPS: SeedGroup[] = [
       },
     ],
   },
-];
+]
 
 export const DEMO_NOTES = [
   {
@@ -159,7 +156,7 @@ export const DEMO_NOTES = [
     text: "Click on a bookmark's icon or name or url to open it, or click on any empty space in the bookmark card to drag and drop it.",
     color: "#3b82f6", // Blue
   },
-];
+]
 
 export const DEMO_TODOS = [
   { text: "Add your first bookmark", priority: "high" },
@@ -167,45 +164,42 @@ export const DEMO_TODOS = [
   { text: "Import your browser bookmarks", priority: "low" },
   { text: "Try reordering your groups", priority: "low" },
   { text: "Try reordering your bookmarks", priority: "low" },
-];
+]
 
 /**
  * Seeds a new user with default demo data if they haven't been seeded yet.
  * Uses user_metadata to track seeding status across sessions.
  */
-export async function seedNewUser(
-  supabase: SupabaseClient<Database>,
-  user: User,
-) {
+export async function seedNewUser(supabase: SupabaseClient<Database>, user: User) {
   try {
-    const userId = user.id;
-    const hasSeeded = user.user_metadata?.has_seeded;
+    const userId = user.id
+    const hasSeeded = user.user_metadata?.has_seeded
 
     // 1. If metadata flag exists, definitively skip
     if (hasSeeded) {
-      return;
+      return
     }
 
     // 2. Check for existing groups to determine if user is new or existing
     const { data: userGroups, error: groupsError } = await supabase
       .from("groups")
       .select("id, name")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
 
-    if (groupsError) throw groupsError;
+    if (groupsError) throw groupsError
 
-    const existingGroups = userGroups || [];
+    const existingGroups = userGroups || []
 
     // If they have groups, assume they are already seeded or have their own data
     if (existingGroups.length > 0) {
-      await supabase.auth.updateUser({ data: { has_seeded: true } });
-      return;
+      await supabase.auth.updateUser({ data: { has_seeded: true } })
+      return
     }
 
     // 3. New User -> Create groups and bookmarks in the specified order
     for (let i = 0; i < DEMO_GROUPS.length; i++) {
-      const groupData = DEMO_GROUPS[i];
-      if (!groupData) continue;
+      const groupData = DEMO_GROUPS[i]
+      if (!groupData) continue
 
       const { data: newGroup, error: createGroupError } = await supabase
         .from("groups")
@@ -217,21 +211,21 @@ export async function seedNewUser(
           order_index: i,
         })
         .select("id")
-        .single();
+        .single()
 
       if (createGroupError) {
         // Handle rare race condition
-        if (createGroupError.code === "23505") continue;
-        throw createGroupError;
+        if (createGroupError.code === "23505") continue
+        throw createGroupError
       }
 
-      if (!newGroup) continue;
+      if (!newGroup) continue
 
       // Add demo bookmarks for this group
       const bookmarksToInsert = groupData.bookmarks.map((bm, bIndex) => {
-        const normalized = normalizeUrl(bm.url);
-        const domain = getDomain(normalized);
-        const ogImageUrl = bm.og_image_url ?? null;
+        const normalized = normalizeUrl(bm.url)
+        const domain = getDomain(normalized)
+        const ogImageUrl = bm.og_image_url ?? null
 
         return {
           url: bm.url,
@@ -246,14 +240,12 @@ export async function seedNewUser(
           user_id: userId,
           status: "ready" as const,
           order_index: bIndex,
-        };
-      });
+        }
+      })
 
-      const { error: insertError } = await supabase
-        .from("bookmarks")
-        .insert(bookmarksToInsert);
+      const { error: insertError } = await supabase.from("bookmarks").insert(bookmarksToInsert)
 
-      if (insertError) throw insertError;
+      if (insertError) throw insertError
     }
 
     // 4. Seed Notes
@@ -262,13 +254,11 @@ export async function seedNewUser(
       color: note.color,
       user_id: userId,
       order_index: index,
-    }));
+    }))
 
-    const { error: notesError } = await supabase
-      .from("notes")
-      .insert(notesToInsert);
+    const { error: notesError } = await supabase.from("notes").insert(notesToInsert)
 
-    if (notesError) throw notesError;
+    if (notesError) throw notesError
 
     // 5. Seed Todos
     const todosToInsert = DEMO_TODOS.map((todo, index) => ({
@@ -277,21 +267,19 @@ export async function seedNewUser(
       completed: false,
       user_id: userId,
       order_index: index,
-    }));
+    }))
 
-    const { error: todosError } = await supabase
-      .from("todos")
-      .insert(todosToInsert);
+    const { error: todosError } = await supabase.from("todos").insert(todosToInsert)
 
-    if (todosError) throw todosError;
+    if (todosError) throw todosError
 
     // 6. Final step: Flag the user as seeded in their metadata
     await supabase.auth.updateUser({
       data: { has_seeded: true },
-    });
+    })
 
-    console.log(`[Seed] Successfully seeded user ${userId} with demo data.`);
+    console.log(`[Seed] Successfully seeded user ${userId} with demo data.`)
   } catch (error) {
-    console.error("[Seed] Failed to seed user:", error);
+    console.error("[Seed] Failed to seed user:", error)
   }
 }

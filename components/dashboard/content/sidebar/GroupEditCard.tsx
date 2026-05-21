@@ -1,11 +1,11 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ALL_ICONS_MAP } from "@/lib/hugeicons-list";
-import type { GroupRow } from "@/lib/supabase/queries";
-import type { IconPickerPopoverProps } from "../../IconPickerPopover";
-import { CharacterCount } from "./CharacterCount";
-import { MAX_GROUP_NAME_LENGTH } from "./constants";
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
+import type { GroupRow } from "@/lib/supabase/queries"
+import type { IconPickerPopoverProps } from "../../IconPickerPopover"
+import { CharacterCount } from "./CharacterCount"
+import { MAX_GROUP_NAME_LENGTH } from "./constants"
 
 export function GroupEditCard({
   group,
@@ -20,19 +20,19 @@ export function GroupEditCard({
   onCancel,
   onSave,
 }: {
-  group: GroupRow;
-  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>;
-  editGroupName: string;
-  setEditGroupName: (value: string) => void;
-  editGroupIcon: string;
-  setEditGroupIcon: (value: string) => void;
-  editGroupColor: string | null;
-  setEditGroupColor: (value: string | null) => void;
-  isUpdatingGroup: boolean;
-  onCancel: () => void;
-  onSave: () => void;
+  group: GroupRow
+  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
+  editGroupName: string
+  setEditGroupName: (value: string) => void
+  editGroupIcon: string
+  setEditGroupIcon: (value: string) => void
+  editGroupColor: string | null
+  setEditGroupColor: (value: string | null) => void
+  isUpdatingGroup: boolean
+  onCancel: () => void
+  onSave: () => void
 }) {
-  void group;
+  void group
   return (
     <div className="relative my-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
       <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export function GroupEditCard({
         <Input
           value={editGroupName}
           onChange={(e) => {
-            setEditGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH));
+            setEditGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH))
           }}
           placeholder="Group name"
           className="h-8 flex-1 text-sm rounded-xl"
@@ -66,9 +66,9 @@ export function GroupEditCard({
           maxLength={MAX_GROUP_NAME_LENGTH}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              onSave();
+              onSave()
             } else if (e.key === "Escape") {
-              onCancel();
+              onCancel()
             }
           }}
         />
@@ -95,5 +95,5 @@ export function GroupEditCard({
         </div>
       </div>
     </div>
-  );
+  )
 }

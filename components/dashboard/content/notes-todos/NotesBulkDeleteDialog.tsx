@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 
 export function NotesBulkDeleteDialog({
   open,
@@ -15,10 +15,10 @@ export function NotesBulkDeleteDialog({
   selectedCount,
   onConfirm,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedCount: number;
-  onConfirm: () => Promise<void>;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedCount: number
+  onConfirm: () => Promise<void>
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -30,9 +30,7 @@ export function NotesBulkDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className="rounded-4xl cursor-pointer"
@@ -43,5 +41,5 @@ export function NotesBulkDeleteDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

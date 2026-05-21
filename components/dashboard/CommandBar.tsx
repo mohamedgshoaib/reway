@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { startTransition, useRef, useState } from "react";
-import { BookmarkRow } from "@/lib/supabase/queries";
-import { useIsMac } from "@/hooks/useIsMac";
-import { CommandBarInput } from "./command-bar/CommandBarInput";
-import { useCommandHandlers } from "./command-bar/useCommandHandlers";
-import type { EnrichmentResult } from "./content/dashboard-types";
+import { startTransition, useRef, useState } from "react"
+import { useIsMac } from "@/hooks/useIsMac"
+import { BookmarkRow } from "@/lib/supabase/queries"
+import { CommandBarInput } from "./command-bar/CommandBarInput"
+import { useCommandHandlers } from "./command-bar/useCommandHandlers"
+import type { EnrichmentResult } from "./content/dashboard-types"
 
 interface CommandBarProps {
-  onAddBookmark: (bookmark: BookmarkRow) => void;
-  onApplyEnrichment?: (id: string, enrichment?: EnrichmentResult) => void;
-  onReplaceBookmarkId?: (stableId: string, actualId: string) => void;
-  activeGroupId: string;
-  mode?: "add" | "search";
-  searchQuery?: string;
-  onModeChange?: (mode: "add" | "search") => void;
-  onSearchChange?: (query: string) => void;
+  onAddBookmark: (bookmark: BookmarkRow) => void
+  onApplyEnrichment?: (id: string, enrichment?: EnrichmentResult) => void
+  onReplaceBookmarkId?: (stableId: string, actualId: string) => void
+  activeGroupId: string
+  mode?: "add" | "search"
+  searchQuery?: string
+  onModeChange?: (mode: "add" | "search") => void
+  onSearchChange?: (query: string) => void
 }
 
 export function CommandBar({
@@ -28,14 +28,14 @@ export function CommandBar({
   onModeChange,
   onSearchChange,
 }: CommandBarProps) {
-  const [isFocused, setIsFocused] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-  const [addStatus, setAddStatus] = useState<string | null>(null);
-  const [isAddBusy, setIsAddBusy] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isFocused, setIsFocused] = useState(false)
+  const [inputValue, setInputValue] = useState("")
+  const [addStatus, setAddStatus] = useState<string | null>(null)
+  const [isAddBusy, setIsAddBusy] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Detect OS for keyboard shortcuts
-  const isMac = useIsMac();
+  const isMac = useIsMac()
 
   const { handleSubmit } = useCommandHandlers({
     onAddBookmark,
@@ -47,24 +47,24 @@ export function CommandBar({
     inputRef,
     onAddStatusChange: setAddStatus,
     onAddBusyChange: setIsAddBusy,
-  });
+  })
 
   const handleModeChange = (nextMode: "add" | "search") => {
-    if (nextMode === mode) return;
+    if (nextMode === mode) return
 
     if (nextMode === "search") {
       startTransition(() => {
-        onSearchChange?.(inputValue);
-      });
+        onSearchChange?.(inputValue)
+      })
     } else if (nextMode === "add") {
-      setInputValue(searchQuery);
+      setInputValue(searchQuery)
       startTransition(() => {
-        onSearchChange?.("");
-      });
+        onSearchChange?.("")
+      })
     }
 
-    onModeChange?.(nextMode);
-  };
+    onModeChange?.(nextMode)
+  }
 
   return (
     <CommandBarInput
@@ -80,9 +80,7 @@ export function CommandBar({
       onSearchChange={onSearchChange}
       onInputValueChange={setInputValue}
       onFocusChange={setIsFocused}
-      onSubmit={(e) =>
-        handleSubmit(e, mode, inputValue, searchQuery, setInputValue)
-      }
+      onSubmit={(e) => handleSubmit(e, mode, inputValue, searchQuery, setInputValue)}
     />
-  );
+  )
 }

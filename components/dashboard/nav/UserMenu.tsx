@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   HelpCircleIcon,
@@ -8,27 +8,27 @@ import {
   FileImportIcon,
   FileExportIcon,
   Wrench01Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useEffect, useState } from "react"
+import { useFormStatus } from "react-dom"
+import { signOut } from "@/app/dashboard/actions/auth"
+import { ExtensionInstallDialog } from "@/components/extension-install-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SettingsDialog } from "../SettingsDialog";
-import { signOut } from "@/app/dashboard/actions/auth";
-import type { User } from "./types";
-import { ExtensionInstallDialog } from "@/components/extension-install-dialog";
-import type { DashboardPaletteTheme } from "@/lib/themes";
+} from "@/components/ui/dropdown-menu"
+import type { DashboardPaletteTheme } from "@/lib/themes"
+import { SettingsDialog } from "../SettingsDialog"
+import type { User } from "./types"
 
 function LogoutItem() {
-  const { pending } = useFormStatus();
+  const { pending } = useFormStatus()
 
   return (
     <DropdownMenuItem
@@ -47,25 +47,25 @@ function LogoutItem() {
         {pending ? "Logging out..." : "Log out"}
       </button>
     </DropdownMenuItem>
-  );
+  )
 }
 
 interface UserMenuProps {
-  user: User;
-  initials: string;
-  rowContent: "date" | "group";
-  onRowContentChange: (value: "date" | "group") => void;
-  showNotesTodos: boolean;
-  onShowNotesTodosChange: (value: boolean) => void;
-  paletteTheme: DashboardPaletteTheme;
-  onPaletteThemeChange: (value: DashboardPaletteTheme) => void;
-  folderHeaderTint: "off" | "low" | "medium" | "high";
-  onFolderHeaderTintChange: (value: "off" | "low" | "medium" | "high") => void;
-  layoutDensity: "compact" | "extended";
-  onLayoutDensityChange: (value: "compact" | "extended") => void;
-  onOpenImportSheet: () => void;
-  onOpenExportSheet: () => void;
-  onOpenDuplicatesSheet: () => void;
+  user: User
+  initials: string
+  rowContent: "date" | "group"
+  onRowContentChange: (value: "date" | "group") => void
+  showNotesTodos: boolean
+  onShowNotesTodosChange: (value: boolean) => void
+  paletteTheme: DashboardPaletteTheme
+  onPaletteThemeChange: (value: DashboardPaletteTheme) => void
+  folderHeaderTint: "off" | "low" | "medium" | "high"
+  onFolderHeaderTintChange: (value: "off" | "low" | "medium" | "high") => void
+  layoutDensity: "compact" | "extended"
+  onLayoutDensityChange: (value: "compact" | "extended") => void
+  onOpenImportSheet: () => void
+  onOpenExportSheet: () => void
+  onOpenDuplicatesSheet: () => void
 }
 
 export function UserMenu({
@@ -85,18 +85,18 @@ export function UserMenu({
   onOpenExportSheet,
   onOpenDuplicatesSheet,
 }: UserMenuProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const handleOpenRequest = () => setOpen(true);
-    const handleCloseRequest = () => setOpen(false);
-    window.addEventListener("reway:open-user-menu", handleOpenRequest);
-    window.addEventListener("reway:close-user-menu", handleCloseRequest);
+    const handleOpenRequest = () => setOpen(true)
+    const handleCloseRequest = () => setOpen(false)
+    window.addEventListener("reway:open-user-menu", handleOpenRequest)
+    window.addEventListener("reway:close-user-menu", handleCloseRequest)
     return () => {
-      window.removeEventListener("reway:open-user-menu", handleOpenRequest);
-      window.removeEventListener("reway:close-user-menu", handleCloseRequest);
-    };
-  }, []);
+      window.removeEventListener("reway:open-user-menu", handleOpenRequest)
+      window.removeEventListener("reway:close-user-menu", handleCloseRequest)
+    }
+  }, [])
 
   return (
     <>
@@ -138,9 +138,7 @@ export function UserMenu({
           <div className="px-2 py-1.5 font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{user.name}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {user.email}
-              </p>
+              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             </div>
           </div>
           <DropdownMenuSeparator />
@@ -149,11 +147,11 @@ export function UserMenu({
             data-onboarding="start-onboarding"
             className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
             onSelect={(event) => {
-              event.preventDefault();
-              setOpen(false);
+              event.preventDefault()
+              setOpen(false)
               window.setTimeout(() => {
-                window.dispatchEvent(new CustomEvent("reway:start-onboarding"));
-              }, 50);
+                window.dispatchEvent(new CustomEvent("reway:start-onboarding"))
+              }, 50)
             }}
           >
             <HugeiconsIcon icon={HelpCircleIcon} size={16} />
@@ -163,11 +161,11 @@ export function UserMenu({
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
             onSelect={(event) => {
-              event.preventDefault();
-              setOpen(false);
+              event.preventDefault()
+              setOpen(false)
               window.setTimeout(() => {
-                window.dispatchEvent(new CustomEvent("reway:open-settings"));
-              }, 50);
+                window.dispatchEvent(new CustomEvent("reway:open-settings"))
+              }, 50)
             }}
           >
             <HugeiconsIcon icon={Settings01Icon} size={16} />
@@ -178,9 +176,9 @@ export function UserMenu({
             <DropdownMenuItem
               className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
               onSelect={(event) => {
-                event.preventDefault();
-                setOpen(false);
-                onOpenImportSheet();
+                event.preventDefault()
+                setOpen(false)
+                onOpenImportSheet()
               }}
             >
               <HugeiconsIcon icon={FileImportIcon} size={16} />
@@ -190,9 +188,9 @@ export function UserMenu({
             <DropdownMenuItem
               className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
               onSelect={(event) => {
-                event.preventDefault();
-                setOpen(false);
-                onOpenExportSheet();
+                event.preventDefault()
+                setOpen(false)
+                onOpenExportSheet()
               }}
             >
               <HugeiconsIcon icon={FileExportIcon} size={16} />
@@ -203,9 +201,9 @@ export function UserMenu({
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
             onSelect={(event) => {
-              event.preventDefault();
-              setOpen(false);
-              onOpenDuplicatesSheet();
+              event.preventDefault()
+              setOpen(false)
+              onOpenDuplicatesSheet()
             }}
           >
             <HugeiconsIcon icon={Wrench01Icon} size={16} />
@@ -228,5 +226,5 @@ export function UserMenu({
         </DropdownMenuContent>
       </DropdownMenu>
     </>
-  );
+  )
 }

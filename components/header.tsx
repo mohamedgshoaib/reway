@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import RewayLogo from "@/components/logo";
-import { useScroll } from "@/hooks/use-scroll";
-import { Button } from "@/components/ui/button";
-import { MobileNav } from "@/components/mobile-nav";
-import { createClient } from "@/lib/supabase/client";
-import { useEffect, useMemo, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import RewayLogo from "@/components/logo"
+import { MobileNav } from "@/components/mobile-nav"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
+import { useScroll } from "@/hooks/use-scroll"
+import { createClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
 
 export const navLinks = [
   {
@@ -30,61 +30,58 @@ export const navLinks = [
     label: "About",
     href: { pathname: "/about" },
   },
-];
+]
 
 type HeaderUser = {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url?: string;
-};
+  id: string
+  email: string
+  name: string
+  avatar_url?: string
+}
 
 export function Header() {
-  const scrolled = useScroll(10);
-  const [user, setUser] = useState<HeaderUser | null>(null);
-  const [isDashboardNavLoading, setIsDashboardNavLoading] = useState(false);
-  const router = useRouter();
+  const scrolled = useScroll(10)
+  const [user, setUser] = useState<HeaderUser | null>(null)
+  const [isDashboardNavLoading, setIsDashboardNavLoading] = useState(false)
+  const router = useRouter()
 
   const onLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createClient()
     supabase.auth
       .getUser()
       .then(({ data }) => {
         if (!data?.user) {
-          setUser(null);
-          return;
+          setUser(null)
+          return
         }
 
         setUser({
           id: data.user.id,
           email: data.user.email || "",
-          name:
-            data.user.user_metadata?.full_name ||
-            data.user.email?.split("@")[0] ||
-            "User",
+          name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
           avatar_url: data.user.user_metadata?.avatar_url,
-        });
+        })
       })
       .catch(() => {
-        setUser(null);
-      });
-  }, []);
+        setUser(null)
+      })
+  }, [])
 
   const initials = useMemo(() => {
-    if (!user?.name) return "U";
+    if (!user?.name) return "U"
     return user.name
       .split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2);
-  }, [user]);
+      .slice(0, 2)
+  }, [user])
 
   return (
     <header
@@ -124,11 +121,7 @@ export function Header() {
             href="/"
           >
             <span className="flex items-center gap-2">
-              <RewayLogo
-                className="size-8"
-                aria-hidden="true"
-                focusable="false"
-              />
+              <RewayLogo className="size-8" aria-hidden="true" focusable="false" />
               <span className="text-base font-bold text-foreground">Reway</span>
             </span>
           </Link>
@@ -148,9 +141,9 @@ export function Header() {
                   size="sm"
                   className="bg-foreground text-background hover:bg-foreground/90 rounded-4xl transition-colors ring-0 cursor-pointer"
                   onClick={() => {
-                    if (isDashboardNavLoading) return;
-                    setIsDashboardNavLoading(true);
-                    router.push("/dashboard");
+                    if (isDashboardNavLoading) return
+                    setIsDashboardNavLoading(true)
+                    router.push("/dashboard")
                   }}
                   disabled={isDashboardNavLoading}
                 >
@@ -191,5 +184,5 @@ export function Header() {
         </nav>
       </div>
     </header>
-  );
+  )
 }

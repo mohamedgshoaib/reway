@@ -1,27 +1,23 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useEffect } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Alert02Icon,
-  Refresh01Icon,
-  Home01Icon,
-} from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
+import { Alert02Icon, Refresh01Icon, Home01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { motion, useReducedMotion } from "motion/react"
+import Link from "next/link"
+import { useEffect } from "react"
+import { Button } from "@/components/ui/button"
 
 interface ErrorPageProps {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion()
 
   useEffect(() => {
-    console.error(error);
-  }, [error]);
+    console.error(error)
+  }, [error])
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
@@ -29,21 +25,13 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         <motion.div
           initial={{ opacity: 0, transform: "translateY(12px)" }}
           animate={{ opacity: 1, transform: "translateY(0px)" }}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { duration: 0.28, ease: "easeOut" }
-          }
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.28, ease: "easeOut" }}
           suppressHydrationWarning
           className="space-y-8"
         >
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
-              <HugeiconsIcon
-                icon={Alert02Icon}
-                size={28}
-                className="text-destructive"
-              />
+              <HugeiconsIcon icon={Alert02Icon} size={28} className="text-destructive" />
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-bold">Something went wrong</h1>
@@ -68,5 +56,5 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         </motion.div>
       </main>
     </div>
-  );
+  )
 }
