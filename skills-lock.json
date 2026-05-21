@@ -25,29 +25,17 @@
       "skillPath": "skills/emil-design-eng/SKILL.md",
       "computedHash": "ac3fc5b4e206488ffc408a2806f829bb2e5eaf518fded09be34790685c2b3a0d"
     },
-    "find-skills": {
-      "source": "vercel-labs/skills",
-      "sourceType": "github",
-      "skillPath": "skills/find-skills/SKILL.md",
-      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
-    },
-    "fixing-accessibility": {
-      "source": "ibelick/ui-skills",
-      "sourceType": "github",
-      "skillPath": "skills/fixing-accessibility/SKILL.md",
-      "computedHash": "f8ddcb0a8c7b8728105eab18e17223e41d74fb8649becba58a6deb90c6a5ce8d"
-    },
-    "fixing-metadata": {
-      "source": "ibelick/ui-skills",
-      "sourceType": "github",
-      "skillPath": "skills/fixing-metadata/SKILL.md",
-      "computedHash": "10047222b01c2c9b6e904ef90079880d9dbc09de3241df7f311b238dbcb7869a"
-    },
     "fixing-motion-performance": {
       "source": "ibelick/ui-skills",
       "sourceType": "github",
       "skillPath": "skills/fixing-motion-performance/SKILL.md",
       "computedHash": "c1aca76fe18e8594f401cf78e5e76be24f182ce63167a398bdd4458f2a07639f"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "daf64ca15f4fa081a6747766db538e2dbd1131725ed4fcdd3d538dc62c7035ba"
     },
     "hydration-guardian": {
       "source": "oakoss/agent-skills",
@@ -59,7 +47,7 @@
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
-      "computedHash": "2da1d23b8f53cfe67f2e0b68924ab9f4ec400bb6480de097007eeaeb517d1722"
+      "computedHash": "5d9444ffe5c240f2d20081c42c547112e1b8c372375a14e4c98df4d94bde11e1"
     },
     "make-interfaces-feel-better": {
       "source": "jakubkrehel/make-interfaces-feel-better",
@@ -85,12 +73,6 @@
       "skillPath": "nextjs-client-cookie-pattern/SKILL.md",
       "computedHash": "8bdf307ab16bec1fba54ea37775ea692005781566dacd0edfe236f8174a4a077"
     },
-    "postgresql-optimization": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/postgresql-optimization/SKILL.md",
-      "computedHash": "8022448de70ba9a485e3b5bce34c5bbc644f93eb39b68431c9f7dabcf03aeb09"
-    },
     "postgresql-table-design": {
       "source": "wshobson/agents",
       "sourceType": "github",
@@ -115,6 +97,12 @@
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
       "computedHash": "8e41c7417894e6f394614ee7ca3ee5322b1e58d890255d441f42dea98732597f"
     },
+    "system-design": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "skillPath": "system-design/SKILL.md",
+      "computedHash": "94da329fe36062d527cd3e8e3ef375eb9a59e447546b8a0a27b184b250db8e61"
+    },
     "tailwind-design-system": {
       "source": "wshobson/agents",
       "sourceType": "github",
@@ -126,12 +114,6 @@
       "sourceType": "github",
       "skillPath": "plugins/javascript-typescript/skills/typescript-advanced-types/SKILL.md",
       "computedHash": "ee8377c523a911be41c31037b477805773ca5ab5ade181e44ca7dd3cd8df6692"
-    },
-    "typescript-expert": {
-      "source": "sickn33/antigravity-awesome-skills",
-      "sourceType": "github",
-      "skillPath": "skills/typescript-expert/SKILL.md",
-      "computedHash": "b4623290742a2319a2c6aca09c62438a796c399f65aac6facd7273f9b144c8e7"
     },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",
