@@ -5,7 +5,7 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd"
 function StatusSpinner() {
   return (
     <span
-      className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground"
+      className="inline-block size-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground"
       aria-hidden="true"
     />
   )

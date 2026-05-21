@@ -1,5 +1,5 @@
-import * as m from "motion/react-m"
 import { useReducedMotion } from "motion/react"
+import * as m from "motion/react-m"
 import Link from "next/link"
 import React from "react"
 import { navLinks } from "@/components/header"
@@ -84,7 +84,7 @@ export function MobileNav({ user, initials = "U" }: MobileNavProps) {
           >
             <div className="mx-auto w-full max-w-4xl px-4 pt-3">
               {user ? (
-                <div className="mb-6 rounded-4xl ring-1 ring-foreground/8 bg-muted/20 px-1.5 py-1.5 shadow-none isolate after:absolute after:inset-0 after:rounded-4xl after:ring-1 after:ring-white/5 after:pointer-events-none relative">
+                <div className="mb-6 rounded-4xl ring-1 ring-foreground/8 bg-muted/20 p-1.5 shadow-none isolate after:absolute after:inset-0 after:rounded-4xl after:ring-1 after:ring-white/5 after:pointer-events-none relative">
                   <div className="flex items-center gap-3">
                     <Avatar className="size-9">
                       <AvatarImage src={user.avatar_url} alt={user.name} />

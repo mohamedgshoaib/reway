@@ -183,12 +183,15 @@ export function DemoVideo({
     <>
       <div
         ref={wrapperRef}
+        role="button"
+        tabIndex={0}
         className={cn(
           "group relative h-full w-full overflow-hidden cursor-pointer",
           "bg-muted/20",
           className,
         )}
         onClick={handleWrapperClick}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleWrapperClick() }}
         onMouseEnter={() => setIsHoveredInternally(true)}
         onMouseLeave={() => setIsHoveredInternally(false)}
       >
@@ -306,8 +309,12 @@ export function DemoVideo({
         isMaximized &&
         createPortal(
           <div
-            className="fixed inset-0 z-9999 flex items-center justify-center bg-black"
+            role="button"
+            tabIndex={0}
+            aria-label="Close fullscreen"
+            className="fixed inset-0 z-9999 flex items-center justify-center bg-gray-950"
             onClick={handleMinimize}
+            onKeyDown={(e) => { if (e.key === "Escape" || e.key === "Enter") handleMinimize(e as never) }}
           >
             <video
               ref={overlayVideoRef}

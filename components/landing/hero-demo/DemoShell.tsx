@@ -1,6 +1,7 @@
 "use client"
 
-import { motion, useReducedMotion, type Variants } from "motion/react"
+import { m, useReducedMotion, type Variants } from "motion/react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { useEffect, useState } from "react"
 
 export function DemoShell({
@@ -29,7 +30,8 @@ export function DemoShell({
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <motion.div
+    <RewayLazyMotion>
+    <m.div
       className="w-full"
       initial={enableMotion ? { opacity: 0 } : false}
       whileInView={enableMotion ? { opacity: 1 } : undefined}
@@ -47,7 +49,7 @@ export function DemoShell({
         </div>
       </div>
 
-      <motion.div
+      <m.div
         id="how-it-works"
         className="w-full overflow-hidden rounded-4xl ring-1 ring-foreground/8 bg-card shadow-none isolate"
         initial={enableMotion ? "hidden" : false}
@@ -56,7 +58,8 @@ export function DemoShell({
         variants={enableMotion ? showcaseVariants : undefined}
       >
         {children}
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
+    </RewayLazyMotion>
   )
 }

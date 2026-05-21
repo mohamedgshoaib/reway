@@ -40,6 +40,7 @@ export function HeroTodoRow({
     >
       <div className="flex gap-2 min-w-0 flex-1 items-start">
         <div
+          role="presentation"
           onClick={(event) => {
             event.stopPropagation()
             onToggleCompleted()

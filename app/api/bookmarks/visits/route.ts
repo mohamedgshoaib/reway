@@ -19,9 +19,11 @@ function parseBookmarkIds(payload: unknown): string[] {
     return []
   }
 
-  return payload.bookmarkIds
-    .map((bookmarkId) => (typeof bookmarkId === "string" ? bookmarkId.trim() : ""))
-    .filter((bookmarkId): bookmarkId is string => bookmarkId.length > 0 && isUuid(bookmarkId))
+  return payload.bookmarkIds.flatMap((bookmarkId) => {
+    if (typeof bookmarkId !== "string") return []
+    const t = bookmarkId.trim()
+    return t.length > 0 && isUuid(t) ? [t] : []
+  })
 }
 
 export async function POST(request: Request) {

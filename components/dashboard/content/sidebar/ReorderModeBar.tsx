@@ -11,7 +11,7 @@ export function ReorderModeBar({ onDone }: { onDone: () => void }) {
           className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
           onClick={onDone}
         >
-          Done
+          Done reordering
         </Button>
       </div>
     </div>

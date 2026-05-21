@@ -1,7 +1,7 @@
 "use client"
 
-import * as m from "motion/react-m"
 import { useReducedMotion, type Variants } from "motion/react"
+import * as m from "motion/react-m"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import type { DashboardHref } from "@/components/landing/types"

@@ -54,7 +54,9 @@ export function useOpenGroup({ bookmarks, deferredSearchQuery }: UseOpenGroupOpt
 
       recordBookmarkVisits(orderedTargetBookmarks.map((bookmark) => bookmark.id))
 
-      const urls = orderedTargetBookmarks.map((bookmark) => bookmark.url).filter(Boolean)
+      const urls = orderedTargetBookmarks.flatMap((bookmark) =>
+        bookmark.url ? [bookmark.url] : []
+      )
 
       const requestId = crypto.randomUUID()
       const response = await new Promise<{

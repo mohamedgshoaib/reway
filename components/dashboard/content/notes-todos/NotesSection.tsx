@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { NoteRow } from "@/lib/supabase/queries"
 import { NOTE_COLORS } from "./config"
 import { NoteCreateCard } from "./NoteCreateCard"
@@ -39,7 +39,7 @@ export function NotesSection({
   const [isUpdatingNote, setIsUpdatingNote] = useState(false)
 
   const [noteDeleteDialogOpen, setNoteDeleteDialogOpen] = useState(false)
-  const [noteIdPendingDelete, setNoteIdPendingDelete] = useState<string | null>(null)
+  const noteIdPendingDelete = useRef<string | null>(null)
 
   const toggleSelectedNote = (id: string) => {
     setSelectedNoteIds((prev) => {
@@ -136,7 +136,7 @@ export function NotesSection({
                 setEditNoteColor(note.color ?? NOTE_COLORS[5])
               }}
               onDelete={() => {
-                setNoteIdPendingDelete(note.id)
+                noteIdPendingDelete.current = note.id
                 setNoteDeleteDialogOpen(true)
               }}
               onActionMenuOpenChange={onActionMenuOpenChange}
@@ -171,10 +171,10 @@ export function NotesSection({
         open={noteDeleteDialogOpen}
         onOpenChange={setNoteDeleteDialogOpen}
         onConfirm={() => {
-          if (!noteIdPendingDelete) return
-          void onDeleteNote(noteIdPendingDelete)
+          if (!noteIdPendingDelete.current) return
+          void onDeleteNote(noteIdPendingDelete.current)
           setNoteDeleteDialogOpen(false)
-          setNoteIdPendingDelete(null)
+          noteIdPendingDelete.current = null
         }}
       />
     </>

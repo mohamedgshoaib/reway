@@ -2,7 +2,7 @@
 
 import { DndContext, DragOverlay, defaultDropAnimationSideEffects } from "@dnd-kit/core"
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable"
-import React, { memo, useEffect, useId, useMemo, useState } from "react"
+import React, { memo, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion"
 import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
@@ -65,6 +65,11 @@ export const FolderBoard = memo(function FolderBoard({
   folderHeaderTint = "medium",
 }: FolderBoardProps) {
   const stableSelectedIds = useMemo(() => selectedIds ?? new Set<string>(), [selectedIds])
+
+  const onKeyboardContextChangeRef = useRef(onKeyboardContextChange)
+  useEffect(() => {
+    onKeyboardContextChangeRef.current = onKeyboardContextChange
+  }, [onKeyboardContextChange])
 
   const { collapsedGroups, setCollapsedGroups } = useFolderCollapseState()
 
@@ -153,7 +158,7 @@ export const FolderBoard = memo(function FolderBoard({
         setSelectedFolderId(null)
         setSelectedBookmarkIndex(-1)
         setHasKeyboardFocus(false)
-        onKeyboardContextChange?.("folder")
+        onKeyboardContextChangeRef.current?.("folder")
       })
       return
     }
@@ -173,9 +178,7 @@ export const FolderBoard = memo(function FolderBoard({
         setSelectedBookmarkIndex(-1)
       })
     }
-    // Issue: missing effect deps can call an outdated callback.
-    // Fix: include `onKeyboardContextChange`.
-  }, [hasKeyboardFocus, onKeyboardContextChange, selectedFolderId, visibleGroups])
+  }, [hasKeyboardFocus, selectedFolderId, visibleGroups])
 
   useFolderKeyboardNav({
     bookmarkBuckets,
@@ -259,7 +262,7 @@ export const FolderBoard = memo(function FolderBoard({
                     />
 
                     <AccordionContent className="px-0">
-                      <div className="px-3 py-3 bg-background/60">
+                      <div className="p-3 bg-background/60">
                         {groupBookmarks.length === 0 ? (
                           <EmptyFolder />
                         ) : (

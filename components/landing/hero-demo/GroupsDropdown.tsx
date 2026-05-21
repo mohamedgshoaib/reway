@@ -110,7 +110,7 @@ export function GroupsDropdown({
         <DropdownMenuSeparator />
 
         {dropdownCreatingGroup ? (
-          <div className="p-2" onMouseDown={(e) => e.preventDefault()}>
+          <div role="none" className="p-2" onMouseDown={(e) => e.preventDefault()}>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Popover open={iconPopoverOpen} onOpenChange={setIconPopoverOpen}>
@@ -197,7 +197,6 @@ export function GroupsDropdown({
                   onChange={(e) => setDropdownNewGroupName(e.target.value)}
                   placeholder="New group"
                   className="h-8 text-sm rounded-xl"
-                 
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault()

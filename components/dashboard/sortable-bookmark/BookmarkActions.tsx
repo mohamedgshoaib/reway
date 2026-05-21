@@ -28,6 +28,7 @@ export function BookmarkActions({
 }: BookmarkActionsProps) {
   return (
     <div
+      role="presentation"
       className="absolute right-0 flex items-center gap-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto cursor-default"
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}

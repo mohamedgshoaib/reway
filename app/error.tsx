@@ -2,8 +2,8 @@
 
 import { Alert02Icon, Refresh01Icon, Home01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import * as m from "motion/react-m"
 import { useReducedMotion } from "motion/react"
+import * as m from "motion/react-m"
 import Link from "next/link"
 import { useEffect } from "react"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"

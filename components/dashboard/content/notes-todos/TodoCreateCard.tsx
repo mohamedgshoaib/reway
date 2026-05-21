@@ -66,7 +66,6 @@ export function TodoCreateCard({
                 onChange={(e) => setText(e.target.value)}
                 placeholder="New todo"
                 className="h-8 text-sm rounded-xl"
-               
                 disabled={isCreating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isCreating) {

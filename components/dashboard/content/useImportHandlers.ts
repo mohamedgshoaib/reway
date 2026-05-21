@@ -110,12 +110,11 @@ export function useImportHandlers({
       setImportResult(null)
 
       const allowed = new Set(selectedGroups.map((name) => normalizeGroupName(name)))
-      const entries = importPreview.entries
-        .map((entry) => ({
-          ...entry,
-          groupName: normalizeGroupName(entry.groupName),
-        }))
-        .filter((entry) => allowed.has(entry.groupName) && entry.action !== "skip")
+      const entries = importPreview.entries.flatMap((entry) => {
+        const groupName = normalizeGroupName(entry.groupName)
+        if (!allowed.has(groupName) || entry.action === "skip") return []
+        return [{ ...entry, groupName }]
+      })
       if (entries.length === 0) {
         return
       }
@@ -136,9 +135,11 @@ export function useImportHandlers({
 
       const groupNamesToCreate = Array.from(
         new Set(
-          entries
-            .map((entry) => entry.groupName)
-            .filter((name) => name !== "Ungrouped" && !existingGroups.has(name)),
+          entries.flatMap((entry) =>
+            entry.groupName !== "Ungrouped" && !existingGroups.has(entry.groupName)
+              ? [entry.groupName]
+              : []
+          ),
         ),
       )
 

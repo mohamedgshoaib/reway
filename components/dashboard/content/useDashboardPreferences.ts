@@ -67,9 +67,10 @@ export function useDashboardPreferences({
     const root = document.body
     const dashboardRoot = document.querySelector("[data-dashboard-root]")
     const classToApply = getPaletteThemeClassName(paletteTheme)
-    const knownClasses = DASHBOARD_THEMES.map((theme) =>
-      getPaletteThemeClassName(theme.value),
-    ).filter(Boolean)
+    const knownClasses = DASHBOARD_THEMES.flatMap((theme) => {
+      const cls = getPaletteThemeClassName(theme.value)
+      return cls ? [cls] : []
+    })
 
     root.classList.remove(...knownClasses)
     if (dashboardRoot instanceof HTMLElement) {

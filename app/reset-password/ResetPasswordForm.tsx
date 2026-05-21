@@ -1,7 +1,7 @@
 "use client"
 
-import * as m from "motion/react-m"
 import { useReducedMotion } from "motion/react"
+import * as m from "motion/react-m"
 import { useActionState } from "react"
 import { ActionResponse } from "@/app/login/actions"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
@@ -36,51 +36,51 @@ export function ResetPasswordForm() {
           </p>
         </div>
 
-      <form action={formAction} className="space-y-4">
-        {state?.error && (
-          <div
-            className="p-3 text-sm text-destructive bg-destructive/10 rounded-2xl border border-destructive/20"
-            role="alert"
-          >
-            {state.error}
+        <form action={formAction} className="space-y-4">
+          {state?.error && (
+            <div
+              className="p-3 text-sm text-destructive bg-destructive/10 rounded-2xl border border-destructive/20"
+              role="alert"
+            >
+              {state.error}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="password">New Password</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Minimum 8 characters"
+              required
+              disabled={isPending}
+              className="rounded-3xl"
+            />
           </div>
-        )}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="password">New Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Minimum 8 characters"
-            required
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm your new password"
+              required
+              disabled={isPending}
+              className="rounded-3xl"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full rounded-3xl cursor-pointer bg-primary text-primary-foreground hover:bg-primary/95"
             disabled={isPending}
-            className="rounded-3xl"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">Confirm New Password</Label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm your new password"
-            required
-            disabled={isPending}
-            className="rounded-3xl"
-          />
-        </div>
-
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full rounded-3xl cursor-pointer bg-primary text-primary-foreground hover:bg-primary/95"
-          disabled={isPending}
-        >
-          {isPending ? "Updating password…" : "Update password"}
-        </Button>
-      </form>
+          >
+            {isPending ? "Updating password…" : "Update password"}
+          </Button>
+        </form>
       </m.div>
     </RewayLazyMotion>
   )

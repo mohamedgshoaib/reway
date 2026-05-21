@@ -4,7 +4,8 @@ import Image from "next/image"
 
 import { Search01Icon, BulbIcon, ToolsIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, useReducedMotion } from "motion/react"
+import { m, useReducedMotion } from "motion/react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 type LinkItem = {
@@ -221,6 +222,7 @@ export function GroupsDemo() {
   }
 
   return (
+    <RewayLazyMotion>
     <div ref={containerRef} className="relative w-full h-52 sm:h-56 overflow-hidden select-none">
       {/* Centered Content Wrapper */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -228,7 +230,7 @@ export function GroupsDemo() {
         {headers.map(
           (h) =>
             !h.hidden && (
-              <motion.div
+              <m.div
                 key={h.title}
                 className="absolute flex items-center gap-2 rounded-xl ring-1 ring-foreground/8 bg-background/80 backdrop-blur-sm px-3 py-2"
                 initial={{ opacity: 0, y: -40 }}
@@ -246,12 +248,12 @@ export function GroupsDemo() {
                 <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1.5 text-[10px] font-medium text-muted-foreground ml-auto">
                   {h.count}
                 </span>
-              </motion.div>
+              </m.div>
             ),
         )}
 
         {/* Render Links */}
-        {LINKS.filter((link) => !isMobile || link.group !== "Build").map((link) => {
+        {LINKS.flatMap((link) => (!isMobile || link.group !== "Build" ? [link] : [])).map((link) => {
           const pos = targets[link.id]
           // Adjust Y-base for links so they sit below headers.
           // Headers are at -40. Links start at roughly 0 to +80.
@@ -261,7 +263,7 @@ export function GroupsDemo() {
           const centeredY = (pos?.y ?? 0) - 10
 
           return (
-            <motion.div
+            <m.div
               key={link.id}
               className="absolute flex items-center gap-2 rounded-xl ring-1 ring-foreground/8 bg-muted/30 px-3 py-2 will-change-transform max-w-36"
               animate={{
@@ -282,10 +284,11 @@ export function GroupsDemo() {
               <span className="text-[10px] font-medium text-foreground whitespace-nowrap truncate">
                 {link.label}
               </span>
-            </motion.div>
+            </m.div>
           )
         })}
       </div>
     </div>
+    </RewayLazyMotion>
   )
 }

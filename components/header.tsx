@@ -43,7 +43,7 @@ export function Header() {
   const scrolled = useScroll(10)
   const [user, setUser] = useState<HeaderUser | null>(null)
   const [isDashboardNavLoading, setIsDashboardNavLoading] = useState(false)
-  const router = useRouter()
+  const { push } = useRouter()
 
   const onLogout = async () => {
     const supabase = createClient()
@@ -143,7 +143,7 @@ export function Header() {
                   onClick={() => {
                     if (isDashboardNavLoading) return
                     setIsDashboardNavLoading(true)
-                    router.push("/dashboard")
+                    push("/dashboard")
                   }}
                   disabled={isDashboardNavLoading}
                 >

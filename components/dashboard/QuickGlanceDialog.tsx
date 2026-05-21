@@ -45,19 +45,16 @@ export function QuickGlanceDialog({
   onDelete,
   groups,
 }: QuickGlanceDialogProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
-
-  React.useEffect(() => {
-    setDeleteDialogOpen(false)
-  }, [bookmark?.id, open])
+  const [deletePendingForId, setDeletePendingForId] = React.useState<string | null>(null)
+  const deleteDialogOpen = deletePendingForId === bookmark?.id
 
   const handleDeleteRequest = () => {
-    setDeleteDialogOpen(true)
+    setDeletePendingForId(bookmark?.id ?? null)
   }
 
   const handleDeleteConfirm = () => {
     onDelete(bookmark?.id || "")
-    setDeleteDialogOpen(false)
+    setDeletePendingForId(null)
     onOpenChange(false)
   }
 
@@ -84,7 +81,7 @@ export function QuickGlanceDialog({
   const previewImageUrl = bookmark.og_image_url || bookmark.image_url || null
 
   return (
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+    <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { if (!open) setDeletePendingForId(null) }}>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           className="sm:max-w-125 p-0 overflow-hidden bg-background rounded-4xl focus:outline-none"

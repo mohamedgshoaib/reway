@@ -43,9 +43,9 @@ export function FloatingActionBar({
 
   const moveOptions = [
     { id: "no-group", name: "No Group" },
-    ...groups
-      .filter((group) => group.id !== "no-group")
-      .map((group) => ({ id: group.id, name: group.name })),
+    ...groups.flatMap((group) =>
+      group.id !== "no-group" ? [{ id: group.id, name: group.name }] : []
+    ),
   ]
 
   return (

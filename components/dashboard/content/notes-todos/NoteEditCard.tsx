@@ -32,7 +32,6 @@ export function NoteEditCard({
           onChange={(e) => setEditText(e.target.value)}
           placeholder="Note"
           className="h-8 text-sm rounded-xl"
-         
           disabled={isUpdating}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !isUpdating) {

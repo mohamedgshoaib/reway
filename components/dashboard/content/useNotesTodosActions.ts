@@ -161,9 +161,9 @@ export function useNotesTodosActions({
       const idSet = new Set(ids)
 
       setNotes((prev) => {
-        const deletedNotes = prev
-          .map((note, index) => ({ note, index }))
-          .filter(({ note }) => idSet.has(note.id))
+        const deletedNotes = prev.flatMap((note, index) =>
+          idSet.has(note.id) ? [{ note, index }] : []
+        )
         lastBulkDeletedNotesRef.current = deletedNotes
         return prev.filter((n) => !idSet.has(n.id))
       })
@@ -379,9 +379,9 @@ export function useNotesTodosActions({
       const idSet = new Set(ids)
 
       setTodos((prev) => {
-        const deletedTodos = prev
-          .map((todo, index) => ({ todo, index }))
-          .filter(({ todo }) => idSet.has(todo.id))
+        const deletedTodos = prev.flatMap((todo, index) =>
+          idSet.has(todo.id) ? [{ todo, index }] : []
+        )
         lastBulkDeletedTodosRef.current = deletedTodos
         return prev.filter((t) => !idSet.has(t.id))
       })

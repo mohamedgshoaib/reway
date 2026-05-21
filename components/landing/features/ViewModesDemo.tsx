@@ -7,7 +7,8 @@ import {
   Folder01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import { m, AnimatePresence, useReducedMotion } from "motion/react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { demoLinks } from "./demo-data"
@@ -34,6 +35,7 @@ export function ViewModesDemo() {
   }, [enableMotion, views.length])
 
   return (
+    <RewayLazyMotion>
     <div className="w-full space-y-3">
       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
         {views.map((view, index) => (
@@ -59,7 +61,7 @@ export function ViewModesDemo() {
       <div className="relative h-30">
         <AnimatePresence mode="wait">
           {activeView === 0 ? (
-            <motion.div
+            <m.div
               key="card"
               className="grid grid-cols-2 gap-3 px-1"
               initial={enableMotion ? { opacity: 0, y: 8 } : false}
@@ -117,10 +119,10 @@ export function ViewModesDemo() {
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           ) : null}
           {activeView === 1 ? (
-            <motion.div
+            <m.div
               key="list"
               className="grid gap-2"
               initial={enableMotion ? { opacity: 0, y: 8 } : false}
@@ -148,10 +150,10 @@ export function ViewModesDemo() {
                   <span className="text-[10px] text-muted-foreground">{item.group}</span>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           ) : null}
           {activeView === 2 ? (
-            <motion.div
+            <m.div
               key="folders"
               className="px-1"
               initial={enableMotion ? { opacity: 0, y: 8 } : false}
@@ -203,10 +205,11 @@ export function ViewModesDemo() {
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ) : null}
         </AnimatePresence>
       </div>
     </div>
+    </RewayLazyMotion>
   )
 }

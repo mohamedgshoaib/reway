@@ -19,7 +19,7 @@ export function useDashboardDerived({
   deferredSearchQuery,
 }: UseDashboardDerivedOptions) {
   const hiddenFromAllGroupIds = useMemo(
-    () => new Set(groups.filter((group) => group.hide_from_all_bookmarks).map((group) => group.id)),
+    () => new Set(groups.flatMap((group) => (group.hide_from_all_bookmarks ? [group.id] : []))),
     [groups],
   )
 

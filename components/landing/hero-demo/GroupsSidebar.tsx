@@ -214,7 +214,6 @@ export function GroupsSidebar({
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="New group"
                   className="h-8 text-sm rounded-xl"
-                 
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault()

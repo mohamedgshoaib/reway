@@ -100,14 +100,11 @@ export function useFolderKeyboardNav({
         document.querySelectorAll<HTMLElement>('[data-slot="folder-section"][data-state]'),
       )
 
-      const elements = nodes
-        .map((el) => {
-          const folderId = el.getAttribute("data-folder-id")
-          return { el, folderId, rect: el.getBoundingClientRect() }
-        })
-        .filter((x): x is { el: HTMLElement; folderId: string; rect: DOMRect } =>
-          Boolean(x.folderId),
-        )
+      const elements = nodes.flatMap((el) => {
+        const folderId = el.getAttribute("data-folder-id")
+        if (!folderId) return []
+        return [{ el, folderId, rect: el.getBoundingClientRect() }]
+      })
 
       const current = currentFolderId
         ? elements.find((e) => e.folderId === currentFolderId)
@@ -124,7 +121,7 @@ export function useFolderKeyboardNav({
       const candidates = elements.filter((e) => e.folderId !== currentFolderId)
 
       const filtered = candidates
-        .map((e) => {
+        .flatMap((e) => {
           const cx = e.rect.left + e.rect.width / 2
           const cy = e.rect.top + e.rect.height / 2
           const dx = cx - ox
@@ -138,20 +135,15 @@ export function useFolderKeyboardNav({
                   ? dy < -8
                   : dy > 8
 
-          if (!inDir) return null
+          if (!inDir) return []
 
           const primary =
             direction === "left" || direction === "right" ? Math.abs(dx) : Math.abs(dy)
           const secondary =
             direction === "left" || direction === "right" ? Math.abs(dy) : Math.abs(dx)
 
-          return {
-            value: e.folderId,
-            primary,
-            secondary,
-          }
+          return [{ value: e.folderId, primary, secondary }]
         })
-        .filter((x): x is { value: string; primary: number; secondary: number } => Boolean(x))
         .toSorted((a, b) =>
           a.primary !== b.primary ? a.primary - b.primary : a.secondary - b.secondary,
         )

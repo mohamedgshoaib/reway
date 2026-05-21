@@ -8,8 +8,9 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion } from "motion/react"
+import { m } from "motion/react"
 import { Favicon } from "@/components/dashboard/Favicon"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 
 import TextShimmer from "@/components/ui/text-shimmer"
 import type { HeroBookmark } from "./types"
@@ -30,6 +31,7 @@ export function BookmarksGrid({
   onEdit: (event: React.MouseEvent) => void
 }) {
   return (
+    <RewayLazyMotion>
     <div className="w-full grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-3 min-h-49">
       {stableBookmarkSlots.map((slot, index) =>
         slot.kind === "placeholder" ? (
@@ -41,7 +43,7 @@ export function BookmarksGrid({
             aria-hidden="true"
           />
         ) : (
-          <motion.div
+          <m.div
             key={slot.value.id}
             className={`group rounded-2xl bg-muted/20 p-4 ring-1 ring-foreground/8 transition-colors hover:bg-muted/30 cursor-pointer ${
               index >= 3 ? "hidden sm:block" : ""
@@ -122,9 +124,10 @@ export function BookmarksGrid({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         ),
       )}
     </div>
+    </RewayLazyMotion>
   )
 }

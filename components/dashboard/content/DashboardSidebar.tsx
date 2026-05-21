@@ -502,7 +502,7 @@ export function DashboardSidebar({
                 handleSidebarMouseLeave()
               }}
             >
-              <div className="h-full rounded-r-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
+              <div className="h-full rounded-r-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 p-2 flex flex-col gap-2 text-sm text-muted-foreground">
                 {sidebarBody}
               </div>
             </aside>
@@ -560,7 +560,7 @@ export function DashboardSidebar({
               handleSidebarMouseLeave()
             }}
           >
-            <div className="h-full rounded-r-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 px-2 py-2 flex flex-col gap-2 text-sm text-muted-foreground">
+            <div className="h-full rounded-r-3xl bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/70 ring-1 ring-foreground/8 p-2 flex flex-col gap-2 text-sm text-muted-foreground">
               {sidebarBody}
             </div>
           </aside>

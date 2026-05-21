@@ -33,6 +33,22 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 
+function GroupOption({
+  group,
+  iconsMap,
+}: {
+  group: GroupRow
+  iconsMap: Record<string, IconSvgElement> | null
+}) {
+  const Icon = group.icon && iconsMap ? (iconsMap[group.icon] ?? Folder01Icon) : Folder01Icon
+  return (
+    <div className="flex items-center gap-2">
+      <HugeiconsIcon icon={Icon} size={14} />
+      <span className="truncate">{group.name}</span>
+    </div>
+  )
+}
+
 interface BookmarkEditSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -122,16 +138,6 @@ export function BookmarkEditSheet({
     }
   }
 
-  const renderGroupOption = (group: GroupRow) => {
-    const Icon = group.icon && iconsMap ? (iconsMap[group.icon] ?? Folder01Icon) : Folder01Icon
-    return (
-      <div className="flex items-center gap-2">
-        <HugeiconsIcon icon={Icon} size={14} />
-        <span className="truncate">{group.name}</span>
-      </div>
-    )
-  }
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-lg p-0">
@@ -140,7 +146,7 @@ export function BookmarkEditSheet({
           <SheetDescription>Update your bookmark details.</SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <form id="edit-bookmark-sheet" onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="edit-sheet-url" className="flex items-center gap-2">
@@ -239,7 +245,7 @@ export function BookmarkEditSheet({
                   <SelectItem value="no-group">No Group</SelectItem>
                   {groups.map((group) => (
                     <SelectItem key={group.id} value={group.id}>
-                      {renderGroupOption(group)}
+                      <GroupOption group={group} iconsMap={iconsMap} />
                     </SelectItem>
                   ))}
                 </SelectContent>

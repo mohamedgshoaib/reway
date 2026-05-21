@@ -2,7 +2,8 @@
 
 import { FileUploadIcon, FileDownloadIcon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import { m, AnimatePresence, useReducedMotion } from "motion/react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { useEffect, useState } from "react"
 
 export function ImportExportDemo() {
@@ -33,6 +34,7 @@ export function ImportExportDemo() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
+    <RewayLazyMotion>
     <div className="w-full">
       <div className="grid gap-2">
         <div className="flex items-center justify-between rounded-2xl ring-1 ring-foreground/8 bg-muted/30 px-3 py-2">
@@ -47,7 +49,7 @@ export function ImportExportDemo() {
           </div>
           <AnimatePresence mode="wait">
             {phase === 0 ? (
-              <motion.span
+              <m.span
                 key="importing"
                 className="text-[10px] font-medium text-muted-foreground"
                 initial={enableMotion ? { opacity: 0, y: 6 } : false}
@@ -55,11 +57,11 @@ export function ImportExportDemo() {
                 exit={enableMotion ? { opacity: 0, y: -6 } : undefined}
                 transition={enableMotion ? { duration: 0.25 } : undefined}
               >
-                Importing...
-              </motion.span>
+                Importing…
+              </m.span>
             ) : null}
             {phase !== 0 ? (
-              <motion.span
+              <m.span
                 key="imported"
                 className="inline-flex items-center gap-1 text-[10px] font-medium text-foreground"
                 initial={enableMotion ? { opacity: 0, y: 6 } : false}
@@ -69,7 +71,7 @@ export function ImportExportDemo() {
               >
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
                 Done
-              </motion.span>
+              </m.span>
             ) : null}
           </AnimatePresence>
         </div>
@@ -86,7 +88,7 @@ export function ImportExportDemo() {
           </div>
           <AnimatePresence mode="wait">
             {phase === 1 ? (
-              <motion.span
+              <m.span
                 key="exporting"
                 className="text-[10px] font-medium text-muted-foreground"
                 initial={enableMotion ? { opacity: 0, y: 6 } : false}
@@ -94,11 +96,11 @@ export function ImportExportDemo() {
                 exit={enableMotion ? { opacity: 0, y: -6 } : undefined}
                 transition={enableMotion ? { duration: 0.25 } : undefined}
               >
-                Exporting...
-              </motion.span>
+                Exporting…
+              </m.span>
             ) : null}
             {phase !== 1 ? (
-              <motion.span
+              <m.span
                 key="exported"
                 className="inline-flex items-center gap-1 text-[10px] font-medium text-foreground"
                 initial={enableMotion ? { opacity: 0, y: 6 } : false}
@@ -108,11 +110,12 @@ export function ImportExportDemo() {
               >
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
                 Ready
-              </motion.span>
+              </m.span>
             ) : null}
           </AnimatePresence>
         </div>
       </div>
     </div>
+    </RewayLazyMotion>
   )
 }

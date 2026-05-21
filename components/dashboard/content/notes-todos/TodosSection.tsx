@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { TodoRow as TodoRowType } from "@/lib/supabase/queries"
 import { normalizePriority } from "./config"
 import { TodoCreateCard } from "./TodoCreateCard"
@@ -43,7 +43,7 @@ export function TodosSection({
   const [isUpdatingTodo, setIsUpdatingTodo] = useState(false)
 
   const [todoDeleteDialogOpen, setTodoDeleteDialogOpen] = useState(false)
-  const [todoIdPendingDelete, setTodoIdPendingDelete] = useState<string | null>(null)
+  const todoIdPendingDelete = useRef<string | null>(null)
 
   const toggleSelectedTodo = (id: string) => {
     setSelectedTodoIds((prev) => {
@@ -145,7 +145,7 @@ export function TodosSection({
                 setEditTodoPriority(priority)
               }}
               onDelete={() => {
-                setTodoIdPendingDelete(todo.id)
+                todoIdPendingDelete.current = todo.id
                 setTodoDeleteDialogOpen(true)
               }}
               onActionMenuOpenChange={onActionMenuOpenChange}
@@ -180,10 +180,10 @@ export function TodosSection({
         open={todoDeleteDialogOpen}
         onOpenChange={setTodoDeleteDialogOpen}
         onConfirm={() => {
-          if (!todoIdPendingDelete) return
-          void onDeleteTodo(todoIdPendingDelete)
+          if (!todoIdPendingDelete.current) return
+          void onDeleteTodo(todoIdPendingDelete.current)
           setTodoDeleteDialogOpen(false)
-          setTodoIdPendingDelete(null)
+          todoIdPendingDelete.current = null
         }}
       />
     </>

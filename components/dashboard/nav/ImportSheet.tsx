@@ -74,10 +74,9 @@ export function ImportSheet({
 
   const duplicateAction = (() => {
     if (!importPreview || totalDuplicates === 0) return null
-    const dupActions = importPreview.entries
-      .filter((e) => e.isDuplicate)
-      .map((e) => e.action)
-      .filter((value): value is "skip" | "override" => value === "skip" || value === "override")
+    const dupActions = importPreview.entries.flatMap((e) =>
+      e.isDuplicate && (e.action === "skip" || e.action === "override") ? [e.action] : []
+    )
     if (dupActions.length === 0) return null
     const first = dupActions[0]
     return dupActions.every((a) => a === first) ? first : null

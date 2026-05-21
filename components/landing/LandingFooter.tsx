@@ -2,10 +2,11 @@
 
 import { GithubIcon, Linkedin02Icon, NewTwitterIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion, useReducedMotion, type Variants } from "motion/react"
+import { m, useReducedMotion, type Variants } from "motion/react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import BrandWord from "@/components/landing/BrandWord"
 import { ThemeSwitcher } from "@/components/landing/ThemeSwitcher"
 import type { DashboardHref } from "@/components/landing/types"
@@ -17,7 +18,7 @@ export function LandingFooter() {
   const [mounted, setMounted] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false)
-  const router = useRouter()
+  const { push } = useRouter()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
@@ -32,10 +33,7 @@ export function LandingFooter() {
       .catch(() => setIsAuthenticated(false))
   }, [])
 
-  const primaryHref: DashboardHref = useMemo(
-    () => (isAuthenticated ? "/dashboard" : "/login"),
-    [isAuthenticated],
-  )
+  const primaryHref: DashboardHref = isAuthenticated ? "/dashboard" : "/login"
   const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started"
 
   const socialLinks = [
@@ -77,7 +75,8 @@ export function LandingFooter() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
-    <motion.footer
+    <RewayLazyMotion>
+    <m.footer
       className="border-t border-foreground/12 bg-background pt-16 lg:pt-20 pb-0"
       initial={enableMotion ? "hidden" : false}
       whileInView={enableMotion ? "visible" : undefined}
@@ -135,7 +134,7 @@ export function LandingFooter() {
                     onClick={() => {
                       if (isPrimaryNavLoading) return
                       setIsPrimaryNavLoading(true)
-                      router.push("/dashboard")
+                      push("/dashboard")
                     }}
                     disabled={isPrimaryNavLoading}
                   >
@@ -210,7 +209,7 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <motion.div
+        <m.div
           className="py-16 w-full text-muted-foreground/6"
           initial={enableMotion ? "hidden" : false}
           whileInView={enableMotion ? "visible" : undefined}
@@ -218,8 +217,9 @@ export function LandingFooter() {
           variants={enableMotion ? signatureVariants : undefined}
         >
           <BrandWord className="h-auto w-full select-none" />
-        </motion.div>
+        </m.div>
       </div>
-    </motion.footer>
+    </m.footer>
+    </RewayLazyMotion>
   )
 }

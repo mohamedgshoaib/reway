@@ -39,7 +39,8 @@ export function GroupEditRow({
 }) {
   return (
     <div
-      className="relative mx-1 my-1.5 px-3 py-3 space-y-3 bg-muted/20 rounded-xl ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate"
+      role="presentation"
+      className="relative mx-1 my-1.5 p-3 space-y-3 bg-muted/20 rounded-xl ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center gap-2">
@@ -71,7 +72,6 @@ export function GroupEditRow({
           placeholder="Group name"
           className="h-8 flex-1 text-sm rounded-lg"
           maxLength={MAX_GROUP_NAME_LENGTH}
-         
           onKeyDown={(e) => {
             e.stopPropagation()
             if (e.key === "Enter") {

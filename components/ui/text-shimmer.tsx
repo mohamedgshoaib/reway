@@ -1,13 +1,13 @@
 "use client"
 
-import { motion } from "motion/react"
+import { m } from "motion/react"
 import React from "react"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { cn } from "@/lib/utils"
 
 export type TextShimmerProps = {
   children: string
-  as?: keyof typeof motion
+  as?: keyof typeof m
   className?: string
   duration?: number
   spread?: number
@@ -24,7 +24,7 @@ const TextShimmer = ({
   delay = 0,
   repeatDelay = 0,
 }: TextShimmerProps) => {
-  const MotionComponent = (motion[as as keyof typeof motion] || motion.p) as typeof motion.p
+  const MotionComponent = (m[as as keyof typeof m] || m.p) as typeof m.p
 
   const dynamicSpread = children.length * spread
 

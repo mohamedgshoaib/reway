@@ -37,6 +37,11 @@ export async function updatePasswordAction(
 
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect("/login")
+
   const { error } = await supabase.auth.updateUser({
     password,
   })

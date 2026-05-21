@@ -85,7 +85,7 @@ export function SettingsDialog({
   const [confirmValue, setConfirmValue] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const { theme, setTheme } = useTheme()
-  const router = useRouter()
+  const { push } = useRouter()
   const normalizedName = useMemo(() => userName.trim(), [userName])
   const confirmPhrase = normalizedName || "your name"
   const isConfirmMatch = confirmValue.trim() === normalizedName
@@ -121,7 +121,7 @@ export function SettingsDialog({
       toast.success("Account deleted successfully")
       setConfirmOpen(false)
       setOpen(false)
-      router.push("/login")
+      push("/login")
     } catch (error) {
       console.error("Delete account failed:", error)
       toast.error("Failed to delete account. Please try again.")

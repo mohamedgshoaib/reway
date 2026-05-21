@@ -50,10 +50,10 @@ export const extractUrlsFromText = (input: string) => {
     }
   }
 
-  const results = Array.from(candidates)
-    .map((u) => u.trim())
-    .filter(Boolean)
-    .filter((u) => isUrl(u))
+  const results = Array.from(candidates).flatMap((u) => {
+    const t = u.trim()
+    return t && isUrl(t) ? [t] : []
+  })
 
   return results
 }

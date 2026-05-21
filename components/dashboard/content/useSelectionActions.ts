@@ -98,7 +98,7 @@ export function useSelectionActions({
       return
     }
 
-    const urls = selectedBookmarks.map((bookmark) => bookmark.url).filter(Boolean)
+    const urls = selectedBookmarks.flatMap((bookmark) => (bookmark.url ? [bookmark.url] : []))
     if (urls.length === 0) return
 
     recordBookmarkVisits(selectedBookmarks.map((bookmark) => bookmark.id))
@@ -158,9 +158,9 @@ export function useSelectionActions({
     const idsToDelete = Array.from(selectedIds)
     if (idsToDelete.length === 0) return
 
-    const deletedBookmarks = bookmarks
-      .map((bookmark, index) => ({ bookmark, index }))
-      .filter(({ bookmark }) => selectedIds.has(bookmark.id))
+    const deletedBookmarks = bookmarks.flatMap((bookmark, index) =>
+      selectedIds.has(bookmark.id) ? [{ bookmark, index }] : []
+    )
 
     lastBulkDeletedRef.current = deletedBookmarks
 

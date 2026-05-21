@@ -62,7 +62,6 @@ export function GroupEditCard({
           }}
           placeholder="Group name"
           className="h-8 flex-1 text-sm rounded-xl"
-         
           maxLength={MAX_GROUP_NAME_LENGTH}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

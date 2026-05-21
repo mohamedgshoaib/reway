@@ -4,9 +4,10 @@ const MAX_VISIT_BATCH_SIZE = 500
 function normalizeBookmarkIds(bookmarkIds: Array<string | null | undefined>) {
   return Array.from(
     new Set(
-      bookmarkIds
-        .map((bookmarkId) => bookmarkId?.trim())
-        .filter((bookmarkId): bookmarkId is string => Boolean(bookmarkId)),
+      bookmarkIds.flatMap((bookmarkId) => {
+        const t = bookmarkId?.trim()
+        return t ? [t] : []
+      }),
     ),
   ).slice(0, MAX_VISIT_BATCH_SIZE)
 }

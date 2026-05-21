@@ -136,7 +136,7 @@ export function UserMenu({
           className="w-56 rounded-2xl p-2 ring-1 ring-foreground/8 animate-in slide-in-from-top-2 duration-200 motion-reduce:animate-none after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate"
         >
           <div className="px-2 py-1.5 font-normal">
-            <div className="flex flex-col space-y-1">
+            <div className="flex flex-col gap-1">
               <p className="text-sm font-medium leading-none">{user.name}</p>
               <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             </div>

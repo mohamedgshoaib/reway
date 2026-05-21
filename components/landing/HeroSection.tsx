@@ -1,6 +1,7 @@
 "use client"
 
-import { motion, useReducedMotion, type Variants } from "motion/react"
+import { m, useReducedMotion, type Variants } from "motion/react"
+import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -15,7 +16,7 @@ export function HeroSection() {
   const [mounted, setMounted] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false)
-  const router = useRouter()
+  const { push } = useRouter()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
@@ -45,9 +46,10 @@ export function HeroSection() {
   const enableMotion = mounted && !shouldReduceMotion
 
   return (
+    <RewayLazyMotion>
     <section className="border-b border-foreground/8 bg-background">
       <div className="mx-auto flex w-full max-w-350 flex-col gap-10 px-4 py-16 sm:px-6 lg:py-20">
-        <motion.div
+        <m.div
           className="space-y-6 text-center"
           initial={enableMotion ? "hidden" : false}
           whileInView={enableMotion ? "visible" : undefined}
@@ -72,7 +74,7 @@ export function HeroSection() {
                   onClick={() => {
                     if (isPrimaryNavLoading) return
                     setIsPrimaryNavLoading(true)
-                    router.push("/dashboard")
+                    push("/dashboard")
                   }}
                   disabled={isPrimaryNavLoading}
                 >
@@ -96,10 +98,11 @@ export function HeroSection() {
               </ExtensionInstallDialog>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         <HeroDemoPreview />
       </div>
     </section>
+    </RewayLazyMotion>
   )
 }

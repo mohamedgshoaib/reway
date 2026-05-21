@@ -42,7 +42,7 @@ export function NoteCreateCard({
                     aria-label="Pick note color"
                   >
                     <span
-                      className="h-2.5 w-2.5 rounded-full ring-1 ring-border/60"
+                      className="size-2.5 rounded-full ring-1 ring-border/60"
                       style={{ backgroundColor: color ?? NOTE_COLORS[5] }}
                     />
                   </button>
@@ -63,7 +63,6 @@ export function NoteCreateCard({
                 onChange={(e) => setText(e.target.value)}
                 placeholder="New note"
                 className="h-8 text-sm rounded-xl"
-               
                 disabled={isCreating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isCreating) {
