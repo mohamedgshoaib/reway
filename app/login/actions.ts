@@ -30,6 +30,7 @@ const getSiteUrl = () => {
 
 const logDev = (...args: unknown[]) => {
   if (process.env.NODE_ENV !== "production") {
+    // react-doctor-disable-next-line react-doctor/server-after-nonblocking
     after(() => console.log(...args))
   }
 }

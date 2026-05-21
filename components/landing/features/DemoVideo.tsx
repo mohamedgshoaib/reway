@@ -43,6 +43,7 @@ export function DemoVideo({
 
   // 2-phase loading states
   const [shouldAttachSource, setShouldAttachSource] = useState(false)
+  // react-doctor-disable-next-line react-doctor/rerender-state-only-in-handlers
   const [shouldPlay, setShouldPlay] = useState(false)
 
   const isHovered = isHoveredExternally ?? isHoveredInternally
@@ -196,7 +197,7 @@ export function DemoVideo({
         onMouseLeave={() => setIsHoveredInternally(false)}
       >
         {blurDataURL && (
-          /* eslint-disable-next-line @next/next/no-img-element */
+          // eslint-disable-next-line @next/next/no-img-element, react-doctor/nextjs-no-img-element
           <img
             src={blurDataURL}
             alt=""

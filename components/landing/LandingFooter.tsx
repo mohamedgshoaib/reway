@@ -5,36 +5,20 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { m, useReducedMotion, type Variants } from "motion/react"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import BrandWord from "@/components/landing/BrandWord"
 import { ThemeSwitcher } from "@/components/landing/ThemeSwitcher"
 import type { DashboardHref } from "@/components/landing/types"
 import RewayLogo from "@/components/logo"
-import { createClient } from "@/lib/supabase/client"
 
 export function LandingFooter() {
   const shouldReduceMotion = useReducedMotion()
   const [mounted, setMounted] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false)
-  const { push } = useRouter()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
     return () => clearTimeout(timer)
   }, [])
-
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth
-      .getUser()
-      .then(({ data }) => setIsAuthenticated(Boolean(data?.user)))
-      .catch(() => setIsAuthenticated(false))
-  }, [])
-
-  const primaryHref: DashboardHref = isAuthenticated ? "/dashboard" : "/login"
-  const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started"
 
   const socialLinks = [
     {
@@ -127,27 +111,12 @@ export function LandingFooter() {
                 </Link>
               </li>
               <li>
-                {isAuthenticated ? (
-                  <button
-                    type="button"
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                    onClick={() => {
-                      if (isPrimaryNavLoading) return
-                      setIsPrimaryNavLoading(true)
-                      push("/dashboard")
-                    }}
-                    disabled={isPrimaryNavLoading}
-                  >
-                    {isPrimaryNavLoading ? "Loading..." : primaryLabel}
-                  </button>
-                ) : (
-                  <Link
-                    href={primaryHref}
-                    className="hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    {primaryLabel}
-                  </Link>
-                )}
+                <Link
+                  href="/login"
+                  className="hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Get Started
+                </Link>
               </li>
             </ul>
           </div>

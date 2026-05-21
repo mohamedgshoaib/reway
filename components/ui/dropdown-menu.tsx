@@ -171,20 +171,23 @@ function DropdownMenuSeparator({
   )
 }
 
-const DropdownMenuShortcut = React.forwardRef<
-  React.ElementRef<"span">,
-  React.ComponentPropsWithoutRef<"span">
->(({ className, ...props }, ref) => (
-  <span
-    data-slot="dropdown-menu-shortcut"
-    ref={ref}
-    className={cn(
-      "text-muted-foreground group-focus/dropdown-menu-item:text-primary/90 ml-auto text-xs",
-      className,
-    )}
-    {...props}
-  />
-))
+function DropdownMenuShortcut({
+  className,
+  ref,
+  ...props
+}: React.ComponentPropsWithoutRef<"span"> & { ref?: React.Ref<HTMLSpanElement> }) {
+  return (
+    <span
+      data-slot="dropdown-menu-shortcut"
+      ref={ref}
+      className={cn(
+        "text-muted-foreground group-focus/dropdown-menu-item:text-primary/90 ml-auto text-xs",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
 
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
 

@@ -159,6 +159,8 @@ export function DashboardContent({
 
     const CONCURRENCY = 2
 
+    const timeouts = enrichmentTimeoutsRef.current
+
     resumePendingEnrichmentTask = (async () => {
       try {
         while (true) {
@@ -203,6 +205,7 @@ export function DashboardContent({
                   enrichmentTimeoutsRef.current.add(timeoutId)
                 })
                 const enrichmentPromise = enrichCreatedBookmark(current.id, current.url)
+                // react-doctor-disable-next-line react-doctor/async-defer-await, react-doctor/async-await-in-loop
                 const enrichment = (await Promise.race([
                   enrichmentPromise,
                   timeoutPromise,
@@ -239,6 +242,7 @@ export function DashboardContent({
             }
           }
 
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop
           await Promise.all(
             Array.from({ length: Math.min(CONCURRENCY, pendingNow.length) }, () => worker()),
           )
@@ -250,10 +254,10 @@ export function DashboardContent({
 
     return () => {
       cancelled = true
-      enrichmentTimeoutsRef.current.forEach((timeoutId) => {
+      timeouts.forEach((timeoutId) => {
         window.clearTimeout(timeoutId)
       })
-      enrichmentTimeoutsRef.current.clear()
+      timeouts.clear()
     }
   }, [applyEnrichment, bookmarks, setBookmarks])
 

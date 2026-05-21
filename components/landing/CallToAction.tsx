@@ -5,14 +5,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useReducedMotion, type Variants } from "motion/react"
 import * as m from "motion/react-m"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import ChromeWebStoreIcon from "@/components/chrome-store-logo"
 import { ExtensionInstallDialog } from "@/components/extension-install-dialog"
-import type { DashboardHref } from "@/components/landing/types"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -42,25 +39,11 @@ const itemVariants: Variants = {
 export function CallToAction() {
   const shouldReduceMotion = useReducedMotion()
   const [mounted, setMounted] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false)
-  const { push } = useRouter()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
     return () => clearTimeout(timer)
   }, [])
-
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth
-      .getUser()
-      .then(({ data }) => setIsAuthenticated(Boolean(data?.user)))
-      .catch(() => setIsAuthenticated(false))
-  }, [])
-
-  const primaryHref: DashboardHref = isAuthenticated ? "/dashboard" : "/login"
-  const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started"
 
   const enableMotion = mounted && !shouldReduceMotion
 
@@ -96,30 +79,12 @@ export function CallToAction() {
                     whileTap={enableMotion ? { scale: 0.97 } : undefined}
                     transition={enableMotion ? { duration: 0.16, ease: "easeOut" } : undefined}
                   >
-                    {isAuthenticated ? (
-                      <Button
-                        size="lg"
-                        className="rounded-full px-8 cursor-pointer"
-                        onClick={() => {
-                          if (isPrimaryNavLoading) return
-                          setIsPrimaryNavLoading(true)
-                          push("/dashboard")
-                        }}
-                        disabled={isPrimaryNavLoading}
-                      >
-                        {isPrimaryNavLoading ? "Loading…" : "Dashboard"}
-                        {!isPrimaryNavLoading ? (
-                          <HugeiconsIcon icon={ArrowRight01Icon} size={20} className="ml-2" />
-                        ) : null}
-                      </Button>
-                    ) : (
-                      <Button asChild size="lg" className="rounded-full px-8 cursor-pointer">
-                        <Link href={primaryHref}>
-                          {primaryLabel}
-                          <HugeiconsIcon icon={ArrowRight01Icon} size={20} className="ml-2" />
-                        </Link>
-                      </Button>
-                    )}
+                    <Button asChild size="lg" className="rounded-full px-8 cursor-pointer">
+                      <Link href="/login">
+                        Get Started
+                        <HugeiconsIcon icon={ArrowRight01Icon} size={20} className="ml-2" />
+                      </Link>
+                    </Button>
                   </m.div>
 
                   <ExtensionInstallDialog>

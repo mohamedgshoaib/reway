@@ -221,8 +221,7 @@ export function HeroDemoPreview() {
                   >
                     <div className="relative flex-1 min-w-0">
                       <form
-                        onSubmit={(e) => {
-                          e.preventDefault()
+                        action={() => {
                           submitCommandInput()
                         }}
                       >

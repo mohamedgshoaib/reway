@@ -201,6 +201,7 @@ export async function seedNewUser(supabase: SupabaseClient<Database>, user: User
       const groupData = DEMO_GROUPS[i]
       if (!groupData) continue
 
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop
       const { data: newGroup, error: createGroupError } = await supabase
         .from("groups")
         .insert({

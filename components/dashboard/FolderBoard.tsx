@@ -120,7 +120,7 @@ export const FolderBoard = memo(function FolderBoard({
   const isExtendedFolderGrid = layoutDensity === "extended"
 
   const openFolders = useMemo(
-    () => visibleGroups.filter((group) => !collapsedGroups[group.id]).map((group) => group.id),
+    () => visibleGroups.flatMap((group) => (collapsedGroups[group.id] ? [] : [group.id])),
     [collapsedGroups, visibleGroups],
   )
 

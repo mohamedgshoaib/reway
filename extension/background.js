@@ -312,18 +312,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const directUrls = Array.isArray(message.urls) ? message.urls.filter(Boolean) : []
 
         const normalizedUrls = directUrls
-          .map((url) => {
+          .flatMap((url) => {
             try {
               const parsed = new URL(url)
               if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-                return null
+                return []
               }
-              return parsed.toString()
+              return [parsed.toString()]
             } catch {
-              return null
+              return []
             }
           })
-          .filter(Boolean)
           .slice(0, 25)
 
         if (normalizedUrls.length > 0) {
@@ -349,20 +348,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const bookmarks = data.bookmarks || []
 
         const bookmarkUrls = bookmarks
-          .map((bookmark) => bookmark.url)
-          .filter(Boolean)
-          .map((url) => {
+          .flatMap((bookmark) => {
+            if (!bookmark.url) return []
             try {
-              const parsed = new URL(url)
+              const parsed = new URL(bookmark.url)
               if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-                return null
+                return []
               }
-              return parsed.toString()
+              return [parsed.toString()]
             } catch {
-              return null
+              return []
             }
           })
-          .filter(Boolean)
           .slice(0, 25)
 
         await Promise.all(bookmarkUrls.map((url) => chrome.tabs.create({ url, active: false })))

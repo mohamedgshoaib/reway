@@ -3,36 +3,20 @@
 import { m, useReducedMotion, type Variants } from "motion/react"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import ChromeWebStoreIcon from "@/components/chrome-store-logo"
 import { ExtensionInstallDialog } from "@/components/extension-install-dialog"
 import { HeroDemoPreview } from "@/components/landing/HeroDemoPreview"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion()
   const [mounted, setMounted] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [isPrimaryNavLoading, setIsPrimaryNavLoading] = useState(false)
-  const { push } = useRouter()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
     return () => clearTimeout(timer)
   }, [])
-
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth
-      .getUser()
-      .then(({ data }) => setIsAuthenticated(Boolean(data?.user)))
-      .catch(() => setIsAuthenticated(false))
-  }, [])
-
-  const primaryHref = isAuthenticated ? "/dashboard" : "/login"
-  const primaryLabel = isAuthenticated ? "Dashboard" : "Get Started"
 
   const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
@@ -67,24 +51,9 @@ export function HeroSection() {
 
           <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 pt-1">
             <div className="flex flex-col items-center gap-3 sm:flex-row">
-              {isAuthenticated ? (
-                <Button
-                  size="lg"
-                  className="rounded-full px-8 cursor-pointer"
-                  onClick={() => {
-                    if (isPrimaryNavLoading) return
-                    setIsPrimaryNavLoading(true)
-                    push("/dashboard")
-                  }}
-                  disabled={isPrimaryNavLoading}
-                >
-                  {isPrimaryNavLoading ? "Loading..." : "Dashboard"}
-                </Button>
-              ) : (
-                <Button asChild size="lg" className="rounded-full px-8 cursor-pointer">
-                  <Link href={primaryHref}>{primaryLabel}</Link>
-                </Button>
-              )}
+              <Button asChild size="lg" className="rounded-full px-8 cursor-pointer">
+                <Link href="/login">Get Started</Link>
+              </Button>
 
               <ExtensionInstallDialog>
                 <Button variant="outline" size="lg" className="rounded-full px-8 cursor-pointer">

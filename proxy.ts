@@ -50,6 +50,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Redirect authenticated users from homepage to dashboard,
+  // unless they arrived via an intentional navigation (bypass cookie).
+  if (request.nextUrl.pathname === "/" && user) {
+    const bypass = request.cookies.get("homepage-bypass")
+    if (bypass?.value === "1") {
+      supabaseResponse.cookies.set("homepage-bypass", "", { maxAge: 0, path: "/" })
+      return supabaseResponse
+    }
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard"
+    return NextResponse.redirect(url)
+  }
+
   return supabaseResponse
 }
 

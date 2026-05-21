@@ -35,7 +35,7 @@ export function BookmarkDragOverlay({ activeBookmark, viewMode }: BookmarkDragOv
             <p className="truncate text-xs text-muted-foreground">{domain}</p>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p suppressHydrationWarning className="text-xs text-muted-foreground">
           {new Date(activeBookmark.created_at).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",
@@ -55,7 +55,7 @@ export function BookmarkDragOverlay({ activeBookmark, viewMode }: BookmarkDragOv
         </div>
       </div>
       <div className="flex shrink-0 items-center pl-6">
-        <span className="text-sm font-medium text-muted-foreground">
+        <span suppressHydrationWarning className="text-sm font-medium text-muted-foreground">
           {new Date(activeBookmark.created_at).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",

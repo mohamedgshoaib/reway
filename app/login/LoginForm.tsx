@@ -89,7 +89,7 @@ const forgotPasswordSchema = z.object({
 })
 
 function LoginFormContent() {
-  const { get: getSearchParam } = useSearchParams()
+  const searchParams = useSearchParams()
   const shouldReduceMotion = useReducedMotion()
 
   // Mode state
@@ -125,7 +125,7 @@ function LoginFormContent() {
   const [googlePending, setGooglePending] = useState(false)
 
   // Read URL query errors (like verification expiry)
-  const urlError = getSearchParam("error")
+  const urlError = searchParams.get("error")
   const [activeUrlError, setActiveUrlError] = useState<string | null>(urlError)
 
   // Track animation state to disable overflow-hidden once password field is fully animated

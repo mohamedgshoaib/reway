@@ -68,6 +68,7 @@ function FaviconInner({
 }: FaviconProps & {
   initialFallbackLevel: "primary" | "origin" | "service" | "letter"
 }) {
+  // react-doctor-disable-next-line react-doctor/no-derived-useState
   const [fallbackLevel, setFallbackLevel] = useState<"primary" | "origin" | "service" | "letter">(
     initialFallbackLevel,
   )
@@ -149,6 +150,7 @@ function FaviconInner({
         <HugeiconsIcon icon={Bookmark01Icon} size={20} className="text-muted-foreground/20" />
       ) : shouldTryImage && currentImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
+        // react-doctor-disable-next-line react-doctor/nextjs-no-img-element, next/no-img-element
         <img
           key={currentImageUrl}
           src={currentImageUrl}

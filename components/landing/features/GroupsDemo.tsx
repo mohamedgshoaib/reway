@@ -253,13 +253,9 @@ export function GroupsDemo() {
         )}
 
         {/* Render Links */}
-        {LINKS.flatMap((link) => (!isMobile || link.group !== "Build" ? [link] : [])).map((link) => {
+        {LINKS.flatMap((link) => {
+          if (isMobile && link.group === "Build") return []
           const pos = targets[link.id]
-          // Adjust Y-base for links so they sit below headers.
-          // Headers are at -40. Links start at roughly 0 to +80.
-          // Let's shift them slightly up to balance the visual center with headers included.
-          // Actually, if we keep 'y' from layout logic (approx 10..90 relative),
-          // we should subtract a bit to center the whole block vertically.
           const centeredY = (pos?.y ?? 0) - 10
 
           return (

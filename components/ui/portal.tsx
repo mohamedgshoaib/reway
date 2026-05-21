@@ -12,13 +12,17 @@ function Portal({ className, ...props }: React.ComponentProps<"div">) {
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
     const originalPaddingRight = document.body.style.paddingRight
 
+    // react-doctor-disable-next-line react-doctor/js-batch-dom-css
     document.body.style.overflow = "hidden"
     if (scrollbarWidth > 0) {
+      // react-doctor-disable-next-line react-doctor/js-batch-dom-css
       document.body.style.paddingRight = `${scrollbarWidth}px`
     }
 
     return () => {
+      // react-doctor-disable-next-line react-doctor/js-batch-dom-css
       document.body.style.overflow = originalStyle
+      // react-doctor-disable-next-line react-doctor/js-batch-dom-css
       document.body.style.paddingRight = originalPaddingRight
     }
   }, [])

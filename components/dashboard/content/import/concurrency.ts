@@ -18,6 +18,7 @@ export async function runWithConcurrency<T>(
       if (current >= items.length) return
       index += 1
 
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop
       await handler(items[current])
     }
   }

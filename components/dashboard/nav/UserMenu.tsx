@@ -2,6 +2,7 @@
 
 import {
   HelpCircleIcon,
+  Home01Icon,
   Logout01Icon,
   Settings01Icon,
   Download02Icon,
@@ -10,6 +11,7 @@ import {
   Wrench01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { signOut } from "@/app/dashboard/actions/auth"
@@ -86,6 +88,12 @@ export function UserMenu({
   onOpenDuplicatesSheet,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
+
+  const goToHomepage = () => {
+    document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
+    router.push("/")
+  }
 
   useEffect(() => {
     const handleOpenRequest = () => setOpen(true)
@@ -220,6 +228,18 @@ export function UserMenu({
               Download Extension
             </DropdownMenuItem>
           </ExtensionInstallDialog>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+            onSelect={(event) => {
+              event.preventDefault()
+              setOpen(false)
+              goToHomepage()
+            }}
+          >
+            <HugeiconsIcon icon={Home01Icon} size={16} />
+            Homepage
+          </DropdownMenuItem>
           <form action={signOut}>
             <LogoutItem />
           </form>

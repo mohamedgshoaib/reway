@@ -2,7 +2,7 @@
 
 import { Note01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import { checkDuplicateGroup, createGroup } from "@/app/dashboard/actions/groups"
@@ -147,6 +147,7 @@ export function DashboardNav({
   onSetTodosCompleted,
 }: DashboardNavProps) {
   void onReorderGroups
+  const router = useRouter()
   const [isInlineCreating, setIsInlineCreating] = useState(false)
   const [newGroupName, setNewGroupName] = useState("")
   const [newGroupIcon, setNewGroupIcon] = useState("folder")
@@ -343,9 +344,17 @@ export function DashboardNav({
       >
         <div className="flex h-14 w-full items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link href="/" className="hidden md:flex shrink-0 items-center">
+            <button
+              type="button"
+              onClick={() => {
+                document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
+                router.push("/")
+              }}
+              className="hidden md:flex shrink-0 items-center"
+              aria-label="Reway Homepage"
+            >
               <RewayLogo className="size-8" aria-label="Reway" />
-            </Link>
+            </button>
 
             <GroupMenu
               groups={groups}

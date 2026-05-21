@@ -1,0 +1,20 @@
+{
+  "ignore": {
+    "rules": [
+      "react-doctor/no-cascading-set-state",
+      "react-doctor/no-giant-component",
+      "react-doctor/prefer-useReducer",
+      "react-doctor/react-compiler-destructure-method"
+    ],
+    "overrides": [
+      {
+        "files": ["app/login/actions.ts", "components/landing/hero-demo/actions.ts"],
+        "rules": ["react-doctor/server-auth-actions"]
+      },
+      {
+        "files": ["components/dashboard/content/useDashboardPreferences.ts"],
+        "rules": ["react-doctor/no-derived-state-effect"]
+      }
+    ]
+  }
+}

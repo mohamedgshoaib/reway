@@ -218,6 +218,7 @@ export function useCommandHandlers({
     [inputRef, onModeChange],
   )
 
+  // react-doctor-disable-next-line react-doctor/advanced-event-handler-refs
   useEffect(() => {
     window.addEventListener("paste", handlePaste)
     return () => {

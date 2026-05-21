@@ -4,34 +4,13 @@ import Link from "next/link"
 import React from "react"
 import { navLinks } from "@/components/header"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Portal, PortalBackdrop } from "@/components/ui/portal"
-import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 
-type MobileNavUser = {
-  id: string
-  email: string
-  name: string
-  avatar_url?: string
-} | null
-
-interface MobileNavProps {
-  user?: MobileNavUser
-  initials?: string
-}
-
-export function MobileNav({ user, initials = "U" }: MobileNavProps) {
+export function MobileNav() {
   const [open, setOpen] = React.useState(false)
   const shouldReduceMotion = useReducedMotion()
-
-  const onLogout = React.useCallback(async () => {
-    setOpen(false)
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    window.location.reload()
-  }, [])
 
   React.useEffect(() => {
     if (!open) return
@@ -83,32 +62,6 @@ export function MobileNav({ user, initials = "U" }: MobileNavProps) {
             data-slot={open ? "open" : "closed"}
           >
             <div className="mx-auto w-full max-w-4xl px-4 pt-3">
-              {user ? (
-                <div className="mb-6 rounded-4xl ring-1 ring-foreground/8 bg-muted/20 p-1.5 shadow-none isolate after:absolute after:inset-0 after:rounded-4xl after:ring-1 after:ring-white/5 after:pointer-events-none relative">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="size-9">
-                      <AvatarImage src={user.avatar_url} alt={user.name} />
-                      <AvatarFallback>{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-foreground">
-                        {user.name}
-                      </div>
-                      <div className="truncate text-xs text-muted-foreground">{user.email}</div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="shrink-0"
-                      onClick={onLogout}
-                      type="button"
-                    >
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-
               <div className="grid gap-y-1">
                 {navLinks.map((link) => (
                   <Button
@@ -123,23 +76,13 @@ export function MobileNav({ user, initials = "U" }: MobileNavProps) {
                 ))}
               </div>
               <div className="mt-8 border-t border-foreground/8 pt-4">
-                {user ? (
-                  <Button
-                    asChild
-                    className="w-full ring-1 ring-foreground/8"
-                    onClick={() => setOpen(false)}
-                  >
-                    <Link href="/dashboard">Go to Dashboard</Link>
-                  </Button>
-                ) : (
-                  <Button
-                    asChild
-                    className="w-full ring-1 ring-foreground/8"
-                    onClick={() => setOpen(false)}
-                  >
-                    <Link href="/login">Get Started</Link>
-                  </Button>
-                )}
+                <Button
+                  asChild
+                  className="w-full ring-1 ring-foreground/8"
+                  onClick={() => setOpen(false)}
+                >
+                  <Link href="/login">Get Started</Link>
+                </Button>
               </div>
             </div>
           </div>

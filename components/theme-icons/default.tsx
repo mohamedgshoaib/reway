@@ -36,7 +36,7 @@ const Default = (props: SVGProps<SVGSVGElement>) => (
           fill: "#fff",
           stroke: "none",
         }}
-        transform="translate(110.372 110.372) scale(12.13567)"
+        transform="translate(110.37 110.37) scale(12.14)"
       />
     </g>
   </svg>
