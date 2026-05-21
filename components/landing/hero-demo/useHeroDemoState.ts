@@ -1,5 +1,6 @@
 import { BulbIcon, Folder01Icon, Search01Icon, ToolsIcon } from "@hugeicons/core-free-icons"
-import { useMemo, useState } from "react"
+import type { ComponentType, SVGProps } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import type { TodoPriority } from "@/components/dashboard/content/notes-todos/types"
 import type { NoteRow, TodoRow } from "@/lib/supabase/queries"
@@ -18,7 +19,7 @@ import {
   updateTodoCompleted,
   updateTodoValues,
 } from "./helpers"
-import type { HeroGroup, HeroGroupId } from "./types"
+import type { HeroBookmark, HeroGroup, HeroGroupId } from "./types"
 
 const HERO_GROUP_PRESETS: Record<string, { icon: typeof Folder01Icon; color: string }> = {
   Research: { icon: Search01Icon, color: "#3b82f6" },
@@ -44,7 +45,8 @@ export function useHeroDemoState() {
   const [commandInputValue, setCommandInputValue] = useState("")
   const [isCommandFocused, setIsCommandFocused] = useState(false)
 
-  const [heroBookmarks, setHeroBookmarks] = useState(createInitialHeroBookmarks)
+  const initialBookmarksRef = useRef(createInitialHeroBookmarks())
+  const [heroBookmarks, setHeroBookmarks] = useState(() => initialBookmarksRef.current)
   const [notes, setNotes] = useState<NoteRow[]>(createInitialNotes)
   const [activeNotesTodosSection, setActiveNotesTodosSection] = useState<"notes" | "todos">("notes")
   const [heroGroups, setHeroGroups] = useState<HeroGroup[]>(() =>
@@ -161,10 +163,10 @@ export function useHeroDemoState() {
     setDropdownNewGroupColor(null)
   }
 
-  const submitCommandInput = () => {
+  const submitCommandInput = (overrideValue?: string) => {
     if (commandMode !== "add") return
 
-    const value = commandInputValue.trim()
+    const value = (overrideValue ?? commandInputValue).trim()
     if (!value) return
 
     const extracted = extractUrlsFromText(value)
@@ -202,6 +204,7 @@ export function useHeroDemoState() {
                 shimmerUrl: false,
                 title: meta?.title || b.title,
                 domain: meta?.domain || b.domain,
+                favicon: meta?.favicon || b.favicon,
               }
             }
             return b
@@ -209,6 +212,47 @@ export function useHeroDemoState() {
         )
       })
     })
+  }
+
+  const addAutoplayBookmark = (spec: {
+    url: string
+    title: string
+    domain: string
+    group: Exclude<HeroGroupId, "all">
+    faviconIcon?: ComponentType<SVGProps<SVGSVGElement>>
+  }): string => {
+    const id = makeHeroDemoId()
+
+    // Insert with shimmer — no icon/title yet, looks like it's fetching
+    const shimmerBookmark: HeroBookmark = {
+      id,
+      title: spec.url,
+      domain: spec.domain,
+      url: spec.url,
+      date: "Now",
+      favicon: "",
+      group: spec.group,
+      shimmerUrl: true,
+    }
+    setHeroBookmarks((prev) => [shimmerBookmark, ...prev].slice(0, 9))
+
+    // Resolve after a randomised fake-fetch delay (800–1 400 ms)
+    const delay = 800 + Math.random() * 600
+    setTimeout(() => {
+      setHeroBookmarks((prev) =>
+        prev.map((b) =>
+          b.id === id
+            ? { ...b, shimmerUrl: false, title: spec.title, faviconIcon: spec.faviconIcon }
+            : b,
+        ),
+      )
+    }, delay)
+
+    return id
+  }
+
+  const resetAutoplayBookmarks = () => {
+    setHeroBookmarks(initialBookmarksRef.current)
   }
 
   const handleToggleTodoCompleted = (id: string, completed: boolean) => {
@@ -391,6 +435,8 @@ export function useHeroDemoState() {
     cancelCreateHeroGroup,
     cancelCreateHeroGroupFromDropdown,
     submitCommandInput,
+    addAutoplayBookmark,
+    resetAutoplayBookmarks,
     handleCopy,
     handleOpen,
     handleEdit,

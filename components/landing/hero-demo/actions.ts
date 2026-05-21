@@ -8,6 +8,7 @@ export async function fetchDemoMetadata(url: string) {
     return {
       title: data.title,
       domain: data.domain,
+      favicon: data.favicon,
     }
   } catch {
     return null

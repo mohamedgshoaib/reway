@@ -3,7 +3,7 @@
 import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTheme } from "next-themes"
-import { useState, useSyncExternalStore } from "react"
+import { useRef, useState, useSyncExternalStore } from "react"
 import RewayLogo from "@/components/logo"
 import { ThemeIcon } from "@/components/theme-icons/ThemeIcon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -25,6 +25,7 @@ import {
 
 import { BookmarksGrid } from "./hero-demo/BookmarksGrid"
 import { DemoShell } from "./hero-demo/DemoShell"
+import { useHeroDemoAutoplay } from "./hero-demo/useHeroDemoAutoplay"
 import { GroupsDropdown } from "./hero-demo/GroupsDropdown"
 import { GroupsSidebar } from "./hero-demo/GroupsSidebar"
 import { NotesSectionPreview, TodosSectionPreview } from "./hero-demo/NotesTodosPreviews"
@@ -51,6 +52,7 @@ export function HeroDemoPreview() {
   const [demoTheme, setDemoTheme] = useState<DashboardPaletteTheme>("default")
   const { resolvedTheme, setTheme } = useTheme()
   const hasHydrated = useHasHydrated()
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   const {
     copiedIndex,
@@ -93,9 +95,19 @@ export function HeroDemoPreview() {
     handleOpen,
     handleEdit,
     handleToggleTodoCompleted,
+    addAutoplayBookmark,
+    resetAutoplayBookmarks,
     handleCreateNote,
     handleCreateTodo,
   } = useHeroDemoState()
+
+  useHeroDemoAutoplay({
+    activeGroup,
+    inputRef,
+    setCommandInputValue,
+    addAutoplayBookmark,
+    resetAutoplayBookmarks,
+  })
 
   const themeClassName = getPaletteThemeClassName(demoTheme)
   const isDark = hasHydrated && resolvedTheme === "dark"
@@ -226,6 +238,7 @@ export function HeroDemoPreview() {
                         }}
                       >
                         <input
+                          ref={inputRef}
                           type="text"
                           value={commandInputValue}
                           onChange={(e) => setCommandInputValue(e.target.value)}
@@ -236,7 +249,7 @@ export function HeroDemoPreview() {
                               ? "Search bookmarks..."
                               : "Paste a link to save..."
                           }
-                          className="w-full bg-transparent p-0 pl-1.5 text-sm font-medium outline-none placeholder:text-muted-foreground selection:bg-primary/20"
+                          className="w-full bg-transparent p-0 pl-1.5 text-sm font-medium outline-none placeholder:text-muted-foreground selection:bg-primary/20 cursor-text"
                           aria-label="Paste link or search bookmarks"
                         />
                       </form>
@@ -260,7 +273,7 @@ export function HeroDemoPreview() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setCommandMode("search")}
+                        onClick={() => {}}
                         className={`flex items-center gap-1 px-1.5 py-1 text-[11px] rounded-lg cursor-pointer ${
                           commandMode === "search"
                             ? "bg-muted/40 text-primary"

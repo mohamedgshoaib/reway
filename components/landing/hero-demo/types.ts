@@ -1,3 +1,4 @@
+import type { ComponentType, SVGProps } from "react"
 import type { IconSvgElement } from "@hugeicons/react"
 
 export type HeroGroupId = "all" | "No Group" | "Research" | "Inspiration" | "Build" | "Learn"
@@ -20,4 +21,5 @@ export type HeroBookmark = {
   favicon: string
   group: Exclude<HeroGroupId, "all">
   shimmerUrl?: boolean
+  faviconIcon?: ComponentType<SVGProps<SVGSVGElement>>
 }

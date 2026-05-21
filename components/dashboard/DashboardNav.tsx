@@ -347,10 +347,10 @@ export function DashboardNav({
             <button
               type="button"
               onClick={() => {
-                document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
-                router.push("/")
+                 document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
+                 router.push("/")
               }}
-              className="hidden md:flex shrink-0 items-center"
+              className="hidden md:flex shrink-0 items-center cursor-pointer"
               aria-label="Reway Homepage"
             >
               <RewayLogo className="size-8" aria-label="Reway" />
