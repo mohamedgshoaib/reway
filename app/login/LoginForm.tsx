@@ -126,7 +126,9 @@ function LoginFormContent() {
 
   // Read URL query errors (like verification expiry)
   const urlError = searchParams.get("error")
+  const urlMessage = searchParams.get("message")
   const [activeUrlError, setActiveUrlError] = useState<string | null>(urlError)
+  const [activeUrlMessage, setActiveUrlMessage] = useState<string | null>(urlMessage)
 
   // Track animation state to disable overflow-hidden once password field is fully animated
   const [pwdAnimDone, setPwdAnimDone] = useState(false)
@@ -163,6 +165,7 @@ function LoginFormContent() {
   // Clear errors/messages/password visibilities on mode switch
   useEffect(() => {
     setActiveUrlError(null)
+    setActiveUrlMessage(null)
     setShowPassword(false)
     setShowConfirmPassword(false)
     setIsIconHovered(false)
@@ -396,6 +399,15 @@ function LoginFormContent() {
               role="alert"
             >
               {state.error}
+            </div>
+          )}
+
+          {activeUrlMessage === "email-confirmed" && (
+            <div
+              className="p-3 text-sm text-emerald-600 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 dark:text-emerald-400"
+              role="status"
+            >
+              Email confirmed. You can sign in now.
             </div>
           )}
 
