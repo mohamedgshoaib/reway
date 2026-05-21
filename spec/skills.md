@@ -263,3 +263,19 @@ Full context: `.agents/skills/wrap-up/SKILL.md`
 **Top 2 Rules**: Use Zod schemas for parsing and validation instead of ad hoc checks. Prefer `safeParse` with structured error handling for user feedback.
 
 Full context: `.agents/skills/zod/SKILL.md`
+
+### 34- migrate-oxfmt
+
+**Triggers**: oxfmt, formatter migration, prettier, biome
+**Pairs With**: migrate-oxlint
+**Top 2 Rules**: Run `npx oxfmt@latest --migrate` for the source formatter and review the generated `.oxfmtrc.json`. Manually convert any overrides and decide on `printWidth` defaults.
+
+Full context: `.agents/skills/migrate-oxfmt/SKILL.md`
+
+### 35- migrate-oxlint
+
+**Triggers**: oxlint, linter migration, eslint, eslint-config
+**Pairs With**: migrate-oxfmt
+**Top 2 Rules**: Run `npx @oxlint/migrate` from repo root and review `.oxlintrc.json` for skipped rules. Replace ESLint commands with `oxlint` and install `oxlint` as a dev dependency.
+
+Full context: `.agents/skills/migrate-oxlint/SKILL.md`

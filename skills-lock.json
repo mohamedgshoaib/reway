@@ -55,6 +55,18 @@
       "skillPath": "skills/make-interfaces-feel-better/SKILL.md",
       "computedHash": "2c3576e63d8c39d75ed327f1dcf6aab7aec0edf293a55f6cb3f7b8571974a01c"
     },
+    "migrate-oxfmt": {
+      "source": "oxc-project/oxc",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/migrate-oxfmt/SKILL.md",
+      "computedHash": "b3ae0d11b61d07471cf466ba0386490a9f7ed5c1186d4956a58ac55a4b6be6ad"
+    },
+    "migrate-oxlint": {
+      "source": "oxc-project/oxc",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/migrate-oxlint/SKILL.md",
+      "computedHash": "efb0bcf1c44791ba292d0536eaef87fac535c1fcc5df3280bd7a79d049b8644c"
+    },
     "motion": {
       "source": "hairyf/skills",
       "sourceType": "github",
