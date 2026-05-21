@@ -97,6 +97,12 @@
       "skillPath": "skills/react-useeffect/SKILL.md",
       "computedHash": "1fdf524f8335afac6f44d3460d6d20e71db9c1d14643e4a31ea17d6463504447"
     },
+    "security-review": {
+      "source": "getsentry/skills",
+      "sourceType": "github",
+      "skillPath": "skills/security-review/SKILL.md",
+      "computedHash": "1eee1e41aa0a0e75dbbe0cac387e3d61bedf51af1888f184301a173731e6973e"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
