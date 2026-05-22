@@ -1,18 +1,18 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ViewIcon, ViewOffSlashIcon, SecurityWarningIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, useReducedMotion } from "motion/react"
 import * as m from "motion/react-m"
 import { useSearchParams } from "next/navigation"
 import { startTransition, useActionState, useState, useEffect, Suspense, useMemo } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import * as z from "zod"
+import { ConfirmPasswordField, PasswordField } from "@/components/auth/PasswordFields"
 import { Google } from "@/components/google-logo"
 import { RewayLazyMotion } from "@/components/motion/RewayLazyMotion"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { getPasswordStrength, passwordSchema } from "@/lib/auth/password-validation"
 import {
   signInWithGoogle,
   signInWithPasswordAction,
@@ -41,22 +41,6 @@ const emailSchema = z
   .string()
   .min(1, { message: "Email address is required." })
   .email({ message: "Enter a valid email address." })
-
-const passwordSchema = z
-  .string()
-  .min(8, { message: "Password must be at least 8 characters long." })
-  .refine((value) => /[a-z]/.test(value), {
-    message: "Password must include a lowercase letter.",
-  })
-  .refine((value) => /[A-Z]/.test(value), {
-    message: "Password must include an uppercase letter.",
-  })
-  .refine((value) => /[0-9]/.test(value), {
-    message: "Password must include a number.",
-  })
-  .refine((value) => /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(value), {
-    message: "Password must include a symbol.",
-  })
 
 const signInSchema = z.object({
   email: emailSchema,
@@ -96,12 +80,6 @@ function LoginFormContent() {
   const [mode, setMode] = useState<AuthMode>("signin")
 
   // Password visibility states
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  // Validation icon hover state
-  const [isIconHovered, setIsIconHovered] = useState(false)
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   // Form states and actions
@@ -129,9 +107,6 @@ function LoginFormContent() {
   const urlMessage = searchParams.get("message")
   const [activeUrlError, setActiveUrlError] = useState<string | null>(urlError)
   const [activeUrlMessage, setActiveUrlMessage] = useState<string | null>(urlMessage)
-
-  // Track animation state to disable overflow-hidden once password field is fully animated
-  const [pwdAnimDone, setPwdAnimDone] = useState(false)
 
   const schema = useMemo(() => {
     switch (mode) {
@@ -166,12 +141,7 @@ function LoginFormContent() {
   useEffect(() => {
     setActiveUrlError(null)
     setActiveUrlMessage(null)
-    setShowPassword(false)
-    setShowConfirmPassword(false)
-    setIsIconHovered(false)
-    setIsPasswordFocused(false)
     setShowSuccessMessage(false)
-    setPwdAnimDone(false)
     const existingEmail = form.getValues("email") || ""
     form.reset({
       fullName: "",
@@ -181,19 +151,6 @@ function LoginFormContent() {
     })
     form.clearErrors()
   }, [mode, form])
-
-  // Close popover on click outside (extremely useful for mobile tap-to-open)
-  useEffect(() => {
-    if (!isIconHovered) return
-    const handleOutsideClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (!target.closest("[data-password-validation]")) {
-        setIsIconHovered(false)
-      }
-    }
-    document.addEventListener("click", handleOutsideClick)
-    return () => document.removeEventListener("click", handleOutsideClick)
-  }, [isIconHovered])
 
   const isAnyPending =
     signInPending || signUpPending || magicLinkPending || forgotPasswordPending || googlePending
@@ -253,90 +210,10 @@ function LoginFormContent() {
     }
   }, [state?.message])
 
-  // Password strength checker using Red / Yellow / Green colors
-  const getPasswordStrength = (pwd: string) => {
-    if (!pwd) {
-      return {
-        score: 0,
-        text: "",
-        color: "",
-        textColor: "",
-        hasLowercase: false,
-        hasUppercase: false,
-        hasNumber: false,
-        hasSpecial: false,
-        isLongEnough: false,
-      }
-    }
-
-    let score = 0
-    const hasLowercase = /[a-z]/.test(pwd)
-    const hasUppercase = /[A-Z]/.test(pwd)
-    const hasNumber = /[0-9]/.test(pwd)
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(pwd)
-
-    if (hasLowercase) score++
-    if (hasUppercase) score++
-    if (hasNumber) score++
-    if (hasSpecial) score++
-
-    const isLongEnough = pwd.length >= 8
-
-    let text = "Weak"
-    let color = "bg-red-500"
-    let textColor = "text-red-500"
-
-    if (score <= 2) {
-      text = "Weak"
-      color = "bg-red-500"
-      textColor = "text-red-500"
-    } else if (score === 3) {
-      text = "Medium"
-      color = "bg-yellow-500"
-      textColor = "text-yellow-500"
-    } else if (score === 4) {
-      if (isLongEnough) {
-        text = "Strong"
-        color = "bg-green-500"
-        textColor = "text-green-500"
-      } else {
-        text = "Medium (Needs 8+ characters)"
-        color = "bg-yellow-500"
-        textColor = "text-yellow-500"
-      }
-    }
-
-    return {
-      score,
-      text,
-      color,
-      textColor,
-      hasLowercase,
-      hasUppercase,
-      hasNumber,
-      hasSpecial,
-      isLongEnough,
-    }
-  }
-
   const strength = getPasswordStrength(password)
 
   // Real-time button disabling validation
   const isValidationPassing = strength.score === 4 && strength.isLongEnough
-
-  // Validation icon color state
-  const iconColorClass =
-    password === ""
-      ? "text-muted-foreground hover:text-foreground"
-      : isValidationPassing
-        ? "text-green-500"
-        : "text-red-500"
-
-  // Helper to determine the dot indicator color in the requirements popover
-  const getDotColorClass = (isMet: boolean) => {
-    if (password === "") return "bg-muted-foreground/30"
-    return isMet ? "bg-green-500" : "bg-red-500"
-  }
 
   const isSubmitDisabled =
     isAnyPending || (mode === "signup" && (!isValidationPassing || password !== confirmPassword))
@@ -500,145 +377,16 @@ function LoginFormContent() {
                       ? { duration: 0 }
                       : { duration: 0.22, ease: [0.23, 1, 0.32, 1] }
                   }
-                  onAnimationComplete={() => {
-                    if (mode === "signin" || mode === "signup") {
-                      setPwdAnimDone(true)
-                    }
-                  }}
-                  className={`px-2 -mx-2 py-1 -my-1 space-y-1.5 relative z-30 ${pwdAnimDone || isIconHovered ? "overflow-visible" : "overflow-hidden"}`}
+                  className="overflow-visible px-2 -mx-2 py-1 -my-1 space-y-1.5 relative z-30"
                 >
-                  <Controller
-                    name="password"
+                  <PasswordField
                     control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field
-                        data-invalid={fieldState.invalid}
-                        data-disabled={isAnyPending}
-                        className="gap-1.5"
-                      >
-                        <FieldLabel htmlFor="password">Password</FieldLabel>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            required={mode === "signin" || mode === "signup"}
-                            disabled={isAnyPending}
-                            className={`rounded-3xl transition-all duration-200 ${
-                              mode === "signup" ? "pr-16" : "pr-10"
-                            }`}
-                            aria-invalid={fieldState.invalid}
-                            onFocus={() => setIsPasswordFocused(true)}
-                            onBlur={(event) => {
-                              const nextTarget = event.relatedTarget as HTMLElement | null
-                              if (!nextTarget?.closest("[data-password-validation]")) {
-                                setIsPasswordFocused(false)
-                                setIsIconHovered(false)
-                              }
-                            }}
-                          />
-
-                          {/* Password validation icon (signup mode only) */}
-                          {mode === "signup" && (
-                            <div
-                              className="absolute inset-y-0 right-9 flex items-center"
-                              data-password-validation
-                            >
-                              <button
-                                type="button"
-                                onMouseEnter={() => setIsIconHovered(true)}
-                                onMouseLeave={() => setIsIconHovered(false)}
-                                onFocus={() => {
-                                  setIsPasswordFocused(true)
-                                  setIsIconHovered(true)
-                                }}
-                                onBlur={() => {
-                                  setIsPasswordFocused(false)
-                                  setIsIconHovered(false)
-                                }}
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  setIsIconHovered((prev) => !prev)
-                                }}
-                                className={`focus:outline-none transition-colors cursor-pointer ${iconColorClass}`}
-                                aria-label="Password requirements"
-                                aria-expanded={isIconHovered}
-                                aria-controls="password-requirements"
-                              >
-                                <HugeiconsIcon icon={SecurityWarningIcon} size={18} />
-                              </button>
-
-                              {/* Compact hover popover showing missing requirements with red dots */}
-                              <AnimatePresence>
-                                {isIconHovered && (password !== "" || isPasswordFocused) && (
-                                  <m.div
-                                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                                    transition={{
-                                      duration: 0.12,
-                                      ease: "easeOut",
-                                    }}
-                                    id="password-requirements"
-                                    className="absolute right-0 bottom-[calc(100%+8px)] z-[60] w-36 p-2 bg-card border border-border rounded-lg shadow-xl space-y-1 backdrop-blur-md"
-                                  >
-                                    <div className="space-y-1 text-[10px] text-foreground">
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.isLongEnough)}`}
-                                        />
-                                        <span>Min 8 characters</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasUppercase)}`}
-                                        />
-                                        <span>Uppercase letter</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasLowercase)}`}
-                                        />
-                                        <span>Lowercase letter</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasNumber)}`}
-                                        />
-                                        <span>Number</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className={`size-1.5 rounded-full ${getDotColorClass(strength.hasSpecial)}`}
-                                        />
-                                        <span>Special character</span>
-                                      </div>
-                                    </div>
-                                  </m.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            onMouseDown={(e) => e.preventDefault()}
-                            className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none transition-colors cursor-pointer"
-                            tabIndex={-1}
-                          >
-                            <HugeiconsIcon
-                              icon={showPassword ? ViewOffSlashIcon : ViewIcon}
-                              size={18}
-                              className="transition-transform duration-200 active:scale-95"
-                            />
-                          </button>
-                        </div>
-
-                        {fieldState.error && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
+                    name="password"
+                    label="Password"
+                    placeholder="••••••••"
+                    required={mode === "signin" || mode === "signup"}
+                    disabled={isAnyPending}
+                    showRequirements={mode === "signup"}
                   />
                 </m.div>
               )}
@@ -655,47 +403,15 @@ function LoginFormContent() {
                       ? { duration: 0 }
                       : { duration: 0.22, ease: [0.23, 1, 0.32, 1] }
                   }
-                  className="overflow-hidden px-2 -mx-2 py-1 -my-1 space-y-1.5 relative z-20"
+                  className="overflow-visible px-2 -mx-2 py-1 -my-1 space-y-1.5 relative z-20"
                 >
-                  <Controller
-                    name="confirmPassword"
+                  <ConfirmPasswordField
                     control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field
-                        data-invalid={fieldState.invalid}
-                        data-disabled={isAnyPending}
-                        className="gap-1.5"
-                      >
-                        <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                            id="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            required={mode === "signup"}
-                            disabled={isAnyPending}
-                            className="rounded-3xl pr-10"
-                            aria-invalid={fieldState.invalid}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            onMouseDown={(e) => e.preventDefault()}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground hover:text-foreground focus:outline-none transition-colors cursor-pointer"
-                            tabIndex={-1}
-                          >
-                            <HugeiconsIcon
-                              icon={showConfirmPassword ? ViewOffSlashIcon : ViewIcon}
-                              size={18}
-                              className="transition-transform duration-200 active:scale-95"
-                            />
-                          </button>
-                        </div>
-
-                        {fieldState.error && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    placeholder="••••••••"
+                    required={mode === "signup"}
+                    disabled={isAnyPending}
                   />
                 </m.div>
               )}

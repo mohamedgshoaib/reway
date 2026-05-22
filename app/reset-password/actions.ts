@@ -2,15 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { ActionResponse } from "@/app/login/actions"
+import { passwordMeetsRequirements } from "@/lib/auth/password-validation"
 import { createClient } from "@/lib/supabase/server"
-
-const passwordMeetsRequirements = (password: string) => {
-  const hasLowercase = /[a-z]/.test(password)
-  const hasUppercase = /[A-Z]/.test(password)
-  const hasNumber = /[0-9]/.test(password)
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(password)
-  return password.length >= 8 && hasLowercase && hasUppercase && hasNumber && hasSpecial
-}
 
 export async function updatePasswordAction(
   _prevState: ActionResponse,

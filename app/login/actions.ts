@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation"
 import { after } from "next/server"
 import { seedNewUser } from "@/lib/supabase/seed"
+import { passwordMeetsRequirements } from "@/lib/auth/password-validation"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -38,14 +39,6 @@ const logDev = (...args: unknown[]) => {
 
 const buildAuthConfirmUrl = (siteUrl: string, next: string, flow: "signup" | "magiclink" | "recovery") =>
   `${siteUrl}/auth/confirm?next=${encodeURIComponent(next)}&flow=${flow}`
-
-const passwordMeetsRequirements = (password: string) => {
-  const hasLowercase = /[a-z]/.test(password)
-  const hasUppercase = /[A-Z]/.test(password)
-  const hasNumber = /[0-9]/.test(password)
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"|<>?,.\/`~]/.test(password)
-  return password.length >= 8 && hasLowercase && hasUppercase && hasNumber && hasSpecial
-}
 
 const getFriendlyAuthError = (message: string) => {
   if (message === "Invalid login credentials") {
