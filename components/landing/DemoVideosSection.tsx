@@ -18,6 +18,7 @@ import { DemoVideo } from "./features/DemoVideo"
 export function DemoVideosSection() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
   const [mounted, setMounted] = useState(false)
   const progress = useMotionValue(0)
   const scaleX = useTransform(progress, [0, 100], [0, 1])
@@ -27,6 +28,15 @@ export function DemoVideosSection() {
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
     return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)")
+    const updateViewport = () => setIsDesktop(mediaQuery.matches)
+
+    updateViewport()
+    mediaQuery.addEventListener("change", updateViewport)
+    return () => mediaQuery.removeEventListener("change", updateViewport)
   }, [])
 
   useEffect(() => {
@@ -53,6 +63,50 @@ export function DemoVideosSection() {
   }
 
   const enableMotion = mounted && !shouldReduceMotion
+  const activeVideo = demoVideos[activeIndex]
+
+  const renderProgressBar = () => (
+    <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted/40">
+      <m.div
+        className="absolute inset-y-0 left-0 w-full bg-foreground origin-left"
+        style={{ scaleX }}
+      />
+    </div>
+  )
+
+  const renderVideoPlayer = (className: string, hovered: boolean) => (
+    <div className={className}>
+      <div className="relative aspect-4/3 w-full overflow-hidden rounded-4xl ring-1 ring-foreground/8 bg-black/5 isolate">
+        <AnimatePresence mode="wait">
+          <m.div
+            key={activeIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="h-full w-full"
+          >
+            <DemoVideo
+              src={activeVideo.src}
+              blurDataURL={activeVideo.blurDataURL}
+              className="h-full w-full object-cover"
+              hideControls
+              loop={false}
+              onProgressUpdate={(v) => {
+                if (activeIndexRef.current !== activeIndex) return
+                progress.set(v)
+              }}
+              onEnded={() => {
+                if (activeIndexRef.current !== activeIndex) return
+                handleEnded()
+              }}
+              isHovered={hovered}
+            />
+          </m.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  )
 
   return (
     <RewayLazyMotion>
@@ -75,44 +129,16 @@ export function DemoVideosSection() {
           </div>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start lg:gap-12">
-            {/* Video Showcase Side - Larger (8/12) & Top on Mobile */}
-            <div
-              className="lg:col-span-8 order-1"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              <div className="relative aspect-4/3 w-full overflow-hidden rounded-4xl ring-1 ring-foreground/8 bg-black/5 isolate">
-                <AnimatePresence mode="wait">
-                  <m.div
-                    key={activeIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="h-full w-full"
-                  >
-                    <DemoVideo
-                      src={demoVideos[activeIndex].src}
-                      blurDataURL={demoVideos[activeIndex].blurDataURL}
-                      className="h-full w-full object-cover"
-                      hideControls
-                      loop={false}
-                      onProgressUpdate={(v) => {
-                        if (activeIndexRef.current !== activeIndex) return
-                        progress.set(v)
-                      }}
-                      onEnded={() => {
-                        if (activeIndexRef.current !== activeIndex) return
-                        handleEnded()
-                      }}
-                      isHovered={isHovered}
-                    />
-                  </m.div>
-                </AnimatePresence>
+            {isDesktop ? (
+              <div
+                className="order-1 lg:col-span-8"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                {renderVideoPlayer("w-full", isHovered)}
               </div>
-            </div>
+            ) : null}
 
-            {/* Accordion Side - Compact (4/12) */}
             <div className="lg:col-span-4 order-2">
               <div className="flex flex-col gap-2">
                 {demoVideos.map((video, index) => {
@@ -177,6 +203,8 @@ export function DemoVideosSection() {
                             transition={{ duration: 0.3, ease: "easeInOut" }}
                             className="overflow-hidden w-full"
                           >
+                            {!isDesktop ? renderVideoPlayer("mb-5 w-full", false) : null}
+
                             {"description" in video && video.description && (
                               <p className="text-sm leading-relaxed text-muted-foreground mb-6 cursor-text select-text">
                                 {video.description}
@@ -200,13 +228,7 @@ export function DemoVideosSection() {
                               </a>
                             )}
 
-                            {/* Progress bar container */}
-                            <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted/40">
-                              <m.div
-                                className="absolute inset-y-0 left-0 w-full bg-foreground origin-left"
-                                style={{ scaleX }}
-                              />
-                            </div>
+                            {renderProgressBar()}
                           </m.div>
                         )}
                       </AnimatePresence>
