@@ -116,7 +116,7 @@ export function NotesTodosSheet({
               type="button"
               size="sm"
               variant="secondary"
-              className="w-full rounded-4xl cursor-pointer"
+              className="w-full rounded-lg cursor-pointer"
               onClick={() => onOpenChange(false)}
             >
               Close

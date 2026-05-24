@@ -262,7 +262,7 @@ export const FolderBoard = memo(function FolderBoard({
                     />
 
                     <AccordionContent className="px-0">
-                      <div className="p-3 bg-background/60">
+                      <div className="p-2 bg-background/60">
                         {groupBookmarks.length === 0 ? (
                           <EmptyFolder />
                         ) : (
@@ -272,7 +272,7 @@ export const FolderBoard = memo(function FolderBoard({
                             strategy={rectSortingStrategy}
                           >
                             <div
-                              className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(120px,1fr))]"
+                              className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(120px,1fr))]"
                               ref={isSelectedFolder ? activeGridRef : undefined}
                             >
                               {groupBookmarks.map((bookmark, index) => (

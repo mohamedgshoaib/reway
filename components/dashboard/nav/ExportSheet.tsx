@@ -62,7 +62,7 @@ export function ExportSheet({
 
         <SheetBody className="space-y-5">
           {isDone ? (
-            <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-4">
+            <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-2">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 text-emerald-600">
                   <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} />
@@ -77,7 +77,7 @@ export function ExportSheet({
             </div>
           ) : (
             <>
-              <SheetSection className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
+              <SheetSection className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                   <span>Export preview</span>
                   <span>{exportGroupOptions.length} groups</span>
@@ -89,7 +89,7 @@ export function ExportSheet({
                       type="button"
                       size="sm"
                       variant="secondary"
-                      className="rounded-4xl cursor-pointer"
+                      className="rounded-lg cursor-pointer"
                       onClick={handleSelectAll}
                       disabled={isExporting}
                     >
@@ -101,7 +101,7 @@ export function ExportSheet({
                 <ul className="space-y-2">
                   {exportGroupOptions.map((name) => (
                     <li key={name}>
-                      <label className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/10 px-3 py-2 text-sm cursor-pointer">
+                      <label className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/10 px-3 py-2 text-sm cursor-pointer">
                         <span className="truncate">{name}</span>
                         <Checkbox
                           checked={selectedExportGroups.includes(name)}
@@ -151,7 +151,7 @@ export function ExportSheet({
           {isDone ? (
             <Button
               size="sm"
-              className="rounded-4xl cursor-pointer"
+              className="rounded-lg cursor-pointer"
               onClick={() => onOpenChange(false)}
             >
               Close
@@ -160,7 +160,7 @@ export function ExportSheet({
             <div className="flex w-full items-center gap-2">
               <Button
                 size="sm"
-                className="flex-1 rounded-4xl cursor-pointer"
+                className="flex-1 rounded-lg cursor-pointer"
                 onClick={() => onExportBookmarks(selectedExportGroups)}
                 disabled={
                   selectedExportGroups.length === 0 ||
@@ -173,7 +173,7 @@ export function ExportSheet({
               <Button
                 size="sm"
                 variant="secondary"
-                className="rounded-4xl cursor-pointer"
+                className="rounded-lg cursor-pointer"
                 onClick={() => onOpenChange(false)}
               >
                 Close

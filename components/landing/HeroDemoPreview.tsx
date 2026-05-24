@@ -255,11 +255,11 @@ export function HeroDemoPreview() {
                       </form>
                     </div>
 
-                    <div className="flex items-center gap-1 rounded-xl bg-muted/20 p-1 ring-1 ring-inset ring-foreground/5">
+                      <div className="flex items-center gap-1 rounded-xl bg-muted/20 p-1 ring-1 ring-inset ring-foreground/5">
                       <button
                         type="button"
                         onClick={() => setCommandMode("add")}
-                        className={`flex items-center gap-1 px-1.5 py-1 text-[11px] rounded-lg cursor-pointer ${
+                          className={`flex items-center gap-1 px-1.5 py-1 text-[11px] rounded-lg cursor-pointer ${
                           commandMode === "add"
                             ? "bg-muted/40 text-primary"
                             : "text-muted-foreground hover:text-primary hover:bg-muted/40"
@@ -274,7 +274,7 @@ export function HeroDemoPreview() {
                       <button
                         type="button"
                         onClick={() => {}}
-                        className={`flex items-center gap-1 px-1.5 py-1 text-[11px] rounded-lg cursor-pointer ${
+                          className={`flex items-center gap-1 px-1.5 py-1 text-[11px] rounded-lg cursor-pointer ${
                           commandMode === "search"
                             ? "bg-muted/40 text-primary"
                             : "text-muted-foreground hover:text-primary hover:bg-muted/40"

@@ -32,7 +32,7 @@ export function ThemeControls({ paletteTheme, setPaletteTheme }: ThemeControlsPr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-full transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                  className="size-8 rounded-lg transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                   aria-label="Change dashboard theme"
                 >
                   <HugeiconsIcon icon={ColorsIcon} size={16} strokeWidth={2} />
@@ -54,7 +54,7 @@ export function ThemeControls({ paletteTheme, setPaletteTheme }: ThemeControlsPr
             return (
               <DropdownMenuItem
                 key={themeOption.value}
-                className={`rounded-lg flex items-center gap-2 cursor-pointer ${
+                className={`rounded-xl flex items-center gap-2 cursor-pointer ${
                   isActive ? "bg-muted text-foreground font-medium" : ""
                 }`}
                 onClick={() => setPaletteTheme(themeOption.value)}
@@ -68,7 +68,7 @@ export function ThemeControls({ paletteTheme, setPaletteTheme }: ThemeControlsPr
           <div className="my-1 h-px w-full bg-border/40" />
 
           <DropdownMenuItem
-            className="rounded-lg flex items-center gap-2 cursor-pointer"
+            className="rounded-xl flex items-center gap-2 cursor-pointer"
             onClick={() => setTheme("light")}
           >
             <HugeiconsIcon icon={Sun01Icon} size={14} strokeWidth={2} />
@@ -79,7 +79,7 @@ export function ThemeControls({ paletteTheme, setPaletteTheme }: ThemeControlsPr
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            className="rounded-lg flex items-center gap-2 cursor-pointer"
+            className="rounded-xl flex items-center gap-2 cursor-pointer"
             onClick={() => setTheme("dark")}
           >
             <HugeiconsIcon icon={Moon02Icon} size={14} strokeWidth={2} />

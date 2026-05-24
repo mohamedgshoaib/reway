@@ -132,21 +132,21 @@ export function GroupRow({
                   onToggleInSelectionMode()
                 }
               }}
-              className="gap-2 text-xs rounded-xl cursor-pointer"
+              className="gap-2 text-xs rounded-lg cursor-pointer"
             >
               <HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
               {selectionMode ? "Toggle selection" : "Select groups"}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onOpenGroup}
-              className="gap-2 text-xs rounded-xl cursor-pointer"
+              className="gap-2 text-xs rounded-lg cursor-pointer"
             >
               <HugeiconsIcon icon={ArrowUpRight03Icon} size={14} />
               Open group
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onEditGroup}
-              className="gap-2 text-xs rounded-xl cursor-pointer"
+              className="gap-2 text-xs rounded-lg cursor-pointer"
             >
               <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
               Edit group
@@ -154,7 +154,7 @@ export function GroupRow({
             <DropdownMenuItem
               onSelect={onDeleteGroup}
               variant="destructive"
-              className="gap-2 text-xs rounded-xl cursor-pointer"
+              className="gap-2 text-xs rounded-lg cursor-pointer"
             >
               <HugeiconsIcon icon={Delete02Icon} size={14} />
               Delete group

@@ -43,7 +43,7 @@ export function GroupCreateRow({
     return (
       <div
         role="presentation"
-        className="relative mx-1 my-1.5 p-3 space-y-3 bg-muted/20 rounded-xl ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate"
+        className="relative mx-1 my-1.5 p-2 space-y-3 bg-muted/20 rounded-xl ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2">
@@ -55,7 +55,7 @@ export function GroupCreateRow({
           >
             <button
               type="button"
-              className="flex items-center justify-center size-8 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer"
+              className="flex items-center justify-center size-8 rounded-md bg-muted/40 hover:bg-muted/60 cursor-pointer"
               aria-label="Select group icon"
             >
               <HugeiconsIcon
@@ -73,7 +73,7 @@ export function GroupCreateRow({
               setNewGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH))
             }}
             placeholder="Group name"
-            className="h-8 flex-1 text-sm rounded-lg"
+            className="h-8 flex-1 text-sm rounded-md"
             maxLength={MAX_GROUP_NAME_LENGTH}
             onKeyDown={(e) => {
               e.stopPropagation()
@@ -89,7 +89,7 @@ export function GroupCreateRow({
           <UIButton
             size="sm"
             variant="secondary"
-            className="h-7 px-3 text-xs rounded-4xl font-bold"
+            className="h-7 px-3 text-xs rounded-md font-bold"
             onClick={() => {
               onInlineCreateCancel()
             }}
@@ -100,7 +100,7 @@ export function GroupCreateRow({
             <CharacterCount current={newGroupName.length} max={MAX_GROUP_NAME_LENGTH} />
             <UIButton
               size="sm"
-              className="h-7 px-3 text-xs rounded-4xl whitespace-nowrap min-w-[72px]"
+              className="h-7 px-3 text-xs rounded-md whitespace-nowrap min-w-[72px]"
               onClick={() => onInlineCreate()}
               disabled={!newGroupName.trim() || isCreating}
             >

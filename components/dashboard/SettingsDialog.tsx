@@ -155,7 +155,7 @@ export function SettingsDialog({
               </h3>
               <div
                 data-onboarding="layout-density-controls"
-                className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-3"
+                className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-2"
               >
                 <p className="text-xs text-muted-foreground px-1">
                   Control how much content is shown on desktop screens.
@@ -164,7 +164,7 @@ export function SettingsDialog({
                   <Button
                     variant={layoutDensity === "compact" ? "default" : "outline"}
                     size="sm"
-                    className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onLayoutDensityChange("compact")}
                   >
                     Compact
@@ -172,7 +172,7 @@ export function SettingsDialog({
                   <Button
                     variant={layoutDensity === "extended" ? "default" : "outline"}
                     size="sm"
-                    className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onLayoutDensityChange("extended")}
                   >
                     Extended
@@ -186,7 +186,7 @@ export function SettingsDialog({
                 <HugeiconsIcon icon={ViewSidebarRightIcon} size={16} />
                 Row Content
               </h3>
-              <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
+              <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-2">
                 <p className="text-xs text-muted-foreground px-1">
                   Choose what to display in the right column of your bookmarks.
                 </p>
@@ -194,7 +194,7 @@ export function SettingsDialog({
                   <Button
                     variant={rowContent === "date" ? "default" : "outline"}
                     size="sm"
-                    className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onRowContentChange("date")}
                   >
                     Date
@@ -202,7 +202,7 @@ export function SettingsDialog({
                   <Button
                     variant={rowContent === "group" ? "default" : "outline"}
                     size="sm"
-                    className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onRowContentChange("group")}
                   >
                     Group
@@ -216,7 +216,7 @@ export function SettingsDialog({
                 <HugeiconsIcon icon={ViewSidebarRightIcon} size={16} />
                 Notes & Todos Sidebar
               </h3>
-              <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
+              <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-2">
                 <p className="text-xs text-muted-foreground px-1">
                   Toggle the Notes & Todos sidebar visibility (desktop only).
                 </p>
@@ -224,7 +224,7 @@ export function SettingsDialog({
                   <Button
                     variant={showNotesTodos ? "default" : "outline"}
                     size="sm"
-                    className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onShowNotesTodosChange(true)}
                   >
                     Show
@@ -232,7 +232,7 @@ export function SettingsDialog({
                   <Button
                     variant={!showNotesTodos ? "default" : "outline"}
                     size="sm"
-                    className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     onClick={() => onShowNotesTodosChange(false)}
                   >
                     Hide
@@ -246,7 +246,7 @@ export function SettingsDialog({
                 <HugeiconsIcon icon={ColorsIcon} size={16} />
                 Appearance
               </h3>
-              <div className="rounded-2xl border border-border/60 bg-muted/10 p-3">
+              <div className="rounded-2xl border border-border/60 bg-muted/10 p-2">
                 <div data-onboarding="appearance-controls" className="space-y-2">
                   <div className="space-y-1">
                     <Label className="px-1">Folder header color</Label>
@@ -261,7 +261,7 @@ export function SettingsDialog({
                       onFolderHeaderTintChange(value as "off" | "low" | "medium" | "high")
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full rounded-lg">
                       <span className="min-w-0 truncate">
                         <SelectValue placeholder="Folder header color" />
                       </span>
@@ -289,7 +289,7 @@ export function SettingsDialog({
                     onOpenChange={setThemeSelectOpen}
                     onValueChange={(value) => onPaletteThemeChange(value as DashboardPaletteTheme)}
                   >
-                    <SelectTrigger data-onboarding="palette-theme-trigger" className="w-full">
+                    <SelectTrigger data-onboarding="palette-theme-trigger" className="w-full rounded-lg">
                       <span className="min-w-0 truncate">
                         <SelectValue placeholder="Theme" />
                       </span>
@@ -319,7 +319,7 @@ export function SettingsDialog({
                     <Button
                       variant={theme === "light" ? "default" : "outline"}
                       size="sm"
-                      className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                      className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                       onClick={() => setTheme("light")}
                       aria-label="Light mode"
                       title="Light mode"
@@ -330,7 +330,7 @@ export function SettingsDialog({
                     <Button
                       variant={theme === "dark" ? "default" : "outline"}
                       size="sm"
-                      className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                      className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                       onClick={() => setTheme("dark")}
                       aria-label="Dark mode"
                       title="Dark mode"
@@ -341,7 +341,7 @@ export function SettingsDialog({
                     <Button
                       variant={theme === "system" ? "default" : "outline"}
                       size="sm"
-                      className="flex-1 gap-2 rounded-4xl transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                      className="flex-1 gap-2 rounded-lg transition-transform duration-200 ease-out active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                       onClick={() => setTheme("system")}
                       aria-label="System mode"
                       title="System mode"
@@ -366,7 +366,7 @@ export function SettingsDialog({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full rounded-4xl border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive cursor-pointer"
+                    className="w-full rounded-lg border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive cursor-pointer"
                   >
                     Delete Account
                   </Button>
@@ -392,12 +392,12 @@ export function SettingsDialog({
                     />
                   </div>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-4xl cursor-pointer" disabled={isDeleting}>
+                    <AlertDialogCancel className="rounded-lg cursor-pointer" disabled={isDeleting}>
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
                       variant="destructive"
-                      className="rounded-4xl cursor-pointer"
+                      className="rounded-lg cursor-pointer"
                       disabled={!isConfirmMatch || isDeleting}
                       onClick={handleDeleteAccount}
                     >

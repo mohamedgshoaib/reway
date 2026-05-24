@@ -176,7 +176,7 @@ export function DuplicatesSheet({
                     type="button"
                     variant="secondary"
                     size="sm"
-                    className="rounded-4xl cursor-pointer"
+                    className="rounded-lg cursor-pointer"
                     onClick={handleSelectAll}
                   >
                     Select all
@@ -185,7 +185,7 @@ export function DuplicatesSheet({
                     type="button"
                     variant="secondary"
                     size="sm"
-                    className="rounded-4xl cursor-pointer"
+                    className="rounded-lg cursor-pointer"
                     disabled={selectedDuplicateIds.size === 0}
                     onClick={handleClearAll}
                   >
@@ -198,7 +198,7 @@ export function DuplicatesSheet({
                 {reviewedDuplicateGroups.map((group) => (
                   <div
                     key={group.key}
-                    className="rounded-xl border border-border/60 bg-muted/10 p-2"
+                    className="rounded-lg border border-border/60 bg-muted/10 p-2"
                   >
                     <div className="text-[11px] font-semibold truncate">{group.key}</div>
                     <div className="mt-2 space-y-1">
@@ -239,7 +239,7 @@ export function DuplicatesSheet({
               <Button
                 variant="destructive"
                 size="sm"
-                className="w-full rounded-4xl cursor-pointer"
+                className="w-full rounded-lg cursor-pointer"
                 disabled={selectedDuplicateIds.size === 0 || isCleaning}
               >
                 {isCleaning ? "Deleting..." : "Delete selected"}
@@ -254,10 +254,10 @@ export function DuplicatesSheet({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="rounded-lg cursor-pointer">Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   variant="destructive"
-                  className="rounded-4xl cursor-pointer"
+                  className="rounded-lg cursor-pointer"
                   onClick={(event) => {
                     event.preventDefault()
                     void handleCleanDuplicates()
@@ -272,7 +272,7 @@ export function DuplicatesSheet({
           <Button
             size="sm"
             variant="secondary"
-            className="w-full rounded-4xl cursor-pointer"
+            className="w-full rounded-lg cursor-pointer"
             onClick={() => onOpenChange(false)}
           >
             Close

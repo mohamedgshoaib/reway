@@ -39,7 +39,7 @@ export function BookmarkContextMenu({
   const showShortcuts = useShowShortcuts()
 
   return (
-    <ContextMenuContent className="w-56 rounded-2xl p-1.5">
+    <ContextMenuContent className="w-56 rounded-2xl p-2">
       <ContextMenuItem
         className="rounded-xl flex items-center gap-2.5 py-2 cursor-pointer"
         onClick={onOpen}

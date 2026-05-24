@@ -16,14 +16,14 @@ export function SelectionModeHeader({
 }) {
   return (
     <div className="px-1 pb-2">
-      <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+      <div className="rounded-2xl border border-border/60 bg-muted/20 p-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">{selectedCount} selected</span>
           <div className="flex items-center gap-2">
             <UIButton
               size="sm"
               variant="secondary"
-              className="size-7 p-0 rounded-4xl font-bold cursor-pointer"
+              className="size-7 p-0 rounded-lg font-bold cursor-pointer"
               onClick={onCancel}
               aria-label="Cancel selection"
             >
@@ -32,7 +32,7 @@ export function SelectionModeHeader({
             <UIButton
               size="sm"
               variant="destructive"
-              className="size-7 p-0 rounded-4xl cursor-pointer"
+              className="size-7 p-0 rounded-lg cursor-pointer"
               onClick={onDelete}
               disabled={disableDelete}
               aria-label="Delete selected groups"

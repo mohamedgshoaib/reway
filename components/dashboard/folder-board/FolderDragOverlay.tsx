@@ -20,7 +20,7 @@ export function FolderDragOverlay({ activeBookmark }: FolderDragOverlayProps) {
   })
 
   return (
-    <div className="relative flex flex-col items-center gap-3 rounded-2xl bg-background/95 ring-1 ring-foreground/8 p-4 text-center after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate overflow-hidden">
+    <div className="relative flex flex-col items-center gap-3 rounded-xl bg-background/95 ring-1 ring-foreground/8 p-3 text-center after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate overflow-hidden">
       <Favicon
         url={activeBookmark.favicon_url || ""}
         domain={domain}

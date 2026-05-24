@@ -35,7 +35,7 @@ export function GroupCreateCard({
   return (
     <div className="pt-3 mt-2 border-t border-border/40">
       {isInlineCreating ? (
-        <div className="relative mt-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
+        <div className="relative mt-2 p-2 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
           <div className="flex items-center gap-2">
             <IconPickerPopover
               selectedIcon={newGroupIcon}
@@ -45,7 +45,7 @@ export function GroupCreateCard({
             >
               <button
                 type="button"
-                className="flex items-center justify-center size-8 rounded-xl bg-primary/10 hover:bg-primary/20 cursor-pointer"
+                className="flex items-center justify-center size-8 rounded-lg bg-primary/10 hover:bg-primary/20 cursor-pointer"
                 aria-label="Select group icon"
               >
                 <HugeiconsIcon
@@ -62,7 +62,7 @@ export function GroupCreateCard({
                 setNewGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH))
               }}
               placeholder="New group"
-              className="h-8 flex-1 text-sm rounded-xl"
+              className="h-8 flex-1 text-sm rounded-lg"
               maxLength={MAX_GROUP_NAME_LENGTH}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -80,7 +80,7 @@ export function GroupCreateCard({
             <Button
               size="sm"
               variant="secondary"
-              className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
+              className="h-7 px-3 text-xs rounded-lg font-bold cursor-pointer"
               onClick={() => {
                 setIsInlineCreating(false)
                 setNewGroupName("")
@@ -94,7 +94,7 @@ export function GroupCreateCard({
               <CharacterCount current={newGroupName.length} max={MAX_GROUP_NAME_LENGTH} />
               <Button
                 size="sm"
-                className="h-7 px-3 text-xs rounded-4xl cursor-pointer"
+                className="h-7 px-3 text-xs rounded-lg cursor-pointer"
                 onClick={onCreate}
                 disabled={!newGroupName.trim() || isCreatingGroup}
               >

@@ -43,7 +43,7 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/8 bg-popover text-popover-foreground min-w-48 rounded-2xl p-1.5 ring-1 duration-100 z-50 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden data-[state=closed]:overflow-hidden after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate",
+          "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/8 bg-popover text-popover-foreground min-w-48 rounded-2xl p-2 ring-1 duration-100 z-50 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden data-[state=closed]:overflow-hidden after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate",
           className,
         )}
         {...props}
@@ -89,14 +89,14 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "focus:bg-accent/60 focus:text-primary/90 data-[highlighted]:bg-accent/60 data-[highlighted]:text-primary/90 gap-2.5 rounded-xl py-2 pr-8 pl-3 text-sm [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-current transition-colors duration-150",
+        "focus:bg-accent/60 focus:text-primary/90 data-[highlighted]:bg-accent/60 data-[highlighted]:text-primary/90 data-[state=checked]:bg-muted/40 data-[state=checked]:text-primary gap-2.5 rounded-xl py-2 pr-3 pl-8 text-sm [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-current transition-colors duration-150",
         className,
       )}
       checked={checked}
       {...props}
     >
       <span
-        className="absolute right-2 flex items-center justify-center pointer-events-none"
+        className="absolute left-3 flex items-center justify-center pointer-events-none"
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
         <DropdownMenuPrimitive.ItemIndicator>
@@ -123,13 +123,13 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "focus:bg-muted/60 focus:text-primary/90 data-[highlighted]:bg-muted/60 data-[highlighted]:text-primary/90 gap-2.5 rounded-xl py-2 pr-8 pl-3 text-sm [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-current transition-colors duration-150",
+        "focus:bg-muted/60 focus:text-primary/90 data-[highlighted]:bg-muted/60 data-[highlighted]:text-primary/90 data-[state=checked]:bg-muted/40 data-[state=checked]:text-primary gap-2.5 rounded-xl py-2 pr-3 pl-8 text-sm [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-current transition-colors duration-150",
         className,
       )}
       {...props}
     >
       <span
-        className="absolute right-2 flex items-center justify-center pointer-events-none"
+        className="absolute left-3 flex items-center justify-center pointer-events-none"
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <DropdownMenuPrimitive.ItemIndicator>
@@ -227,7 +227,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/8 bg-popover text-popover-foreground min-w-36 rounded-2xl p-1.5 ring-1 duration-100 z-50 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate",
+        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/8 bg-popover text-popover-foreground min-w-36 rounded-2xl p-2 ring-1 duration-100 z-50 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate",
         className,
       )}
       {...props}

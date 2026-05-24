@@ -29,7 +29,7 @@ export function LayoutControls({ layoutDensity, setLayoutDensity }: LayoutContro
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-full transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                  className="size-8 rounded-lg transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                   aria-label="Change layout density"
                 >
                   <HugeiconsIcon icon={activeIcon} size={16} strokeWidth={2} />
@@ -46,7 +46,7 @@ export function LayoutControls({ layoutDensity, setLayoutDensity }: LayoutContro
           className="w-36 rounded-2xl p-2 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate"
         >
           <DropdownMenuItem
-            className={`rounded-lg flex items-center gap-2 cursor-pointer ${
+            className={`rounded-xl flex items-center gap-2 cursor-pointer ${
               layoutDensity === "compact" ? "bg-muted text-foreground font-medium" : ""
             }`}
             onClick={() => setLayoutDensity("compact")}
@@ -55,7 +55,7 @@ export function LayoutControls({ layoutDensity, setLayoutDensity }: LayoutContro
             Compact
           </DropdownMenuItem>
           <DropdownMenuItem
-            className={`rounded-lg flex items-center gap-2 cursor-pointer ${
+            className={`rounded-xl flex items-center gap-2 cursor-pointer ${
               layoutDensity === "extended" ? "bg-muted text-foreground font-medium" : ""
             }`}
             onClick={() => setLayoutDensity("extended")}

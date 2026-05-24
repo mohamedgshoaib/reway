@@ -204,7 +204,7 @@ export function BookmarkEditSheet({
                 placeholder="https://example.com/favicon.ico"
               />
               {faviconUrl.trim().length > 0 && (
-                <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-3">
+                <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/10 p-2">
                   <p className="text-xs font-medium text-foreground">
                     Apply this custom favicon to
                   </p>
@@ -213,7 +213,7 @@ export function BookmarkEditSheet({
                       type="button"
                       size="sm"
                       variant={faviconScope === "single" ? "default" : "outline"}
-                      className="flex-1 rounded-4xl cursor-pointer"
+                      className="flex-1 rounded-lg cursor-pointer"
                       onClick={() => setFaviconScope("single")}
                     >
                       This only
@@ -222,7 +222,7 @@ export function BookmarkEditSheet({
                       type="button"
                       size="sm"
                       variant={faviconScope === "domain" ? "default" : "outline"}
-                      className="flex-1 rounded-4xl cursor-pointer"
+                      className="flex-1 rounded-lg cursor-pointer"
                       onClick={() => setFaviconScope("domain")}
                     >
                       All bookmarks

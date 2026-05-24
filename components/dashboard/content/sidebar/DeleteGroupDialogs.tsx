@@ -38,10 +38,10 @@ export function DeleteGroupDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-lg cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            className="rounded-4xl cursor-pointer"
+            className="rounded-lg cursor-pointer"
             onClick={onConfirm}
           >
             Delete
@@ -74,10 +74,10 @@ export function BulkDeleteGroupsDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-lg cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            className="rounded-4xl cursor-pointer"
+            className="rounded-lg cursor-pointer"
             onClick={onConfirm}
           >
             Delete

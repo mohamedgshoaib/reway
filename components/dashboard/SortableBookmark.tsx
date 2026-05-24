@@ -92,7 +92,7 @@ export const SortableBookmark = memo(function SortableBookmark({
   const dragStyle = isDragging
     ? "z-50 bg-background ring-1 ring-primary/20"
     : isSelected
-      ? "bg-foreground/4 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] isolate shadow-none"
+      ? "bg-foreground/4 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] isolate shadow-none"
       : ""
 
   const openInNewTab = (e?: React.MouseEvent) => {
@@ -154,7 +154,7 @@ export const SortableBookmark = memo(function SortableBookmark({
         <ContextMenuTrigger asChild>
           <div
             ref={setNodeRef}
-            className={`group relative flex items-center justify-between rounded-2xl px-4 py-1.5 ${
+            className={`group relative flex items-center justify-between rounded-xl px-3 py-2 ${
               status === "pending"
                 ? "opacity-60"
                 : selectionMode
@@ -182,7 +182,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                     e.stopPropagation()
                     onToggleSelection?.(id)
                   }}
-                  className="size-9 shrink-0 flex items-center justify-center rounded-xl border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
+                  className="size-8 shrink-0 flex items-center justify-center rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
                   aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
                 >
                   <div
@@ -234,7 +234,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                     domain={domain}
                     title={title}
                     isEnriching={status === "pending" && isEnriching}
-                    className="size-10"
+                    className="size-8"
                   />
                 </a>
               )}
@@ -365,10 +365,10 @@ export const SortableBookmark = memo(function SortableBookmark({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-lg cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            className="rounded-4xl cursor-pointer"
+            className="rounded-lg cursor-pointer"
             onClick={handleDeleteConfirm}
           >
             Delete

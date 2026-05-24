@@ -37,7 +37,7 @@ function LogoutItem() {
       asChild
       onSelect={(event) => event.preventDefault()}
       variant="destructive"
-      className="rounded-xl flex items-center gap-2 cursor-pointer w-full py-2"
+      className="rounded-xl flex items-center gap-2 cursor-pointer w-full px-2.5 py-2"
     >
       <button
         type="submit"
@@ -128,7 +128,7 @@ export function UserMenu({
             variant="ghost"
             data-onboarding="user-menu"
             suppressHydrationWarning
-            className="size-8 rounded-full p-0 flex shrink-0 hover:bg-muted/50 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+            className="size-8 rounded-lg p-0 flex shrink-0 hover:bg-muted/50 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
           >
             <Avatar className="size-8 transition-transform">
               <AvatarImage src={user.avatar_url} alt={user.name} />
@@ -153,7 +153,7 @@ export function UserMenu({
 
           <DropdownMenuItem
             data-onboarding="start-onboarding"
-            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
             onSelect={(event) => {
               event.preventDefault()
               setOpen(false)
@@ -167,7 +167,7 @@ export function UserMenu({
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
             onSelect={(event) => {
               event.preventDefault()
               setOpen(false)
@@ -182,7 +182,7 @@ export function UserMenu({
 
           <div data-onboarding="import-export">
             <DropdownMenuItem
-              className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+              className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
               onSelect={(event) => {
                 event.preventDefault()
                 setOpen(false)
@@ -194,7 +194,7 @@ export function UserMenu({
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+              className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
               onSelect={(event) => {
                 event.preventDefault()
                 setOpen(false)
@@ -207,7 +207,7 @@ export function UserMenu({
           </div>
 
           <DropdownMenuItem
-            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
             onSelect={(event) => {
               event.preventDefault()
               setOpen(false)
@@ -221,7 +221,7 @@ export function UserMenu({
           <ExtensionInstallDialog>
             <DropdownMenuItem
               data-onboarding="extension"
-              className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+              className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
               onSelect={(event) => event.preventDefault()}
             >
               <HugeiconsIcon icon={Download02Icon} size={16} />
@@ -230,7 +230,7 @@ export function UserMenu({
           </ExtensionInstallDialog>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium py-2"
+            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
             onSelect={(event) => {
               event.preventDefault()
               setOpen(false)

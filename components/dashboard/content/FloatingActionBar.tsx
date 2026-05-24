@@ -54,7 +54,7 @@ export function FloatingActionBar({
         <p className="sr-only" aria-live="polite">
           {selectedCount} selected.
         </p>
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-background ring-1 ring-foreground/8 shadow-none isolate after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-background ring-1 ring-foreground/8 shadow-none isolate after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none">
           <span className="text-sm font-medium text-foreground tabular-nums whitespace-nowrap shrink-0">
             {selectedCount} selected
           </span>
@@ -62,7 +62,7 @@ export function FloatingActionBar({
           <button
             type="button"
             onClick={onOpenSelected}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
             aria-label="Open selected bookmarks"
           >
             Open
@@ -84,7 +84,7 @@ export function FloatingActionBar({
           >
             <SelectTrigger
               size="sm"
-              className="h-8 rounded-xl bg-muted/50 hover:bg-muted text-foreground font-medium text-sm"
+              className="h-8 rounded-lg bg-muted/50 hover:bg-muted text-foreground font-medium text-sm"
               aria-label="Move selected bookmarks to a group"
             >
               <SelectValue placeholder={isMoving ? "Moving..." : "Move to"} />
@@ -100,7 +100,7 @@ export function FloatingActionBar({
           <button
             type="button"
             onClick={() => setDeleteDialogOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none bg-destructive/10 text-destructive hover:bg-destructive/20 cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none bg-destructive/10 text-destructive hover:bg-destructive/20 cursor-pointer"
             aria-label="Delete selected bookmarks"
           >
             Delete
@@ -108,7 +108,7 @@ export function FloatingActionBar({
           <button
             type="button"
             onClick={onCancelSelection}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 hover:bg-muted text-foreground font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 hover:bg-muted text-foreground font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
             aria-label="Cancel selection"
           >
             Cancel
@@ -124,10 +124,10 @@ export function FloatingActionBar({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-lg cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            className="rounded-4xl cursor-pointer"
+            className="rounded-lg cursor-pointer"
             onClick={() => {
               onBulkDelete()
               setDeleteDialogOpen(false)

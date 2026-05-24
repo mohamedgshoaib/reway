@@ -38,7 +38,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "relative bg-input/20 ring-1 ring-foreground/8 data-placeholder:text-muted-foreground dark:hover:bg-input/50 focus-visible:ring-primary/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 gap-1.5 rounded-4xl px-3 py-2 text-sm transition-[color,background-color,box-shadow] focus-visible:ring-2 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 *:data-[slot=select-value]:line-clamp-1 [&_svg:not([class*='size-'])]:size-4 flex w-fit cursor-pointer items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 after:absolute after:inset-0 after:rounded-4xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate",
+        "relative bg-input/20 ring-1 ring-foreground/8 data-placeholder:text-muted-foreground dark:hover:bg-input/50 focus-visible:ring-primary/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 gap-1.5 rounded-lg px-3 py-2 text-sm transition-[color,background-color,box-shadow] focus-visible:ring-2 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 *:data-[slot=select-value]:line-clamp-1 [&_svg:not([class*='size-'])]:size-4 flex w-fit cursor-pointer items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate",
         className,
       )}
       {...props}
@@ -67,7 +67,7 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/8 min-w-36 rounded-2xl p-1.5 ring-1 duration-100 relative z-50 max-h-(--radix-select-content-available-height) origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate",
+          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/8 min-w-36 rounded-2xl p-2 ring-1 duration-100 relative z-50 max-h-(--radix-select-content-available-height) origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none shadow-none isolate",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
@@ -111,12 +111,12 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-muted/60 focus:text-primary/90 data-[highlighted]:bg-muted/60 data-[highlighted]:text-primary/90 gap-2.5 rounded-xl py-2 pr-8 pl-3 text-sm [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-pointer items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-current transition-colors duration-150",
+        "focus:bg-muted/60 focus:text-primary/90 data-[highlighted]:bg-muted/60 data-[highlighted]:text-primary/90 data-[state=checked]:bg-muted/40 data-[state=checked]:text-primary gap-2.5 rounded-xl py-2 pr-3 pl-8 text-sm [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-pointer items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-current transition-colors duration-150",
         className,
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
+      <span className="pointer-events-none absolute left-3 flex size-4 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
           <HugeiconsIcon icon={Tick01Icon} size={14} className="pointer-events-none" />
         </SelectPrimitive.ItemIndicator>

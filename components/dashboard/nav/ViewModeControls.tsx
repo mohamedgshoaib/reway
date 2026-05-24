@@ -41,7 +41,7 @@ export function ViewModeControls({ viewMode, setViewMode }: ViewModeControlsProp
                     size="icon"
                     data-onboarding="view-mode"
                     suppressHydrationWarning
-                    className="size-8 rounded-full transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+                    className="size-8 rounded-lg transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
                     aria-label="Change view mode"
                   >
                     <HugeiconsIcon icon={activeIcon} size={16} strokeWidth={2} />
@@ -61,7 +61,7 @@ export function ViewModeControls({ viewMode, setViewMode }: ViewModeControlsProp
               <DropdownMenuItem
                 key={option.value}
                 suppressHydrationWarning
-                className={`rounded-lg flex items-center gap-2 cursor-pointer ${
+                className={`rounded-xl flex items-center gap-2 cursor-pointer ${
                   viewMode === option.value ? "bg-muted text-foreground font-medium" : ""
                 }`}
                 onClick={() => setViewMode(option.value)}

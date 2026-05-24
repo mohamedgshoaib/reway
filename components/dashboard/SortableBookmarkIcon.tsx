@@ -135,7 +135,7 @@ export function SortableBookmarkIcon({
             {...attributes}
             {...(selectionMode ? {} : listeners)}
             data-slot="bookmark-card"
-            className={`group relative flex flex-col items-center gap-3 rounded-2xl bg-muted/20 p-4 text-center ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden ${
+            className={`group relative flex flex-col items-center gap-2.5 rounded-xl bg-muted/20 p-3 text-center ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden ${
               dragDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing"
             } ${
               isSelectionChecked || isSelected ? "ring-2 ring-primary/30" : ""
@@ -148,7 +148,7 @@ export function SortableBookmarkIcon({
                   event.stopPropagation()
                   onToggleSelection?.(id)
                 }}
-                className="size-12 flex items-center justify-center rounded-2xl border border-border/50 hover:border-border/70 hover:bg-muted/40 transition-transform duration-150"
+                className="size-10 flex items-center justify-center rounded-xl border border-border/50 hover:border-border/70 hover:bg-muted/40 transition-transform duration-150"
                 aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
               >
                 <div
@@ -193,14 +193,14 @@ export function SortableBookmarkIcon({
                 }}
                 aria-label="Open bookmark"
               >
-                <Favicon
-                  url={favicon || ""}
-                  domain={domain}
-                  title={title}
-                  isEnriching={isEnriching}
-                  className="size-12"
-                />
-              </a>
+                  <Favicon
+                    url={favicon || ""}
+                    domain={domain}
+                    title={title}
+                    isEnriching={isEnriching}
+                    className="size-10"
+                  />
+                </a>
             )}
             <a
               className="text-xs font-semibold text-foreground truncate w-full block cursor-pointer group-hover:text-primary! hover:text-primary! transition-colors duration-200"
@@ -243,10 +243,10 @@ export function SortableBookmarkIcon({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-4xl cursor-pointer">Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-lg cursor-pointer">Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            className="rounded-4xl cursor-pointer"
+            className="rounded-lg cursor-pointer"
             onClick={handleDeleteConfirm}
           >
             Delete

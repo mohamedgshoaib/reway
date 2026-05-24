@@ -22,7 +22,7 @@ export function BookmarkDragOverlay({ activeBookmark, viewMode }: BookmarkDragOv
 
   if (viewMode === "card") {
     return (
-      <div className="relative flex flex-col gap-3 rounded-2xl bg-background/95 ring-1 ring-foreground/8 p-4 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate overflow-hidden">
+      <div className="relative flex flex-col gap-3 rounded-xl bg-background/95 ring-1 ring-foreground/8 p-3 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate overflow-hidden">
         <div className="flex items-center gap-3 min-w-0">
           <Favicon
             url={activeBookmark.favicon_url || ""}
@@ -46,7 +46,7 @@ export function BookmarkDragOverlay({ activeBookmark, viewMode }: BookmarkDragOv
   }
 
   return (
-    <div className="relative flex items-center justify-between rounded-2xl bg-background/95 ring-1 ring-foreground/8 px-4 py-1.5 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate">
+    <div className="relative flex items-center justify-between rounded-xl bg-background/95 ring-1 ring-foreground/8 px-3 py-1.5 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Favicon url={activeBookmark.favicon_url || ""} domain={domain} title={displayTitle} />
         <div className="flex min-w-0 flex-col gap-0.5">

@@ -397,7 +397,7 @@ export function DashboardNav({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-full transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer min-[1200px]:hidden"
+                className="size-8 rounded-lg transition-transform duration-150 hover:bg-muted/50 active:scale-[0.97] motion-reduce:transition-none cursor-pointer min-[1200px]:hidden"
                 onClick={() => setNotesTodosSheetOpen(true)}
                 aria-label="Open notes and todos"
               >

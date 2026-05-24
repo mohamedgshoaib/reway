@@ -31,7 +31,7 @@ export function NoteCreateCard({
   return (
     <div className="pt-3 mt-2 border-t border-border/40">
       {creating ? (
-        <div className="relative mt-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
+        <div className="relative mt-2 p-2 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Popover open={colorPopoverOpen} onOpenChange={setColorPopoverOpen}>
@@ -62,7 +62,7 @@ export function NoteCreateCard({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="New note"
-                className="h-8 text-sm rounded-xl"
+                className="h-8 text-sm rounded-lg"
                 disabled={isCreating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isCreating) {
@@ -80,7 +80,7 @@ export function NoteCreateCard({
             <Button
               size="sm"
               variant="secondary"
-              className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
+              className="h-7 px-3 text-xs rounded-lg font-bold cursor-pointer"
               onClick={() => {
                 setCreating(false)
                 setText("")
@@ -92,7 +92,7 @@ export function NoteCreateCard({
             </Button>
             <Button
               size="sm"
-              className="h-7 px-3 text-xs rounded-4xl cursor-pointer"
+              className="h-7 px-3 text-xs rounded-lg cursor-pointer"
               onClick={onCreate}
               disabled={!text.trim() || isCreating}
             >

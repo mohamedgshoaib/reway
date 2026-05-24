@@ -45,7 +45,7 @@ export function PriorityPicker({
             key={p}
             type="button"
             className={cn(
-              "h-6 px-2 text-[11px] rounded-4xl border border-border/60 cursor-pointer",
+              "h-6 px-2 text-[11px] rounded-lg border border-border/60 cursor-pointer",
               active
                 ? "bg-muted text-foreground"
                 : "bg-muted/60 text-muted-foreground hover:text-primary/90",

@@ -34,7 +34,7 @@ export function GroupEditCard({
 }) {
   void group
   return (
-    <div className="relative my-2 p-3 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
+    <div className="relative my-2 p-2 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">
       <div className="flex items-center gap-2">
         <IconPickerPopover
           selectedIcon={editGroupIcon}
@@ -44,7 +44,7 @@ export function GroupEditCard({
         >
           <button
             type="button"
-            className="flex items-center justify-center size-8 rounded-xl bg-primary/10 hover:bg-primary/20 cursor-pointer"
+            className="flex items-center justify-center size-8 rounded-lg bg-primary/10 hover:bg-primary/20 cursor-pointer"
             aria-label="Select group icon"
           >
             <HugeiconsIcon
@@ -61,7 +61,7 @@ export function GroupEditCard({
             setEditGroupName(e.target.value.slice(0, MAX_GROUP_NAME_LENGTH))
           }}
           placeholder="Group name"
-          className="h-8 flex-1 text-sm rounded-xl"
+          className="h-8 flex-1 text-sm rounded-lg"
           maxLength={MAX_GROUP_NAME_LENGTH}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -76,7 +76,7 @@ export function GroupEditCard({
         <Button
           size="sm"
           variant="secondary"
-          className="h-7 px-3 text-xs rounded-4xl font-bold cursor-pointer"
+          className="h-7 px-3 text-xs rounded-lg font-bold cursor-pointer"
           onClick={onCancel}
         >
           Cancel
@@ -85,7 +85,7 @@ export function GroupEditCard({
           <CharacterCount current={editGroupName.length} max={MAX_GROUP_NAME_LENGTH} />
           <Button
             size="sm"
-            className="h-7 px-3 text-xs rounded-4xl cursor-pointer"
+            className="h-7 px-3 text-xs rounded-lg cursor-pointer"
             onClick={onSave}
             disabled={!editGroupName.trim() || isUpdatingGroup}
           >

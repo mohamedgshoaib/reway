@@ -111,7 +111,7 @@ export function ImportSheet({
 
         <SheetBody className="space-y-5">
           {importProgress.status !== "idle" && !(isDone || isStopped) ? (
-            <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3">
+            <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-2">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
                   {importProgress.status === "importing"
@@ -147,7 +147,7 @@ export function ImportSheet({
           ) : null}
 
           {isDone || isStopped ? (
-            <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-4">
+            <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-2">
               <div className="flex items-start gap-3">
                 {isDone ? (
                   <span className="mt-0.5 text-emerald-600">
@@ -194,7 +194,7 @@ export function ImportSheet({
                   }}
                 />
                 {selectedFileName ? (
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/10 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/10 px-3 py-2">
                     <span className="truncate text-xs text-muted-foreground">
                       {selectedFileName}
                     </span>
@@ -202,7 +202,7 @@ export function ImportSheet({
                       type="button"
                       size="sm"
                       variant="secondary"
-                      className="rounded-4xl cursor-pointer"
+                      className="rounded-lg cursor-pointer"
                       disabled={isImporting || isStopping}
                       onClick={() => {
                         onClearImport()
@@ -216,13 +216,13 @@ export function ImportSheet({
               </SheetSection>
 
               {importPreview ? (
-                <SheetSection className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
+                <SheetSection className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-2">
                   <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                     <span>Import preview</span>
                     <span>{importPreview.entries.length} bookmarks</span>
                   </div>
                   {totalDuplicates > 0 ? (
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-background/60 px-3 py-2 ring-1 ring-foreground/8">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background/60 px-3 py-2 ring-1 ring-foreground/8">
                       <span className="text-xs text-muted-foreground">
                         {totalDuplicates} duplicate
                         {totalDuplicates > 1 ? "s" : ""}
@@ -232,7 +232,7 @@ export function ImportSheet({
                           type="button"
                           size="sm"
                           variant={duplicateAction === "skip" ? "default" : "secondary"}
-                          className="rounded-4xl cursor-pointer"
+                            className="rounded-lg cursor-pointer"
                           aria-pressed={duplicateAction === "skip"}
                           disabled={isImporting || isStopping}
                           onClick={() => onUpdateImportAction("skip")}
@@ -243,7 +243,7 @@ export function ImportSheet({
                           type="button"
                           size="sm"
                           variant={duplicateAction === "override" ? "default" : "secondary"}
-                          className="rounded-4xl cursor-pointer"
+                            className="rounded-lg cursor-pointer"
                           aria-pressed={duplicateAction === "override"}
                           disabled={isImporting || isStopping}
                           onClick={() => onUpdateImportAction("override")}
@@ -260,7 +260,7 @@ export function ImportSheet({
                         type="button"
                         size="sm"
                         variant="secondary"
-                        className="rounded-4xl cursor-pointer"
+                        className="rounded-lg cursor-pointer"
                         onClick={handleSelectAllGroups}
                         disabled={isImporting || isStopping}
                       >
@@ -271,7 +271,7 @@ export function ImportSheet({
                   <ul className="space-y-2">
                     {importPreview.groups.map((group) => (
                       <li key={group.name}>
-                        <label className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/10 px-3 py-2 text-sm cursor-pointer">
+                        <label className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/10 px-3 py-2 text-sm cursor-pointer">
                           <span className="truncate">{group.name}</span>
                           <span className="flex items-center gap-2 shrink-0">
                             {typeof group.duplicateCount === "number" &&
@@ -292,7 +292,7 @@ export function ImportSheet({
                   </ul>
                 </SheetSection>
               ) : (
-                <div className="rounded-2xl border border-border/60 bg-muted/10 p-4 text-xs text-muted-foreground">
+                <div className="rounded-2xl border border-border/60 bg-muted/10 p-2 text-xs text-muted-foreground">
                   Choose a bookmarks HTML file to preview and import.
                 </div>
               )}
@@ -304,7 +304,7 @@ export function ImportSheet({
           {isDone || isStopped ? (
             <Button
               size="sm"
-              className="rounded-4xl cursor-pointer"
+              className="rounded-lg cursor-pointer"
               onClick={() => {
                 onClearImport()
                 resetFileSelection()
@@ -317,7 +317,7 @@ export function ImportSheet({
             <div className="flex w-full items-center gap-2">
               <Button
                 size="sm"
-                className="flex-1 rounded-4xl cursor-pointer"
+                className="flex-1 rounded-lg cursor-pointer"
                 onClick={() => onConfirmImport(selectedImportGroups)}
                 disabled={selectedImportGroups.length === 0 || isImporting || isStopping}
               >
@@ -327,7 +327,7 @@ export function ImportSheet({
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="rounded-4xl cursor-pointer"
+                  className="rounded-lg cursor-pointer"
                   disabled={isStopping}
                   onClick={() => {
                     onClearImport()
@@ -339,7 +339,7 @@ export function ImportSheet({
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="rounded-4xl cursor-pointer"
+                  className="rounded-lg cursor-pointer"
                   onClick={() => {
                     resetFileSelection()
                     onOpenChange(false)
