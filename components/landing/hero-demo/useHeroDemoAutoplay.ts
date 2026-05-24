@@ -146,7 +146,6 @@ export function useHeroDemoAutoplay({
     ;(async () => {
       await sleep(INITIAL_DELAY)
       if (stopped) return
-      inputRef.current?.focus()
 
       for (;;) {
         if (stopped) return
