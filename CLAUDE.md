@@ -4,17 +4,18 @@
 
 - OS: Windows 11 — PowerShell only
 - Timezone: UTC+02:00 (Cairo) — 12-hour format
-- Locale: English + French
+- Locale: English
 - Package manager: pnpm
+- Database project URL: https://josjxbrgsaugqsnyhdaf.supabase.co
 
 ## Session Start Sequence
 
 Read in order, stop if a blocker is found:
 
-1. `spec/index.md` — project DNA
-2. Latest file in `spec/sessions/` — open blockers + sprint state
+1. `spec/index.md` — project DNA, purpose, and constraints
+2. Latest file in `spec/sessions/` by most recent date — open blockers + sprint state
 
-Skills index: `spec/skills.md`. Read only when a skill trigger is encountered.
+Skills index: `spec/skills.md`. Read only when a skill trigger is encountered to know which skill/skills to use, using skills is mandatory for optimal code quality.
 
 ## Reply Style
 
@@ -40,7 +41,7 @@ Initial page-load motion may be expressive. Repeated interactions must be fast a
 ## Engineering Rules
 
 - New feature → invoke `grill-me` skill first. No code until spec is confirmed.
-- Architecture/system design decisions → `system-design` skill
+- Architecture/system design decisions → `system-design` and `improve-codebase-architecture` skills
 - Refactoring with broad structural impact → `improve-codebase-architecture` skill
 - Simple local edits → no skill needed
 - Outer radius = inner radius + padding (optical alignment)

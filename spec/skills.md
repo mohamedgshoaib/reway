@@ -1,14 +1,6 @@
 ## Skills
 
-### 1- bootstrap
-
-**Triggers**: bootstrap, init, new-repo, spec-index, skills-index
-**Pairs With**: None
-**Top 2 Rules**: Interview the user and capture requirements before writing the spec. Fill `spec/index.md` and `spec/skills.md` from verified inputs, not guesses.
-
-Full context: `.agents/skills/bootstrap/SKILL.md`
-
-### 2- browser-extension-builder
+### 1- browser-extension-builder
 
 **Triggers**: extension-product, browser-workflows, manifest, monetization, publishing
 **Pairs With**: chrome-extension-development, chrome-extension-ui
@@ -16,7 +8,7 @@ Full context: `.agents/skills/bootstrap/SKILL.md`
 
 Full context: `.agents/skills/browser-extension-builder/SKILL.md`
 
-### 3- chrome-extension-development
+### 2- chrome-extension-development
 
 **Triggers**: chrome-extension, manifest-v3, service-worker, content-script, permissions
 **Pairs With**: chrome-extension-ui, browser-extension-builder
@@ -24,7 +16,7 @@ Full context: `.agents/skills/browser-extension-builder/SKILL.md`
 
 Full context: `.agents/skills/chrome-extension-development/SKILL.md`
 
-### 4- chrome-extension-ui
+### 3- chrome-extension-ui
 
 **Triggers**: extension-ui, popup, sidepanel, content-script-ui, chrome-apis
 **Pairs With**: chrome-extension-development, emil-design-eng
@@ -32,7 +24,7 @@ Full context: `.agents/skills/chrome-extension-development/SKILL.md`
 
 Full context: `.agents/skills/chrome-extension-ui/SKILL.md`
 
-### 5- dnd-kit-react
+### 4- dnd-kit-react
 
 **Triggers**: dnd-kit, drag-and-drop, sortable, sensors, collision-detection
 **Pairs With**: vercel-react-best-practices, make-interfaces-feel-better
@@ -40,7 +32,7 @@ Full context: `.agents/skills/chrome-extension-ui/SKILL.md`
 
 Full context: `.agents/skills/dnd-kit-react/SKILL.md`
 
-### 6- emil-design-eng
+### 5- emil-design-eng
 
 **Triggers**: ui-polish, design-detail, animation, surfaces, typography
 **Pairs With**: make-interfaces-feel-better, tailwind-design-system, web-design-guidelines
@@ -48,7 +40,7 @@ Full context: `.agents/skills/dnd-kit-react/SKILL.md`
 
 Full context: `.agents/skills/emil-design-eng/SKILL.md`
 
-### 7- fixing-motion-performance
+### 6- fixing-motion-performance
 
 **Triggers**: animation-jank, transforms, blur, scroll-motion, compositor
 **Pairs With**: motion, make-interfaces-feel-better, vercel-react-best-practices
@@ -56,7 +48,7 @@ Full context: `.agents/skills/emil-design-eng/SKILL.md`
 
 Full context: `.agents/skills/fixing-motion-performance/SKILL.md`
 
-### 8- grill-me
+### 7- grill-me
 
 **Triggers**: grill me, stress-test, challenge plan, design review
 **Pairs With**: system-design, new-feature
@@ -64,7 +56,7 @@ Full context: `.agents/skills/fixing-motion-performance/SKILL.md`
 
 Full context: `.agents/skills/grill-me/SKILL.md`
 
-### 9- hydration-guardian
+### 8- hydration-guardian
 
 **Triggers**: hydration, ssr, csr, mismatch, suppresshydrationwarning
 **Pairs With**: next-best-practices, react-useeffect, vercel-react-best-practices
@@ -72,7 +64,7 @@ Full context: `.agents/skills/grill-me/SKILL.md`
 
 Full context: `.agents/skills/hydration-guardian/SKILL.md`
 
-### 10- improve-codebase-architecture
+### 9- improve-codebase-architecture
 
 **Triggers**: architecture, refactor, modularity, coupling, codebase-health
 **Pairs With**: vercel-composition-patterns, supabase-postgres-best-practices, system-design
@@ -80,7 +72,7 @@ Full context: `.agents/skills/hydration-guardian/SKILL.md`
 
 Full context: `.agents/skills/improve-codebase-architecture/SKILL.md`
 
-### 11- make-interfaces-feel-better
+### 10- make-interfaces-feel-better
 
 **Triggers**: polish, microinteractions, hover-states, shadows, typography
 **Pairs With**: emil-design-eng, fixing-motion-performance, tailwind-design-system
@@ -88,7 +80,7 @@ Full context: `.agents/skills/improve-codebase-architecture/SKILL.md`
 
 Full context: `.agents/skills/make-interfaces-feel-better/SKILL.md`
 
-### 12- motion
+### 11- motion
 
 **Triggers**: motion-library, gestures, layout-animation, motion-values, transitions
 **Pairs With**: fixing-motion-performance, make-interfaces-feel-better
@@ -96,15 +88,7 @@ Full context: `.agents/skills/make-interfaces-feel-better/SKILL.md`
 
 Full context: `.agents/skills/motion/SKILL.md`
 
-### 13- new-feature
-
-**Triggers**: new feature, feature request, add capability
-**Pairs With**: grill-me, system-design, next-best-practices
-**Top 2 Rules**: Invoke `grill-me` first and confirm the spec before any code. Use `system-design` for architecture decisions before implementation.
-
-Full context: `.agents/skills/new-feature/SKILL.md`
-
-### 14- next-best-practices
+### 12- next-best-practices
 
 **Triggers**: nextjs, app-router, server-actions, route-handlers, metadata, bundling
 **Pairs With**: vercel-react-best-practices, react-useeffect, hydration-guardian
@@ -112,7 +96,7 @@ Full context: `.agents/skills/new-feature/SKILL.md`
 
 Full context: `.agents/skills/next-best-practices/SKILL.md`
 
-### 15- nextjs-client-cookie-pattern
+### 13- nextjs-client-cookie-pattern
 
 **Triggers**: cookies, preferences, server-actions, client-triggered-mutation, nextjs
 **Pairs With**: next-best-practices, react-useeffect
@@ -120,7 +104,7 @@ Full context: `.agents/skills/next-best-practices/SKILL.md`
 
 Full context: `.agents/skills/nextjs-client-cookie-pattern/SKILL.md`
 
-### 16- postgresql-table-design
+### 14- postgresql-table-design
 
 **Triggers**: schema-design, indexes, constraints, migrations, postgres-schema
 **Pairs With**: supabase-postgres-best-practices, supabase
@@ -128,7 +112,7 @@ Full context: `.agents/skills/nextjs-client-cookie-pattern/SKILL.md`
 
 Full context: `.agents/skills/postgresql-table-design/SKILL.md`
 
-### 17- react-doctor
+### 15- react-doctor
 
 **Triggers**: react-doctor, lint, accessibility, bundle, cleanup
 **Pairs With**: vercel-react-best-practices, react-useeffect
@@ -136,7 +120,7 @@ Full context: `.agents/skills/postgresql-table-design/SKILL.md`
 
 Full context: `.agents/skills/react-doctor/SKILL.md`
 
-### 18- react-hook-form
+### 16- react-hook-form
 
 **Triggers**: react-hook-form, useform, usefieldarray, usecontroller
 **Pairs With**: zod
@@ -144,7 +128,7 @@ Full context: `.agents/skills/react-doctor/SKILL.md`
 
 Full context: `.agents/skills/react-hook-form/SKILL.md`
 
-### 19- react-useeffect
+### 17- react-useeffect
 
 **Triggers**: useeffect, derived-state, synchronization, client-state, react
 **Pairs With**: vercel-react-best-practices, hydration-guardian, next-best-practices
@@ -152,7 +136,7 @@ Full context: `.agents/skills/react-hook-form/SKILL.md`
 
 Full context: `.agents/skills/react-useeffect/SKILL.md`
 
-### 20- shadcn
+### 18- shadcn
 
 **Triggers**: shadcn, components.json, ui-components, radix, design-system
 **Pairs With**: tailwind-design-system, make-interfaces-feel-better
@@ -160,7 +144,7 @@ Full context: `.agents/skills/react-useeffect/SKILL.md`
 
 Full context: `.agents/skills/shadcn/SKILL.md`
 
-### 21- supabase
+### 19- supabase
 
 **Triggers**: supabase, auth, rls, realtime, storage, edge-functions
 **Pairs With**: supabase-postgres-best-practices, postgresql-table-design, next-best-practices
@@ -168,7 +152,7 @@ Full context: `.agents/skills/shadcn/SKILL.md`
 
 Full context: `.agents/skills/supabase/SKILL.md`
 
-### 22- supabase-postgres-best-practices
+### 20- supabase-postgres-best-practices
 
 **Triggers**: supabase, postgres, query-optimization, indexes, schema
 **Pairs With**: postgresql-table-design, supabase, next-best-practices
@@ -176,7 +160,7 @@ Full context: `.agents/skills/supabase/SKILL.md`
 
 Full context: `.agents/skills/supabase-postgres-best-practices/SKILL.md`
 
-### 23- system-design
+### 21- system-design
 
 **Triggers**: system-design, scale, distributed, high-availability, rate-limiter
 **Pairs With**: new-feature, improve-codebase-architecture
@@ -184,7 +168,7 @@ Full context: `.agents/skills/supabase-postgres-best-practices/SKILL.md`
 
 Full context: `.agents/skills/system-design/SKILL.md`
 
-### 24- tailwind-css-patterns
+### 22- tailwind-css-patterns
 
 **Triggers**: tailwind, utilities, layout, responsive, typography
 **Pairs With**: tailwind-design-system, make-interfaces-feel-better
@@ -192,7 +176,7 @@ Full context: `.agents/skills/system-design/SKILL.md`
 
 Full context: `.agents/skills/tailwind-css-patterns/SKILL.md`
 
-### 25- tailwind-design-system
+### 23- tailwind-design-system
 
 **Triggers**: tailwind-v4, design-tokens, css-variables, theming, responsive-ui
 **Pairs With**: shadcn, make-interfaces-feel-better, emil-design-eng
@@ -200,7 +184,7 @@ Full context: `.agents/skills/tailwind-css-patterns/SKILL.md`
 
 Full context: `.agents/skills/tailwind-design-system/SKILL.md`
 
-### 26- tanstack-query
+### 24- tanstack-query
 
 **Triggers**: tanstack-query, react-query, server-state, caching, invalidation
 **Pairs With**: vercel-react-best-practices
@@ -208,7 +192,7 @@ Full context: `.agents/skills/tailwind-design-system/SKILL.md`
 
 Full context: `.agents/skills/tanstack-query/SKILL.md`
 
-### 27- typescript-advanced-types
+### 25- typescript-advanced-types
 
 **Triggers**: generics, conditional-types, mapped-types, template-literals, utility-types
 **Pairs With**: vercel-composition-patterns
@@ -216,7 +200,7 @@ Full context: `.agents/skills/tanstack-query/SKILL.md`
 
 Full context: `.agents/skills/typescript-advanced-types/SKILL.md`
 
-### 28- vercel-composition-patterns
+### 26- vercel-composition-patterns
 
 **Triggers**: composition, compound-components, render-props, context, component-api
 **Pairs With**: vercel-react-best-practices, shadcn
@@ -224,7 +208,7 @@ Full context: `.agents/skills/typescript-advanced-types/SKILL.md`
 
 Full context: `.agents/skills/vercel-composition-patterns/SKILL.md`
 
-### 29- vercel-react-best-practices
+### 27- vercel-react-best-practices
 
 **Triggers**: react, performance, rendering, memoization, data-fetching, nextjs
 **Pairs With**: next-best-practices, react-useeffect, vercel-composition-patterns, hydration-guardian
@@ -232,7 +216,7 @@ Full context: `.agents/skills/vercel-composition-patterns/SKILL.md`
 
 Full context: `.agents/skills/vercel-react-best-practices/SKILL.md`
 
-### 30- virtual-lists
+### 28- virtual-lists
 
 **Triggers**: virtualization, windowing, large-lists, performance, scroll-jank
 **Pairs With**: vercel-react-best-practices, fixing-motion-performance
@@ -240,7 +224,7 @@ Full context: `.agents/skills/vercel-react-best-practices/SKILL.md`
 
 Full context: `.agents/skills/virtual-lists/SKILL.md`
 
-### 31- web-design-guidelines
+### 29- web-design-guidelines
 
 **Triggers**: ui-review, ux-audit, design-review, accessibility-review, quality-bar
 **Pairs With**: emil-design-eng, make-interfaces-feel-better
@@ -248,7 +232,7 @@ Full context: `.agents/skills/virtual-lists/SKILL.md`
 
 Full context: `.agents/skills/web-design-guidelines/SKILL.md`
 
-### 32- wrap-up
+### 30- wrap-up
 
 **Triggers**: wrap-up, session end, session log
 **Pairs With**: None
@@ -256,26 +240,10 @@ Full context: `.agents/skills/web-design-guidelines/SKILL.md`
 
 Full context: `.agents/skills/wrap-up/SKILL.md`
 
-### 33- zod
+### 31- zod
 
 **Triggers**: zod, schema, validation, safeparse, zod-infer
 **Pairs With**: react-hook-form
 **Top 2 Rules**: Use Zod schemas for parsing and validation instead of ad hoc checks. Prefer `safeParse` with structured error handling for user feedback.
 
 Full context: `.agents/skills/zod/SKILL.md`
-
-### 34- migrate-oxfmt
-
-**Triggers**: oxfmt, formatter migration, prettier, biome
-**Pairs With**: migrate-oxlint
-**Top 2 Rules**: Run `npx oxfmt@latest --migrate` for the source formatter and review the generated `.oxfmtrc.json`. Manually convert any overrides and decide on `printWidth` defaults.
-
-Full context: `.agents/skills/migrate-oxfmt/SKILL.md`
-
-### 35- migrate-oxlint
-
-**Triggers**: oxlint, linter migration, eslint, eslint-config
-**Pairs With**: migrate-oxfmt
-**Top 2 Rules**: Run `npx @oxlint/migrate` from repo root and review `.oxlintrc.json` for skipped rules. Replace ESLint commands with `oxlint` and install `oxlint` as a dev dependency.
-
-Full context: `.agents/skills/migrate-oxlint/SKILL.md`

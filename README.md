@@ -4,7 +4,7 @@
   <img src="app/opengraph-image.png" alt="Reway" width="800">
 </div>
 
-Reway is a bookmark manager built for speed and organization. It helps you save links, organize them into groups, and keep your library clean with automatic titles and icons. It includes a web dashboard and a Chrome extension to sync your bookmarks across devices.
+Reway is a bookmark manager built for speed and organization. It captures instantly, then enriches titles and icons in the background so saving never feels blocked. It includes a web dashboard and a Chrome extension to sync your bookmarks across devices.
 
 ## Why use Reway?
 
@@ -22,6 +22,7 @@ Reway fixes this by putting everything in one place with fast search and clear v
 - **Web App**: Built with Next.js 16 and React 19. It uses a real-time database so changes show up instantly on all your open tabs.
 - **Database**: Powered by Supabase (PostgreSQL). Your data is private and only accessible by you.
 - **Extension**: A Chrome extension for saving pages, grabbing multiple links from a site, or saving your entire current window session.
+- **Enrichment**: Titles, descriptions, and icons are fetched asynchronously after save; new items can appear with minimal metadata until it finishes.
 - **Analytics**: Privacy-friendly Umami analytics, proxied through Reway's own domain so basic traffic stats work even when adblockers are enabled.
 
 ## Features
@@ -32,7 +33,7 @@ Reway fixes this by putting everything in one place with fast search and clear v
 - **Link Grabber**: Select text on a page and save all links found in that selection.
 - **Session Import**: Save all open tabs in your current window as a new group.
 - **X (Twitter) Integration**: Click the bookmark button on X.com to save the tweet directly to Reway.
-- **Auto Data**: Reway automatically finds the best title, description, and icon for every link you save.
+- **Auto Data**: Reway fetches title, description, and icons after saving, so capture stays fast even if metadata takes time.
 - **Duplicates**: If you save a link that already exists, a bar pops up to let you skip it or move it to a different group.
 
 ### Organization
