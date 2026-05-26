@@ -1,5 +1,7 @@
+import { createGroupRecord, findDuplicateGroupByName } from "@/lib/library/server/capture"
+import { listGroupsForExtension } from "@/lib/library/server/reads"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
+import { broadcastExtensionInsert, getAuthenticatedExtensionUserId } from "../route-adapter"
 import { getCorsHeaders, jsonResponse } from "../utils"
 
 function pickRandomGroupColor() {
@@ -24,22 +26,14 @@ export async function OPTIONS(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return jsonResponse({ error: "Unauthorized" }, { status: 401, request })
+    const auth = await getAuthenticatedExtensionUserId(request)
+    if (!auth.ok) {
+      return auth.response
     }
 
-    const userId = user.id
+    const userId = auth.userId
 
-    const { data, error } = await supabaseAdmin
-      .from("groups")
-      .select("id, name, icon, color, order_index, created_at")
-      .eq("user_id", userId)
-      .order("order_index", { ascending: true })
+    const { data, error } = await listGroupsForExtension(supabaseAdmin, userId)
 
     if (error) {
       console.error("Failed to fetch groups:", error)
@@ -55,16 +49,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return jsonResponse({ error: "Unauthorized" }, { status: 401, request })
+    const auth = await getAuthenticatedExtensionUserId(request)
+    if (!auth.ok) {
+      return auth.response
     }
 
-    const userId = user.id
+    const userId = auth.userId
     const body = await request.json()
 
     const name = body.name.trim()
@@ -77,12 +67,7 @@ export async function POST(request: Request) {
       body.color || ((icon === "folder" || !icon) && !body.color ? pickRandomGroupColor() : null)
 
     // Check for duplicates
-    const { data: existingGroup } = await supabaseAdmin
-      .from("groups")
-      .select("id")
-      .eq("user_id", userId)
-      .ilike("name", name)
-      .maybeSingle()
+    const { data: existingGroup } = await findDuplicateGroupByName(supabaseAdmin, userId, name)
 
     if (existingGroup) {
       return jsonResponse(
@@ -92,46 +77,18 @@ export async function POST(request: Request) {
     }
 
     // Get the maximum order_index to append new group at the end
-    const { data: maxOrderData } = await supabaseAdmin
-      .from("groups")
-      .select("order_index")
-      .eq("user_id", userId)
-      .order("order_index", { ascending: false })
-      .limit(1)
-      .single()
-
-    const nextOrderIndex = maxOrderData ? (maxOrderData.order_index ?? 0) + 1 : 0
-
-    const { data, error } = await supabaseAdmin
-      .from("groups")
-      .insert({
-        name: body.name.trim(),
-        icon,
-        color,
-        user_id: userId,
-        order_index: nextOrderIndex,
-      })
-      .select("id, name, icon, color, order_index, created_at")
-      .single()
+    const { data, error } = await createGroupRecord(supabaseAdmin, userId, {
+      name: body.name.trim(),
+      icon,
+      color,
+    })
 
     if (error) {
       console.error("Failed to create group:", error)
       return jsonResponse({ error: "Failed to create group" }, { status: 500, request })
     }
 
-    try {
-      const channel = supabaseAdmin.channel(`user:${userId}:groups`, {
-        config: { private: true },
-      })
-      await channel.send({
-        type: "broadcast",
-        event: "INSERT",
-        payload: data,
-      })
-      supabaseAdmin.removeChannel(channel)
-    } catch (broadcastError) {
-      console.warn("Realtime broadcast failed (groups):", broadcastError)
-    }
+    await broadcastExtensionInsert(userId, "groups", data)
 
     return jsonResponse({ group: data }, { request })
   } catch (error) {

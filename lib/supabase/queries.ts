@@ -1,4 +1,8 @@
 import { Database } from "./database.types"
+import {
+  listBookmarksForDashboard,
+  listGroupsForDashboard,
+} from "@/lib/library/server/reads"
 import { createClient } from "./server"
 
 export type BookmarkRow = Database["public"]["Tables"]["bookmarks"]["Row"]
@@ -9,13 +13,7 @@ export type TodoRow = Database["public"]["Tables"]["todos"]["Row"]
 export async function getBookmarks() {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("bookmarks")
-    .select(
-      "id,url,normalized_url,domain,title,description,favicon_url,og_image_url,image_url,screenshot_url,group_id,user_id,created_at,order_index,status,is_enriching,last_fetched_at,last_visited_at,visit_count,error_reason",
-    )
-    .order("order_index", { ascending: true })
-    .order("created_at", { ascending: false })
+  const { data, error } = await listBookmarksForDashboard(supabase)
 
   if (error) {
     console.error("Error fetching bookmarks:", error.message || error)
@@ -63,11 +61,7 @@ export async function getTodos() {
 export async function getGroups() {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("groups")
-    .select("id,name,icon,color,user_id,created_at,order_index,hide_from_all_bookmarks")
-    .order("order_index", { ascending: true })
-    .order("name", { ascending: true })
+  const { data, error } = await listGroupsForDashboard(supabase)
 
   if (error) {
     console.error("Error fetching groups:", error.message || error)
