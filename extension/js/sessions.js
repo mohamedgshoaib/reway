@@ -30,13 +30,13 @@ export async function loadTabSession() {
     sessionPreview.querySelectorAll(".session-tab-item").forEach((item) => item.remove())
 
     if (validTabs.length === 0) {
-      emptyState.style.display = "block"
+      emptyState.classList.remove("hidden")
       sessionNameInput.disabled = true
       saveBtn.disabled = true
       return
     }
 
-    emptyState.style.display = "none"
+    emptyState.classList.add("hidden")
     sessionNameInput.disabled = false
     saveBtn.disabled = false
 
@@ -44,11 +44,24 @@ export async function loadTabSession() {
       const item = document.createElement("div")
       item.className = "session-tab-item"
 
+      const checkboxWrap = document.createElement("label")
+      checkboxWrap.className = "session-tab-check"
+      checkboxWrap.setAttribute("aria-label", `Include ${tab.title || tab.url}`)
+
       const checkbox = document.createElement("input")
       checkbox.type = "checkbox"
       checkbox.className = "session-tab-checkbox"
       checkbox.dataset.id = String(tab.id)
       checkbox.checked = true
+
+      const checkboxIndicator = document.createElement("span")
+      checkboxIndicator.className = "session-tab-check-indicator"
+      checkboxIndicator.setAttribute("aria-hidden", "true")
+      checkboxIndicator.innerHTML = `
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M3.75 8.25 6.6 11.1 12.25 5.45" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      `
 
       const favicon = document.createElement("img")
       favicon.className = "session-tab-favicon"
@@ -61,7 +74,9 @@ export async function loadTabSession() {
       title.className = "session-tab-title"
       title.textContent = tab.title || tab.url
 
-      item.appendChild(checkbox)
+      checkboxWrap.appendChild(checkbox)
+      checkboxWrap.appendChild(checkboxIndicator)
+      item.appendChild(checkboxWrap)
       item.appendChild(favicon)
       item.appendChild(title)
       sessionPreview.appendChild(item)
@@ -79,12 +94,12 @@ export async function saveTabSession(destination) {
   const existingGroupId = destination?.groupId || ""
 
   if (mode === "new" && !sessionName) {
-    setStatus("Please enter a session name", "error", statusTarget)
+    setStatus("Name the session you want to save.", "error", statusTarget)
     return
   }
 
   if (mode === "existing" && !existingGroupId) {
-    setStatus("Please select an existing group", "error", statusTarget)
+    setStatus("Choose a group before you save.", "error", statusTarget)
     return
   }
 
@@ -113,13 +128,13 @@ export async function saveTabSession(destination) {
     })
 
     if (selectedTabs.length === 0) {
-      setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group")
+      setLoading(saveBtn, false, "Save Session")
       setStatus("No tabs selected", "error", statusTarget)
       return
     }
 
     if (selectedHttpTabs.length === 0) {
-      setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group")
+      setLoading(saveBtn, false, "Save Session")
       setStatus("No supported tabs selected", "error", statusTarget)
       return
     }
@@ -179,11 +194,11 @@ export async function saveTabSession(destination) {
     setLoading(saveBtn, false, "Saved")
     setTimeout(() => window.close(), 800)
   } catch (err) {
-    setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group")
+    setLoading(saveBtn, false, "Save Session")
 
     let message = "Failed to save session"
     if (err.status === 409) {
-      message = "A group with this name already exists. Switch to Add to existing group."
+      message = "A group with this name already exists. Switch to Existing group."
     } else if (err.status === 401) {
       message = "Log in to keep saving sessions to Reway."
       notifyPopup("reway:auth-required", { flow: "session", message })

@@ -14,7 +14,6 @@ const destinationState = {
 const popupState = {
   groups: "loading",
   metadata: "loading",
-  baseUrl: null,
 }
 
 const groupSelects = {}
@@ -66,7 +65,7 @@ function setPopupHeader(mode) {
   }
 
   titleEl.textContent = "Save to Reway"
-  subtitleEl.textContent = "Choose one of the 3 options below"
+  subtitleEl.textContent = "Pick the way you want to save."
 }
 
 function setButtonDisabled(button, disabled) {
@@ -130,6 +129,17 @@ function updateStartupPanel() {
   setPopupHeader("main")
 }
 
+function setSettingsPanelOpen(isOpen) {
+  document.querySelector(".shell")?.classList.toggle("settings-open", isOpen)
+  elements.devPanel?.classList.toggle("open", isOpen)
+  elements.settingsToggle?.setAttribute("aria-expanded", String(isOpen))
+  elements.settingsToggle?.setAttribute(
+    "aria-label",
+    isOpen ? "Close settings" : "Open settings",
+  )
+  elements.settingsToggle?.setAttribute("title", isOpen ? "Close settings" : "Settings")
+}
+
 function setGroupUiState(flow, state, message = "") {
   const select = groupSelects[flow]
   const trigger = document.getElementById(`${flow}-group-trigger`)
@@ -145,7 +155,7 @@ function setGroupUiState(flow, state, message = "") {
   let disabled = false
 
   if (state === "loading") {
-    placeholder = "Loading groups..."
+    placeholder = "Loading groups…"
     disabled = true
   } else if (state === "auth_required") {
     placeholder = "Log in to load groups"
@@ -240,6 +250,24 @@ function createGroupSelect(flow) {
   let disabled = false
   let placeholder = defaultPlaceholder
 
+  const createCheckIcon = () => {
+    const svgNs = "http://www.w3.org/2000/svg"
+    const svg = document.createElementNS(svgNs, "svg")
+    svg.setAttribute("viewBox", "0 0 16 16")
+    svg.setAttribute("fill", "none")
+    svg.setAttribute("aria-hidden", "true")
+
+    const path = document.createElementNS(svgNs, "path")
+    path.setAttribute("d", "M3.75 8.25 6.6 11.1 12.25 5.45")
+    path.setAttribute("stroke", "currentColor")
+    path.setAttribute("stroke-width", "1.85")
+    path.setAttribute("stroke-linecap", "round")
+    path.setAttribute("stroke-linejoin", "round")
+
+    svg.appendChild(path)
+    return svg
+  }
+
   const updateLabel = () => {
     const selected = options.find((option) => option.id === selectedId)
     label.textContent = selected?.name || placeholder
@@ -252,16 +280,28 @@ function createGroupSelect(flow) {
       const button = document.createElement("button")
       button.type = "button"
       button.className = "select-option"
-      button.textContent = option.name
       button.setAttribute("role", "option")
       button.setAttribute("tabindex", "-1")
       button.dataset.index = String(index)
       button.dataset.groupId = option.id
-      button.setAttribute("aria-selected", String(option.id === selectedId))
+      const isSelected = option.id === selectedId
+      button.setAttribute("aria-selected", String(isSelected))
+      button.dataset.selected = String(isSelected)
 
-      if (option.id === selectedId) {
+      if (isSelected) {
         button.classList.add("active")
       }
+
+      const text = document.createElement("span")
+      text.className = "select-option-text"
+      text.textContent = option.name
+
+      const check = document.createElement("span")
+      check.className = "select-option-check"
+      check.appendChild(createCheckIcon())
+
+      button.appendChild(text)
+      button.appendChild(check)
 
       button.addEventListener("click", () => {
         selectedId = option.id
@@ -462,11 +502,11 @@ async function saveBookmark() {
       try {
         groupId = await createGroup(newGroupName)
       } catch (error) {
-        setLoading(elements.saveBookmarkBtn, false, "Save bookmark")
+        setLoading(elements.saveBookmarkBtn, false, "Save Page")
 
         if (error?.status === 409) {
           setStatus(
-            "A group with this name already exists. Switch to Add to existing group.",
+            "A group with this name already exists. Switch to Existing group.",
             "error",
             statusTarget,
           )
@@ -507,7 +547,7 @@ async function saveBookmark() {
     setLoading(elements.saveBookmarkBtn, false, "Saved")
     setTimeout(() => window.close(), 800)
   } catch (error) {
-    setLoading(elements.saveBookmarkBtn, false, "Save bookmark")
+    setLoading(elements.saveBookmarkBtn, false, "Save Page")
 
     if (error?.status === 401) {
       await handleAuthRequired({
@@ -544,10 +584,8 @@ let currentDevEnv = "prod"
 function switchEnv(env) {
   currentDevEnv = env
   const isProd = env === "prod"
-  elements.envProd.classList.toggle("secondary", isProd)
-  elements.envProd.classList.toggle("ghost", !isProd)
-  elements.envLocal.classList.toggle("secondary", !isProd)
-  elements.envLocal.classList.toggle("ghost", isProd)
+  elements.envProd?.classList.toggle("active", env === "prod")
+  elements.envLocal?.classList.toggle("active", env === "local")
   elements.localPortField.classList.toggle("hidden", isProd)
 }
 
@@ -561,19 +599,6 @@ async function handleSaveDevSettings() {
     })
   }
   window.location.reload()
-}
-
-let logoClickCount = 0
-let logoClickTimeout
-function handleLogoClick() {
-  logoClickCount++
-  clearTimeout(logoClickTimeout)
-  if (logoClickCount === 3) {
-    elements.devPanel.classList.toggle("open")
-    logoClickCount = 0
-    return
-  }
-  logoClickTimeout = setTimeout(() => (logoClickCount = 0), 1000)
 }
 
 async function hydrateEnvironmentControls() {
@@ -590,24 +615,6 @@ async function hydrateEnvironmentControls() {
   }
 
   switchEnv("prod")
-}
-
-async function hydrateFooterLinks() {
-  try {
-    const { baseUrl } = await getSettings()
-    popupState.baseUrl = baseUrl
-
-    if (elements.footerHomepage) {
-      elements.footerHomepage.setAttribute("href", `${baseUrl}/`)
-    }
-    if (elements.footerDashboard) {
-      elements.footerDashboard.setAttribute("href", `${baseUrl}/dashboard`)
-    }
-
-    document.getElementById("footer-links")?.classList.remove("hidden")
-  } catch {
-    document.getElementById("footer-links")?.classList.add("hidden")
-  }
 }
 
 async function hydrateGroups() {
@@ -736,7 +743,6 @@ function init() {
   initializeShell()
 
   void hydrateEnvironmentControls()
-  void hydrateFooterLinks()
   void hydrateGroups()
   void hydratePageMeta()
 }
@@ -753,7 +759,6 @@ if (elements.loginButton) {
 }
 
 document.getElementById("retry-startup")?.addEventListener("click", () => {
-  void hydrateFooterLinks()
   void hydrateGroups()
 })
 
@@ -765,10 +770,19 @@ document.addEventListener("reway:invalid-group", (event) => {
   void handleInvalidGroup(event.detail || {})
 })
 
-elements.logo?.addEventListener("click", handleLogoClick)
+elements.settingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.devPanel?.classList.contains("open")
+  setSettingsPanelOpen(!isOpen)
+})
 elements.envProd?.addEventListener("click", () => switchEnv("prod"))
 elements.envLocal?.addEventListener("click", () => switchEnv("local"))
 elements.saveDevSettings?.addEventListener("click", handleSaveDevSettings)
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && elements.devPanel?.classList.contains("open")) {
+    setSettingsPanelOpen(false)
+  }
+})
 
 document.querySelectorAll(".destination-toggle-button").forEach((button) => {
   button.addEventListener("click", () => {
@@ -815,7 +829,11 @@ if (addManualLinkBtn && manualLinkInput) {
       })
 
       if (response && response.success === false && response.reason === "duplicate") {
-        setStatus("⚠️ Link already added", "error", document.getElementById("manual-link-status"))
+        setStatus(
+          "This link is already in the list.",
+          "error",
+          document.getElementById("manual-link-status"),
+        )
         setTimeout(() => {
           setStatus("", "", document.getElementById("manual-link-status"))
         }, 3000)
@@ -839,6 +857,7 @@ if (addManualLinkBtn && manualLinkInput) {
 
 document.querySelectorAll(".tab-button").forEach((button) => {
   button.addEventListener("click", () => {
+    setSettingsPanelOpen(false)
     const tabId = button.dataset.tab
     switchTab(tabId)
     if (tabId === "links") loadGrabbedLinks()

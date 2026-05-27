@@ -26,14 +26,14 @@ export async function loadGrabbedLinks() {
   const createBtn = document.getElementById("create-group-from-links")
 
   if (links.length === 0) {
-    emptyState.style.display = "block"
+    emptyState.classList.remove("hidden")
     if (groupNameInput) groupNameInput.disabled = true
     if (createBtn) createBtn.disabled = true
     listContainer.querySelectorAll(".session-tab-item").forEach((item) => item.remove())
     return
   }
 
-  emptyState.style.display = "none"
+  emptyState.classList.add("hidden")
   if (groupNameInput) groupNameInput.disabled = false
   if (createBtn) createBtn.disabled = false
 
@@ -104,12 +104,12 @@ export async function createGroupFromLinks(destination) {
   const existingGroupId = destination?.groupId || ""
 
   if (mode === "new" && !groupName) {
-    setStatus("Please enter a group name", "error", statusTarget)
+    setStatus("Name the group you want to save into.", "error", statusTarget)
     return
   }
 
   if (mode === "existing" && !existingGroupId) {
-    setStatus("Please select an existing group", "error", statusTarget)
+    setStatus("Choose a group before you save.", "error", statusTarget)
     return
   }
 
@@ -170,11 +170,11 @@ export async function createGroupFromLinks(destination) {
     }
     setTimeout(() => window.close(), 800)
   } catch (err) {
-    setLoading(createBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group")
+    setLoading(createBtn, false, "Save Links")
 
     let message = "Failed to create group"
     if (err.status === 409) {
-      message = "A group with this name already exists. Switch to Add to existing group."
+      message = "A group with this name already exists. Switch to Existing group."
     } else if (err.status === 401) {
       message = "Log in to keep saving links to Reway."
       notifyPopup("reway:auth-required", { flow: "links", message })
