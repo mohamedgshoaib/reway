@@ -451,7 +451,7 @@ async function saveBookmark() {
     return
   }
 
-  setLoading(elements.saveBookmarkBtn, true, "Saving...")
+  setLoading(elements.saveBookmarkBtn, true, "Saving")
 
   try {
     let groupId = null
@@ -504,7 +504,7 @@ async function saveBookmark() {
     }
 
     elements.saveBookmarkBtn.classList.add("success")
-    setLoading(elements.saveBookmarkBtn, false, "✓ Saved!")
+    setLoading(elements.saveBookmarkBtn, false, "Saved")
     setTimeout(() => window.close(), 800)
   } catch (error) {
     setLoading(elements.saveBookmarkBtn, false, "Save bookmark")

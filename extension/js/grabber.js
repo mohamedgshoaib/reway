@@ -118,7 +118,7 @@ export async function createGroupFromLinks(destination) {
   })
   if (!links?.length) return
 
-  setLoading(createBtn, true, "Saving...")
+  setLoading(createBtn, true, "Saving")
 
   try {
     let groupId = existingGroupId
@@ -160,7 +160,7 @@ export async function createGroupFromLinks(destination) {
     await chrome.runtime.sendMessage({ type: "clearGrabbedLinks" })
 
     createBtn.classList.add("success")
-    setLoading(createBtn, false, "✓ Saved!")
+    setLoading(createBtn, false, "Saved")
     if (duplicates.length > 0) {
       setStatus(
         `Saved links. Skipped ${duplicates.length} duplicate bookmark(s).`,

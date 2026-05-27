@@ -88,7 +88,7 @@ export async function saveTabSession(destination) {
     return
   }
 
-  setLoading(saveBtn, true, "Saving...")
+  setLoading(saveBtn, true, "Saving")
 
   try {
     const currentWindow = await chrome.windows.getCurrent({ populate: true })
@@ -165,7 +165,7 @@ export async function saveTabSession(destination) {
 
     if (duplicates.length > 0) {
       saveBtn.classList.add("success")
-      setLoading(saveBtn, false, "✓ Saved!")
+      setLoading(saveBtn, false, "Saved")
       setStatus(
         `Saved session. Skipped ${duplicates.length} duplicate bookmark(s).`,
         "success",
@@ -176,7 +176,7 @@ export async function saveTabSession(destination) {
     }
 
     saveBtn.classList.add("success")
-    setLoading(saveBtn, false, "✓ Saved!")
+    setLoading(saveBtn, false, "Saved")
     setTimeout(() => window.close(), 800)
   } catch (err) {
     setLoading(saveBtn, false, mode === "existing" ? "Add to existing group" : "Add to new group")

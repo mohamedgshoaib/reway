@@ -8,40 +8,32 @@ button[disabled] {
   pointer-events: none;
 }
 
-button.loading {
-  position: relative;
-  display: flex !important;
+.button-content {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  min-width: 0;
 }
 
-button.loading::before {
-  content: "";
-  width: 14px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  border-right-color: transparent;
-  animation: rotate 0.8s linear infinite;
+.button-icon-slot {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-status-icon {
+  width: 16px;
+  height: 16px;
   display: block;
 }
 
-button.success {
-  background: #10b981 !important;
-  color: white !important;
-  border-color: #10b981 !important;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.button-label {
+  display: inline-block;
+  line-height: 1;
 }
 
 :root {

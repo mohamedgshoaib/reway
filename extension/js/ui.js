@@ -36,6 +36,102 @@ export function setStatus(text, tone = "", target = elements.status) {
   target.dataset.tone = tone
 }
 
+function createLoadingIcon() {
+  const svgNs = "http://www.w3.org/2000/svg"
+  const svg = document.createElementNS(svgNs, "svg")
+  svg.setAttribute("class", "button-status-icon")
+  svg.setAttribute("viewBox", "0 0 16 16")
+  svg.setAttribute("fill", "none")
+  svg.setAttribute("aria-hidden", "true")
+
+  const bars = [
+    { x: "1", begin: "0s" },
+    { x: "6", begin: "0.2s" },
+    { x: "11", begin: "0.4s" },
+  ]
+
+  bars.forEach(({ x, begin }) => {
+    const rect = document.createElementNS(svgNs, "rect")
+    rect.setAttribute("x", x)
+    rect.setAttribute("y", "2")
+    rect.setAttribute("width", "4")
+    rect.setAttribute("height", "8")
+    rect.setAttribute("rx", "1.5")
+    rect.setAttribute("fill", "currentColor")
+
+    const animate = document.createElementNS(svgNs, "animateTransform")
+    animate.setAttribute("attributeName", "transform")
+    animate.setAttribute("attributeType", "XML")
+    animate.setAttribute("type", "translate")
+    animate.setAttribute("values", "0 0; 0 5; 0 0")
+    animate.setAttribute("begin", begin)
+    animate.setAttribute("dur", "0.6s")
+    animate.setAttribute("repeatCount", "indefinite")
+
+    rect.appendChild(animate)
+    svg.appendChild(rect)
+  })
+
+  return svg
+}
+
+function createSuccessIcon() {
+  const svgNs = "http://www.w3.org/2000/svg"
+  const svg = document.createElementNS(svgNs, "svg")
+  svg.setAttribute("class", "button-status-icon")
+  svg.setAttribute("viewBox", "0 0 16 16")
+  svg.setAttribute("fill", "none")
+  svg.setAttribute("aria-hidden", "true")
+
+  const circle = document.createElementNS(svgNs, "circle")
+  circle.setAttribute("cx", "8")
+  circle.setAttribute("cy", "8")
+  circle.setAttribute("r", "6")
+  circle.setAttribute("stroke", "currentColor")
+  circle.setAttribute("stroke-width", "1.75")
+
+  const path = document.createElementNS(svgNs, "path")
+  path.setAttribute("d", "M4.8 8.3 7.2 10.7 11.4 6.5")
+  path.setAttribute("stroke", "currentColor")
+  path.setAttribute("stroke-width", "1.85")
+  path.setAttribute("stroke-linecap", "round")
+  path.setAttribute("stroke-linejoin", "round")
+
+  svg.appendChild(circle)
+  svg.appendChild(path)
+  return svg
+}
+
+function createIconSlot(icon = null) {
+  const slot = document.createElement("span")
+  slot.className = "button-icon-slot"
+
+  if (icon) {
+    slot.appendChild(icon)
+  }
+
+  return slot
+}
+
+function setButtonContent(button, text, state = "idle") {
+  button.replaceChildren()
+
+  const content = document.createElement("span")
+  content.className = "button-content"
+
+  const icon =
+    state === "loading" ? createLoadingIcon() : state === "success" ? createSuccessIcon() : null
+
+  content.appendChild(createIconSlot(icon))
+
+  const label = document.createElement("span")
+  label.className = "button-label"
+  label.textContent = text
+  content.appendChild(label)
+
+  button.appendChild(content)
+}
+
 /**
  * Unified Loading Indicator
  * @param {HTMLButtonElement} button
@@ -51,13 +147,15 @@ export function setLoading(button, isLoading, loadingText = "") {
     button.disabled = true
     button.classList.add("loading")
     if (loadingText) {
-      button.textContent = loadingText
+      setButtonContent(button, loadingText, "loading")
     }
   } else {
     button.disabled = false
     button.classList.remove("loading")
     if (loadingText || button.dataset.originalText) {
-      button.textContent = loadingText || button.dataset.originalText
+      const nextText = loadingText || button.dataset.originalText
+      const nextState = button.classList.contains("success") ? "success" : "idle"
+      setButtonContent(button, nextText, nextState)
       delete button.dataset.originalText
     }
   }
