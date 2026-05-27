@@ -25,6 +25,10 @@ export async function enrichCreatedBookmark(id: string, url: string) {
   return bookmarkMutations.enrichCreated(id, url)
 }
 
+export async function refreshBookmarkMetadata(id: string) {
+  return bookmarkMutations.refresh(id)
+}
+
 export async function updateBookmarksOrder(updates: { id: string; order_index: number }[]) {
   return bookmarkMutations.updateOrder(updates)
 }

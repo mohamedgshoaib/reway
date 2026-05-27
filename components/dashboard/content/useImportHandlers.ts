@@ -2,8 +2,12 @@
 
 import { useCallback, useRef, useState } from "react"
 import { toast } from "sonner"
-import { normalizeUrl } from "@/lib/metadata"
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
+import {
+  buildBookmarkEnrichmentFailure,
+  enrichBookmarkWithTimeout,
+  isBookmarkEnrichmentTimeoutError,
+} from "./bookmark-enrichment"
 import type { EnrichmentResult, ImportEntry, ImportGroupSummary } from "./dashboard-types"
 import { buildImportPreview } from "./import/build-import-preview"
 import { pickRandomGroupColor } from "./import/colors"
@@ -24,7 +28,7 @@ interface UseImportHandlersOptions {
     title?: string
     group_id?: string
     order_index?: number
-  }) => Promise<string | undefined>
+  }) => Promise<BookmarkRow | null>
   createGroup: (formData: { name: string; icon: string; color?: string | null }) => Promise<string>
   enrichCreatedBookmark: (id: string, url: string) => Promise<unknown>
   checkDuplicateBookmarks: (urls: string[]) => Promise<{
@@ -183,15 +187,7 @@ export function useImportHandlers({
         return {
           entry,
           groupId,
-          optimisticId: crypto.randomUUID(),
           orderIndex: startingOrder - (entries.length - index),
-          normalizedUrl: (() => {
-            try {
-              return normalizeUrl(entry.url)
-            } catch {
-              return entry.url
-            }
-          })(),
         }
       })
 
@@ -205,9 +201,7 @@ export function useImportHandlers({
       const handleCreate = async ({
         entry,
         groupId,
-        optimisticId,
         orderIndex,
-        normalizedUrl,
       }: (typeof pendingEntries)[number]) => {
         // Check stop BEFORE doing ANY work (including optimistic insert)
         if (stopRequestedRef.current) {
@@ -215,76 +209,32 @@ export function useImportHandlers({
         }
 
         try {
-          // Issue: without optimistic rows, the UI won't show import "batches" while work is running.
-          // Fix: insert a lightweight optimistic bookmark row immediately, then update/replace it as we get a real id + enrichment.
-          setBookmarks((prev) =>
-            sortBookmarks([
-              {
-                id: optimisticId,
-                url: entry.url,
-                normalized_url: normalizedUrl,
-                domain: null,
-                title: entry.title || entry.url,
-                description: null,
-                favicon_url: null,
-                og_image_url: null,
-                image_url: null,
-                screenshot_url: null,
-                group_id: groupId,
-                user_id: userId,
-                created_at: new Date().toISOString(),
-                order_index: orderIndex,
-                status: "pending",
-                is_enriching: true,
-                last_fetched_at: null,
-                last_visited_at: null,
-                visit_count: 0,
-                error_reason: null,
-              },
-              ...prev,
-            ]),
-          )
-
-          const bookmarkId = await addBookmark({
+          const createdBookmark = await addBookmark({
             url: entry.url,
-            id: optimisticId,
             title: entry.title,
             group_id: groupId ?? undefined,
             order_index: orderIndex,
           })
 
-          const stableId = bookmarkId ?? optimisticId
-          if (bookmarkId && bookmarkId !== optimisticId) {
-            setBookmarks((prev) =>
-              prev.map((item) =>
-                item.id === optimisticId
-                  ? {
-                      ...item,
-                      id: bookmarkId,
-                      order_index: orderIndex,
-                    }
-                  : item,
-              ),
-            )
+          if (!createdBookmark) {
+            throw new Error("Failed to create bookmark")
           }
+
+          const stableId = createdBookmark.id
+          setBookmarks((prev) =>
+            sortBookmarks(
+              [
+                { ...createdBookmark, is_enriching: true },
+                ...prev.filter((item) => item.id !== stableId),
+              ],
+            ),
+          )
 
           enrichmentQueue.push({ id: stableId, url: entry.url })
           importedCount += 1
         } catch (error) {
           console.error("Import add failed:", error)
           failedCount += 1
-          setBookmarks((prev) =>
-            prev.map((item) =>
-              item.id === optimisticId
-                ? {
-                    ...item,
-                    status: "failed",
-                    is_enriching: false,
-                    error_reason: "Import failed",
-                  }
-                : item,
-            ),
-          )
         } finally {
           processedRef.current += 1
           setImportProgress((prev) => {
@@ -299,16 +249,15 @@ export function useImportHandlers({
 
       const enrichmentWorker = async ({ id, url }: { id: string; url: string }) => {
         try {
-          // Timeout wrapper to prevent infinite pending state
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error("Enrichment timeout")), 120000) // 2 minute timeout for slow network requests
+          const enrichment = await enrichBookmarkWithTimeout({
+            bookmarkId: id,
+            url,
+            timeoutMs: 120000,
+            enrichCreatedBookmark: enrichCreatedBookmark as (
+              id: string,
+              url: string,
+            ) => Promise<EnrichmentResult | undefined>,
           })
-
-          const enrichmentPromise = enrichCreatedBookmark(id, url)
-
-          const enrichment = (await Promise.race([enrichmentPromise, timeoutPromise])) as
-            | EnrichmentResult
-            | undefined
 
           if (enrichment?.status === "ready") {
             setBookmarks((prev) =>
@@ -342,18 +291,43 @@ export function useImportHandlers({
                   : item,
               ),
             )
+          } else {
+            setBookmarks((prev) =>
+              prev.map((item) =>
+                item.id === id
+                  ? {
+                      ...item,
+                      is_enriching: false,
+                    }
+                  : item,
+              ),
+            )
           }
         } catch (error) {
-          // Handle timeout or any other error - mark as failed so it's not stuck pending
           console.error("Enrichment worker error for", url, error)
+          if (isBookmarkEnrichmentTimeoutError(error)) {
+            setBookmarks((prev) =>
+              prev.map((item) =>
+                item.id === id
+                  ? {
+                      ...item,
+                      is_enriching: false,
+                    }
+                  : item,
+              ),
+            )
+            return
+          }
+          const failure = buildBookmarkEnrichmentFailure(error)
           setBookmarks((prev) =>
             prev.map((item) =>
               item.id === id
                 ? {
                     ...item,
-                    status: "failed",
+                    status: failure.status,
                     is_enriching: false,
-                    error_reason: error instanceof Error ? error.message : "Enrichment error",
+                    error_reason: failure.error_reason ?? "Enrichment error",
+                    last_fetched_at: failure.last_fetched_at ?? item.last_fetched_at,
                   }
                 : item,
             ),

@@ -25,6 +25,7 @@ interface SortableBookmarkIconProps {
   title: string
   url: string
   domain: string
+  status?: string
   favicon?: string
   isEnriching?: boolean
   isSelected?: boolean
@@ -33,6 +34,7 @@ interface SortableBookmarkIconProps {
   onToggleSelection?: (id: string) => void
   onEnterSelectionMode?: () => void
   onDelete?: (id: string) => void
+  onRefresh?: (id: string) => void
   onEdit?: (id: string) => void
   onPreview?: (id: string) => void
   dragDimmed?: boolean
@@ -44,6 +46,7 @@ export function SortableBookmarkIcon({
   title,
   url,
   domain,
+  status = "ready",
   favicon,
   isEnriching = false,
   isSelected,
@@ -52,6 +55,7 @@ export function SortableBookmarkIcon({
   onToggleSelection,
   onEnterSelectionMode,
   onDelete,
+  onRefresh,
   onEdit,
   onPreview,
   dragDimmed = false,
@@ -114,6 +118,11 @@ export function SortableBookmarkIcon({
     onEdit?.(id)
   }
 
+  const handleRefresh = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    onRefresh?.(id)
+  }
+
   const handlePreview = (e?: React.MouseEvent) => {
     e?.stopPropagation()
     onPreview?.(id)
@@ -124,6 +133,8 @@ export function SortableBookmarkIcon({
     onEnterSelectionMode?.()
     onToggleSelection?.(id)
   }
+
+  const needsRefresh = status === "pending" && !isEnriching
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -198,6 +209,7 @@ export function SortableBookmarkIcon({
                     domain={domain}
                     title={title}
                     isEnriching={isEnriching}
+                    needsRefresh={needsRefresh}
                     className="size-10"
                   />
                 </a>
@@ -229,9 +241,11 @@ export function SortableBookmarkIcon({
           onPreview={handlePreview}
           onCopyLink={handleCopy}
           onEdit={handleEdit}
+          onRefresh={handleRefresh}
           onDelete={handleDeleteRequest}
           onBulkSelect={handleBulkSelect}
           showBulkSelect={!selectionMode}
+          isRefreshing={isEnriching}
         />
       </ContextMenu>
 

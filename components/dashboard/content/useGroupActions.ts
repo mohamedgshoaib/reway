@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { toast } from "sonner"
 import { checkDuplicateGroup, toggleHideFromAllBookmarks } from "@/app/dashboard/actions/groups"
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
@@ -16,12 +16,6 @@ interface UseGroupActionsOptions {
   sortBookmarks: (items: BookmarkRow[]) => BookmarkRow[]
   sortGroups: (items: GroupRow[]) => GroupRow[]
   setActiveGroupId: (id: string) => void
-  editGroupName: string
-  editGroupIcon: string
-  editGroupColor: string | null
-  setEditingGroupId: (value: string | null) => void
-  isUpdatingGroup: boolean
-  setIsUpdatingGroup: (value: boolean) => void
   lastDeletedGroupRef: React.MutableRefObject<GroupRow | null>
   createGroup: (formData: { name: string; icon: string; color?: string | null }) => Promise<string>
   updateGroup: (
@@ -44,15 +38,6 @@ interface UseGroupActionsOptions {
   restoreBookmark: (bookmark: BookmarkRow) => Promise<void>
   lastDeletedGroupBookmarksRef: React.MutableRefObject<BookmarkRow[]>
   initialGroups: GroupRow[]
-  newGroupName: string
-  newGroupIcon: string
-  newGroupColor: string | null
-  setIsInlineCreating: (value: boolean) => void
-  setNewGroupName: (value: string) => void
-  setNewGroupIcon: (value: string) => void
-  setNewGroupColor: (value: string | null) => void
-  isCreatingGroup: boolean
-  setIsCreatingGroup: (value: boolean) => void
 }
 
 export function useGroupActions({
@@ -65,12 +50,6 @@ export function useGroupActions({
   sortBookmarks,
   sortGroups,
   setActiveGroupId,
-  editGroupName,
-  editGroupIcon,
-  editGroupColor,
-  setEditingGroupId,
-  isUpdatingGroup,
-  setIsUpdatingGroup,
   lastDeletedGroupRef,
   createGroup,
   updateGroup,
@@ -79,16 +58,18 @@ export function useGroupActions({
   restoreBookmark,
   lastDeletedGroupBookmarksRef,
   initialGroups,
-  newGroupName,
-  newGroupIcon,
-  newGroupColor,
-  setIsInlineCreating,
-  setNewGroupName,
-  setNewGroupIcon,
-  setNewGroupColor,
-  isCreatingGroup,
-  setIsCreatingGroup,
 }: UseGroupActionsOptions) {
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [editGroupName, setEditGroupName] = useState("")
+  const [editGroupIcon, setEditGroupIcon] = useState("folder")
+  const [editGroupColor, setEditGroupColor] = useState<string | null>(null)
+  const [isUpdatingGroup, setIsUpdatingGroup] = useState(false)
+  const [isInlineCreating, setIsInlineCreating] = useState(false)
+  const [newGroupName, setNewGroupName] = useState("")
+  const [newGroupIcon, setNewGroupIcon] = useState("folder")
+  const [newGroupColor, setNewGroupColor] = useState<string | null>("#6366f1")
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
+
   const getDuplicateMessage = (error: unknown) => {
     if (error instanceof Error) {
       if (/already exists/i.test(error.message)) {
@@ -325,6 +306,24 @@ export function useGroupActions({
     ],
   )
 
+  const startEditingGroup = useCallback((group: GroupRow) => {
+    setEditingGroupId(group.id)
+    setEditGroupName(group.name)
+    setEditGroupIcon(group.icon || "folder")
+    setEditGroupColor(group.color || "#6366f1")
+  }, [])
+
+  const cancelEditingGroup = useCallback(() => {
+    setEditingGroupId(null)
+  }, [])
+
+  const cancelInlineCreateGroup = useCallback(() => {
+    setIsInlineCreating(false)
+    setNewGroupName("")
+    setNewGroupIcon("folder")
+    setNewGroupColor("#6366f1")
+  }, [])
+
   const handleToggleHideFromAllBookmarks = useCallback(
     async (id: string, hide: boolean) => {
       setGroups((prev) =>
@@ -346,6 +345,32 @@ export function useGroupActions({
   )
 
   return {
+    groupControls: {
+      editingGroupId,
+      editGroupName,
+      setEditGroupName,
+      editGroupIcon,
+      setEditGroupIcon,
+      editGroupColor,
+      setEditGroupColor,
+      isUpdatingGroup,
+      isInlineCreating,
+      setIsInlineCreating,
+      newGroupName,
+      setNewGroupName,
+      newGroupIcon,
+      setNewGroupIcon,
+      newGroupColor,
+      setNewGroupColor,
+      isCreatingGroup,
+      handleSidebarGroupUpdate,
+      handleInlineCreateGroup,
+      handleDeleteGroup,
+      handleToggleHideFromAllBookmarks,
+      startEditingGroup,
+      cancelEditingGroup,
+      cancelInlineCreateGroup,
+    },
     handleGroupCreated,
     handleUpdateGroup,
     handleSidebarGroupUpdate,

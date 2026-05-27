@@ -34,6 +34,7 @@ interface SortableBookmarkProps {
   createdAt: string
   groupId: string
   onDelete?: (id: string) => void
+  onRefresh?: (id: string) => void
   activeGroupId?: string
   isSelected?: boolean
   onEdit?: (id: string) => void
@@ -60,6 +61,7 @@ export const SortableBookmark = memo(function SortableBookmark({
   createdAt,
   groupId,
   onDelete,
+  onRefresh,
   activeGroupId,
   isSelected,
   onEdit,
@@ -141,11 +143,18 @@ export const SortableBookmark = memo(function SortableBookmark({
     onEdit?.(id)
   }
 
+  const handleRefresh = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    onRefresh?.(id)
+  }
+
   const handleBulkSelect = () => {
     if (selectionMode) return
     onEnterSelectionMode?.()
     onToggleSelection?.(id)
   }
+
+  const needsRefresh = status === "pending" && !isEnriching
 
   // Normal Bookmark View
   return (
@@ -156,7 +165,7 @@ export const SortableBookmark = memo(function SortableBookmark({
             ref={setNodeRef}
             className={`group relative flex items-center justify-between rounded-xl px-3 py-2 ${
               status === "pending"
-                ? "opacity-60"
+                ? "hover:bg-muted/50 cursor-default"
                 : selectionMode
                   ? "hover:bg-muted/50 cursor-pointer"
                   : dragDisabled
@@ -169,8 +178,6 @@ export const SortableBookmark = memo(function SortableBookmark({
             {...attributes}
             {...(selectionMode ? {} : listeners)}
             data-slot="bookmark-card"
-            role="button"
-            tabIndex={status === "pending" ? -1 : 0}
             aria-roledescription="Draggable bookmark"
           >
             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -233,7 +240,8 @@ export const SortableBookmark = memo(function SortableBookmark({
                     url={favicon || ""}
                     domain={domain}
                     title={title}
-                    isEnriching={status === "pending" && isEnriching}
+                    isEnriching={isEnriching}
+                    needsRefresh={needsRefresh}
                     className="size-8"
                   />
                 </a>
@@ -271,6 +279,10 @@ export const SortableBookmark = memo(function SortableBookmark({
                     <span className="block truncate text-xs font-medium text-muted-foreground">
                       {isEnriching ? "Fetching details..." : "Pending"}
                     </span>
+                  ) : isEnriching ? (
+                    <span className="block truncate text-xs font-medium text-muted-foreground">
+                      Refreshing details...
+                    </span>
                   ) : (
                     <a
                       className="block truncate text-xs font-medium cursor-pointer text-muted-foreground group-hover:text-muted-foreground"
@@ -299,8 +311,12 @@ export const SortableBookmark = memo(function SortableBookmark({
             <div className="relative flex shrink-0 items-center min-w-28 md:min-w-48 justify-end">
               {/* Desktop Date: Fades out on hover if not mobile */}
               {status === "pending" ? (
-                <span className="text-xs font-medium text-muted-foreground tabular-nums">
-                  {isEnriching ? "Enriching..." : "Pending"}
+                <span className="text-xs font-medium text-muted-foreground tabular-nums transition-opacity duration-200 group-hover:opacity-0">
+                  {isEnriching ? "Enriching..." : "Refresh needed"}
+                </span>
+              ) : isEnriching ? (
+                <span className="text-xs font-medium text-muted-foreground tabular-nums transition-opacity duration-200 group-hover:opacity-0">
+                  Refreshing...
                 </span>
               ) : (
                 <span className="text-xs font-medium text-muted-foreground transition-opacity duration-200 tabular-nums md:block group-hover:opacity-0 max-w-20 truncate text-right">
@@ -320,10 +336,12 @@ export const SortableBookmark = memo(function SortableBookmark({
               )}
 
               {/* Desktop Action Buttons: Visible only on hover and on desktop */}
-              {status !== "pending" && !selectionMode ? (
+              {!selectionMode ? (
                 <BookmarkActions
                   isCopied={isCopied}
+                  isRefreshing={isEnriching}
                   onEdit={handleEdit}
+                  onRefresh={handleRefresh}
                   onCopyLink={handleCopyLink}
                   onOpen={openInNewTab}
                   onDelete={handleDeleteRequest}
@@ -331,10 +349,12 @@ export const SortableBookmark = memo(function SortableBookmark({
               ) : null}
 
               {/* Mobile Action Menu */}
-              {status !== "pending" ? (
+              {!selectionMode ? (
                 <MobileActionMenu
                   isCopied={isCopied}
+                  isRefreshing={isEnriching}
                   onEdit={handleEdit}
+                  onRefresh={handleRefresh}
                   onCopyLink={handleCopyLink}
                   onOpen={openInNewTab}
                   onDelete={handleDeleteRequest}
@@ -351,9 +371,11 @@ export const SortableBookmark = memo(function SortableBookmark({
           onPreview={() => onPreview?.(id)}
           onCopyLink={handleCopyLink}
           onEdit={handleEdit}
+          onRefresh={handleRefresh}
           onDelete={handleDeleteRequest}
           onBulkSelect={handleBulkSelect}
           showBulkSelect={!selectionMode}
+          isRefreshing={isEnriching}
         />
       </ContextMenu>
 

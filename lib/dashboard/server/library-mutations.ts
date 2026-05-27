@@ -45,6 +45,120 @@ async function runAuthenticatedDashboardOperation<T>(
 
 export type TodoPriority = "high" | "medium" | "low"
 
+type BookmarkEnrichmentResult =
+  | {
+      status: "ready"
+      title?: string | null
+      description?: string | null
+      favicon_url?: string | null
+      og_image_url?: string | null
+      image_url?: string | null
+      last_fetched_at?: string | null
+      error_reason?: string | null
+    }
+  | {
+      status: "failed"
+      error_reason?: string | null
+      last_fetched_at?: string | null
+    }
+
+async function runBookmarkEnrichment({
+  supabase,
+  userId,
+  id,
+  url,
+}: DashboardMutationContext & {
+  id: string
+  url: string
+}): Promise<BookmarkEnrichmentResult> {
+  try {
+    const metadata = await fetchMetadata(url)
+
+    const { data: existingBookmark, error: bookmarkError } = await supabase
+      .from("bookmarks")
+      .select("id, title, url, normalized_url")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single()
+
+    if (bookmarkError || !existingBookmark) {
+      throw new Error("Failed to load bookmark for enrichment")
+    }
+
+    const nextTitle = metadata.title?.trim()
+    const nextDescription = metadata.description?.trim()
+    const nextFavicon = metadata.favicon?.trim()
+    const nextOgImage = metadata.ogImage?.trim()
+    const fetchedAt = new Date().toISOString()
+
+    const fallbackTitleForMetadataDomain = (domain: string) => {
+      const key = domain.toLowerCase()
+      if (key === "x.com" || key === "twitter.com") return "X"
+      if (key === "tiktok.com") return "TikTok"
+      const parts = key.split(".").filter(Boolean)
+      const base = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || key
+      return base ? base.charAt(0).toUpperCase() + base.slice(1) : null
+    }
+
+    const currentTitle = (existingBookmark.title ?? "").trim()
+    const currentUrl = (existingBookmark.url ?? "").trim()
+    const currentNormalized = (existingBookmark.normalized_url ?? "").trim()
+    const isDefaultTitle =
+      !currentTitle || currentTitle === currentUrl || currentTitle === currentNormalized
+
+    const computedFallbackTitle =
+      !nextTitle && isDefaultTitle ? fallbackTitleForMetadataDomain(metadata.domain) : null
+
+    const titleToWrite = nextTitle || computedFallbackTitle || null
+
+    await supabase
+      .from("bookmarks")
+      .update({
+        ...(titleToWrite ? { title: titleToWrite } : {}),
+        ...(nextDescription ? { description: nextDescription } : {}),
+        ...(nextFavicon ? { favicon_url: nextFavicon } : {}),
+        ...(nextOgImage ? { og_image_url: nextOgImage, image_url: nextOgImage } : {}),
+        status: "ready",
+        is_enriching: false,
+        error_reason: null,
+        last_fetched_at: fetchedAt,
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+
+    return {
+      status: "ready",
+      title: titleToWrite || undefined,
+      description: nextDescription || undefined,
+      favicon_url: nextFavicon || undefined,
+      og_image_url: nextOgImage || undefined,
+      image_url: nextOgImage || undefined,
+      last_fetched_at: fetchedAt,
+      error_reason: null,
+    }
+  } catch (error) {
+    console.error("Enrichment failed for", url, error)
+    const attemptedAt = new Date().toISOString()
+
+    await supabase
+      .from("bookmarks")
+      .update({
+        status: "failed",
+        is_enriching: false,
+        error_reason: error instanceof Error ? error.message : "Unknown error",
+        last_fetched_at: attemptedAt,
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+
+    return {
+      status: "failed",
+      error_reason: error instanceof Error ? error.message : "Unknown error",
+      last_fetched_at: attemptedAt,
+    }
+  }
+}
+
 const normalizePriority = (value: string): TodoPriority => {
   const normalized = value.trim().toLowerCase()
   if (normalized === "high" || normalized === "h") return "high"
@@ -571,98 +685,32 @@ export const bookmarkMutations = {
         throw new Error("Failed to add bookmark")
       }
 
-      return data.id
+      return data
     })
   },
 
   async enrichCreated(id: string, url: string) {
-    try {
-      const metadata = await fetchMetadata(url)
+    return runAuthenticatedDashboardOperation(async ({ supabase, userId }) =>
+      runBookmarkEnrichment({ supabase, userId, id, url }),
+    )
+  },
 
-      return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-        const { data: existingBookmark, error: bookmarkError } = await supabase
-          .from("bookmarks")
-          .select("id, title, url, normalized_url")
-          .eq("id", id)
-          .eq("user_id", userId)
-          .single()
+  async refresh(id: string) {
+    return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
+      const { data: bookmark, error } = await supabase
+        .from("bookmarks")
+        .select("id, url")
+        .eq("id", id)
+        .eq("user_id", userId)
+        .single()
 
-        if (bookmarkError || !existingBookmark) {
-          throw new Error("Failed to load bookmark for enrichment")
-        }
+      if (error || !bookmark?.url) {
+        console.error("Error loading bookmark for refresh:", error)
+        throw new Error("Failed to load bookmark for refresh")
+      }
 
-        const nextTitle = metadata.title?.trim()
-        const nextDescription = metadata.description?.trim()
-        const nextFavicon = metadata.favicon?.trim()
-        const nextOgImage = metadata.ogImage?.trim()
-        const fetchedAt = new Date().toISOString()
-
-        const fallbackTitleForMetadataDomain = (domain: string) => {
-          const key = domain.toLowerCase()
-          if (key === "x.com" || key === "twitter.com") return "X"
-          if (key === "tiktok.com") return "TikTok"
-          const parts = key.split(".").filter(Boolean)
-          const base = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || key
-          return base ? base.charAt(0).toUpperCase() + base.slice(1) : null
-        }
-
-        const currentTitle = (existingBookmark.title ?? "").trim()
-        const currentUrl = (existingBookmark.url ?? "").trim()
-        const currentNormalized = (existingBookmark.normalized_url ?? "").trim()
-        const isDefaultTitle =
-          !currentTitle || currentTitle === currentUrl || currentTitle === currentNormalized
-
-        const computedFallbackTitle =
-          !nextTitle && isDefaultTitle ? fallbackTitleForMetadataDomain(metadata.domain) : null
-
-        const titleToWrite = nextTitle || computedFallbackTitle || null
-
-        await supabase
-          .from("bookmarks")
-          .update({
-            ...(titleToWrite ? { title: titleToWrite } : {}),
-            ...(nextDescription ? { description: nextDescription } : {}),
-            ...(nextFavicon ? { favicon_url: nextFavicon } : {}),
-            ...(nextOgImage ? { og_image_url: nextOgImage, image_url: nextOgImage } : {}),
-            status: "ready",
-            last_fetched_at: fetchedAt,
-          })
-          .eq("id", id)
-          .eq("user_id", userId)
-
-        return {
-          status: "ready" as const,
-          title: titleToWrite || undefined,
-          description: nextDescription || undefined,
-          favicon_url: nextFavicon || undefined,
-          og_image_url: nextOgImage || undefined,
-          image_url: nextOgImage || undefined,
-          last_fetched_at: fetchedAt,
-          error_reason: null,
-        }
-      })
-    } catch (error) {
-      console.error("Enrichment failed for", url, error)
-      const attemptedAt = new Date().toISOString()
-
-      return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-        await supabase
-          .from("bookmarks")
-          .update({
-            status: "failed",
-            error_reason: error instanceof Error ? error.message : "Unknown error",
-            last_fetched_at: attemptedAt,
-          })
-          .eq("id", id)
-          .eq("user_id", userId)
-
-        return {
-          status: "failed" as const,
-          error_reason: error instanceof Error ? error.message : "Unknown error",
-          last_fetched_at: attemptedAt,
-        }
-      })
-    }
+      return runBookmarkEnrichment({ supabase, userId, id, url: bookmark.url })
+    })
   },
 
   async updateOrder(updates: { id: string; order_index: number }[]) {

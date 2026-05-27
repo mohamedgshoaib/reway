@@ -63,7 +63,8 @@ interface GroupMenuProps {
   isCreating: boolean
   onInlineCreate: (onError?: () => void) => void
   onInlineCreateCancel: () => void
-  setEditingGroupId: (value: string | null) => void
+  onStartEditingGroup: (group: GroupRowType) => void
+  onCancelEditingGroup: () => void
 }
 
 export function GroupMenu({
@@ -93,7 +94,8 @@ export function GroupMenu({
   isCreating,
   onInlineCreate,
   onInlineCreateCancel,
-  setEditingGroupId,
+  onStartEditingGroup,
+  onCancelEditingGroup,
 }: GroupMenuProps) {
   void groupCounts
   const [menuOpen, setMenuOpen] = useState(false)
@@ -292,7 +294,7 @@ export function GroupMenu({
                       setEditGroupColor={setEditGroupColor}
                       onUpdateGroup={onUpdateGroup}
                       isUpdating={isUpdating}
-                      setEditingGroupId={setEditingGroupId}
+                      onCancelEditing={onCancelEditingGroup}
                     />
                   )
                 }
@@ -319,10 +321,7 @@ export function GroupMenu({
                       toggleSelected(group.id)
                     }}
                     onEditGroup={() => {
-                      setEditingGroupId(group.id)
-                      setEditGroupName(group.name)
-                      setEditGroupIcon(group.icon || "folder")
-                      setEditGroupColor(group.color || "#6366f1")
+                      onStartEditingGroup(group)
                     }}
                     onDeleteGroup={() => {
                       openDeleteDialog(group)

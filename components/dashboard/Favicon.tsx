@@ -1,6 +1,6 @@
 "use client"
 
-import { Bookmark01Icon } from "@hugeicons/core-free-icons"
+import { Bookmark01Icon, Refresh01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -10,6 +10,7 @@ interface FaviconProps {
   domain: string
   title: string
   isEnriching?: boolean
+  needsRefresh?: boolean
   className?: string
 }
 
@@ -36,7 +37,7 @@ const isValidImageUrl = (src: string | null | undefined): boolean => {
   return true
 }
 
-export function Favicon({ url, domain, title, isEnriching, className }: FaviconProps) {
+export function Favicon({ url, domain, title, isEnriching, needsRefresh, className }: FaviconProps) {
   const hasValidUrl = isValidImageUrl(url)
   const originKnownInvalid = domain ? originStatusCache[domain] === "invalid" : false
   const initialFallbackLevel: "primary" | "origin" | "service" | "letter" = hasValidUrl
@@ -52,6 +53,7 @@ export function Favicon({ url, domain, title, isEnriching, className }: FaviconP
       domain={domain}
       title={title}
       isEnriching={isEnriching}
+      needsRefresh={needsRefresh}
       className={className}
       initialFallbackLevel={initialFallbackLevel}
     />
@@ -63,6 +65,7 @@ function FaviconInner({
   domain,
   title,
   isEnriching,
+  needsRefresh,
   className,
   initialFallbackLevel,
 }: FaviconProps & {
@@ -140,6 +143,8 @@ function FaviconInner({
         "flex size-8 shrink-0 items-center justify-center rounded-lg border transition-transform overflow-hidden",
         isEnriching
           ? "animate-pulse bg-muted/30 border-muted/50"
+          : needsRefresh
+            ? "relative bg-muted/20 border-dashed border-muted-foreground/30 text-muted-foreground"
           : fallbackLevel === "letter"
             ? `${initials.color}`
             : "bg-background border-border hover:bg-muted/30",
@@ -157,14 +162,26 @@ function FaviconInner({
           alt=""
           width={24}
           height={24}
-          className="size-6 rounded-md object-contain"
+          className={cn("size-6 rounded-md object-contain", needsRefresh ? "opacity-45" : "")}
           onError={handleImageError}
           onLoad={handleImageLoad}
           loading="lazy"
         />
       ) : (
-        <span className="text-sm font-bold text-foreground">{initials.char}</span>
+        <span
+          className={cn(
+            "text-sm font-bold text-foreground",
+            needsRefresh ? "text-muted-foreground/60" : "",
+          )}
+        >
+          {initials.char}
+        </span>
       )}
+      {needsRefresh ? (
+        <span className="absolute right-0 top-0 flex size-3.5 items-center justify-center rounded-full bg-background ring-1 ring-border">
+          <HugeiconsIcon icon={Refresh01Icon} size={10} className="text-muted-foreground" />
+        </span>
+      ) : null}
     </div>
   )
 }

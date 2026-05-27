@@ -152,14 +152,13 @@ export async function createBookmarkRecord(
       group_id: persistedGroupId,
       user_id: userId,
       status: input.status,
+      is_enriching: false,
       visit_count: 0,
       last_visited_at: null,
       last_fetched_at: input.last_fetched_at ?? null,
       order_index: nextOrderIndex,
     })
-    .select(
-      "id, url, normalized_url, title, description, group_id, created_at, order_index, status, favicon_url, og_image_url, image_url, visit_count, last_visited_at",
-    )
+    .select("*")
     .single()
 
   if (error) {

@@ -5,6 +5,7 @@ import {
   Copy01Icon,
   Delete02Icon,
   PencilEdit01Icon,
+  Refresh01Icon,
   Tick01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons"
@@ -22,9 +23,11 @@ interface BookmarkContextMenuProps {
   onPreview: () => void
   onCopyLink: MouseEventHandler<HTMLDivElement>
   onEdit: MouseEventHandler<HTMLDivElement>
+  onRefresh: MouseEventHandler<HTMLDivElement>
   onDelete: MouseEventHandler<HTMLDivElement>
   onBulkSelect?: () => void
   showBulkSelect?: boolean
+  isRefreshing?: boolean
 }
 
 export function BookmarkContextMenu({
@@ -32,9 +35,11 @@ export function BookmarkContextMenu({
   onPreview,
   onCopyLink,
   onEdit,
+  onRefresh,
   onDelete,
   onBulkSelect,
   showBulkSelect = false,
+  isRefreshing = false,
 }: BookmarkContextMenuProps) {
   const showShortcuts = useShowShortcuts()
 
@@ -84,6 +89,18 @@ export function BookmarkContextMenu({
         <HugeiconsIcon icon={PencilEdit01Icon} size={16} className="text-muted-foreground" />
         <span>Edit Bookmark</span>
         {showShortcuts ? <ContextMenuShortcut>E</ContextMenuShortcut> : null}
+      </ContextMenuItem>
+      <ContextMenuItem
+        className="rounded-xl flex items-center gap-2.5 py-2 cursor-pointer"
+        onClick={onRefresh}
+        disabled={isRefreshing}
+      >
+        <HugeiconsIcon
+          icon={Refresh01Icon}
+          size={16}
+          className={isRefreshing ? "text-muted-foreground animate-spin" : "text-muted-foreground"}
+        />
+        <span>{isRefreshing ? "Refreshing..." : "Refresh Metadata"}</span>
       </ContextMenuItem>
       <ContextMenuItem
         variant="destructive"

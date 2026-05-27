@@ -27,6 +27,7 @@ interface FolderBoardProps {
   activeGroupId: string
   onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
   onDeleteBookmark: (id: string) => void
+  onRefreshBookmark: (id: string) => Promise<void>
   onEditBookmark: (
     id: string,
     data: {
@@ -54,6 +55,7 @@ export const FolderBoard = memo(function FolderBoard({
   activeGroupId,
   onReorder,
   onDeleteBookmark,
+  onRefreshBookmark,
   onEditBookmark,
   selectionMode = false,
   selectedIds,
@@ -287,7 +289,9 @@ export const FolderBoard = memo(function FolderBoard({
                                   })}
                                   url={bookmark.url}
                                   domain={getDomain(bookmark.url)}
+                                  status={bookmark.status ?? "ready"}
                                   favicon={bookmark.favicon_url || ""}
+                                  isEnriching={Boolean(bookmark.is_enriching)}
                                   isSelected={isSelectedFolder && selectedBookmarkIndex === index}
                                   selectionMode={selectionMode}
                                   isSelectionChecked={stableSelectedIds.has(bookmark.id)}
@@ -295,6 +299,7 @@ export const FolderBoard = memo(function FolderBoard({
                                   onToggleSelection={onToggleSelection}
                                   onEnterSelectionMode={onEnterSelectionMode}
                                   onDelete={onDeleteBookmark}
+                                  onRefresh={(id: string) => void onRefreshBookmark(id)}
                                   onEdit={(id: string) => {
                                     const target = bookmarks.find((b) => b.id === id)
                                     if (target) {

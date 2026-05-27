@@ -77,18 +77,6 @@ export function useDashboardState({
 
   const nonFolderViewMode = viewMode === "folders" ? "list" : viewMode
 
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
-  const [editGroupName, setEditGroupName] = useState("")
-  const [editGroupIcon, setEditGroupIcon] = useState("folder")
-  const [editGroupColor, setEditGroupColor] = useState<string | null>(null)
-  const [isUpdatingGroup, setIsUpdatingGroup] = useState(false)
-
-  const [isInlineCreating, setIsInlineCreating] = useState(false)
-  const [newGroupName, setNewGroupName] = useState("")
-  const [newGroupIcon, setNewGroupIcon] = useState("folder")
-  const [newGroupColor, setNewGroupColor] = useState<string | null>("#6366f1")
-  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
-
   const lastDeletedRef = useRef<{
     bookmark: BookmarkRow
     index: number
@@ -143,7 +131,8 @@ export function useDashboardState({
     if (!url) return false
     if (!/^https?:\/\//i.test(url)) return false
     try {
-      new URL(url)
+      const parsedUrl = new URL(url)
+      void parsedUrl
       return true
     } catch {
       return false
@@ -189,26 +178,6 @@ export function useDashboardState({
     setPaletteTheme,
     folderHeaderTint,
     setFolderHeaderTint,
-    editingGroupId,
-    setEditingGroupId,
-    editGroupName,
-    setEditGroupName,
-    editGroupIcon,
-    setEditGroupIcon,
-    editGroupColor,
-    setEditGroupColor,
-    isUpdatingGroup,
-    setIsUpdatingGroup,
-    isInlineCreating,
-    setIsInlineCreating,
-    newGroupName,
-    setNewGroupName,
-    newGroupIcon,
-    setNewGroupIcon,
-    newGroupColor,
-    setNewGroupColor,
-    isCreatingGroup,
-    setIsCreatingGroup,
     lastDeletedRef,
     lastDeletedGroupRef,
     lastDeletedGroupBookmarksRef,

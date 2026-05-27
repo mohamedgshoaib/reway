@@ -5,6 +5,7 @@ import {
   Copy01Icon,
   Delete02Icon,
   PencilEdit01Icon,
+  Refresh01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -13,7 +14,9 @@ import { Button } from "@/components/ui/button"
 
 interface BookmarkActionsProps {
   isCopied: boolean
+  isRefreshing?: boolean
   onEdit: MouseEventHandler<HTMLButtonElement>
+  onRefresh: MouseEventHandler<HTMLButtonElement>
   onCopyLink: MouseEventHandler<HTMLButtonElement>
   onOpen: MouseEventHandler<HTMLButtonElement>
   onDelete: MouseEventHandler<HTMLButtonElement>
@@ -21,7 +24,9 @@ interface BookmarkActionsProps {
 
 export function BookmarkActions({
   isCopied,
+  isRefreshing = false,
   onEdit,
+  onRefresh,
   onCopyLink,
   onOpen,
   onDelete,
@@ -43,6 +48,21 @@ export function BookmarkActions({
         aria-label="Edit bookmark"
       >
         <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-8 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+        onClick={onRefresh}
+        aria-label={isRefreshing ? "Refreshing metadata" : "Refresh metadata"}
+        disabled={isRefreshing}
+      >
+        <HugeiconsIcon
+          icon={Refresh01Icon}
+          size={16}
+          className={isRefreshing ? "animate-spin" : ""}
+        />
       </Button>
 
       <Button

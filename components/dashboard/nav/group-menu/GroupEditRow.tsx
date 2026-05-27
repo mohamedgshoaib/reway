@@ -22,7 +22,7 @@ export function GroupEditRow({
   setEditGroupColor,
   onUpdateGroup,
   isUpdating,
-  setEditingGroupId,
+  onCancelEditing,
 }: {
   group: GroupRow
   iconsMap: Record<string, IconSvgElement> | null
@@ -35,7 +35,7 @@ export function GroupEditRow({
   setEditGroupColor: (value: string | null) => void
   onUpdateGroup: (id: string, onError?: () => void) => void
   isUpdating: boolean
-  setEditingGroupId: (value: string | null) => void
+  onCancelEditing: () => void
 }) {
   return (
     <div
@@ -77,7 +77,7 @@ export function GroupEditRow({
             if (e.key === "Enter") {
               onUpdateGroup(group.id)
             } else if (e.key === "Escape") {
-              setEditingGroupId(null)
+              onCancelEditing()
             }
           }}
         />
@@ -89,7 +89,7 @@ export function GroupEditRow({
           className="h-7 px-3 text-xs rounded-md font-bold"
           onClick={(e) => {
             e.stopPropagation()
-            setEditingGroupId(null)
+            onCancelEditing()
           }}
         >
           Cancel

@@ -1,6 +1,6 @@
 "use client"
 
-import { startTransition, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { useIsMac } from "@/hooks/useIsMac"
 import { BookmarkRow } from "@/lib/supabase/queries"
 import { CommandBarInput } from "./command-bar/CommandBarInput"
@@ -53,14 +53,10 @@ export function CommandBar({
     if (nextMode === mode) return
 
     if (nextMode === "search") {
-      startTransition(() => {
-        onSearchChange?.(inputValue)
-      })
+      onSearchChange?.(inputValue)
     } else if (nextMode === "add") {
-      setInputValue(searchQuery)
-      startTransition(() => {
-        onSearchChange?.("")
-      })
+      setInputValue("")
+      onSearchChange?.("")
     }
 
     onModeChange?.(nextMode)

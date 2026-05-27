@@ -19,6 +19,7 @@ import {
   NO_GROUP_NAME,
 } from "@/lib/system-groups"
 import type { IconPickerPopoverProps } from "../IconPickerPopover"
+import type { DashboardGroupControlsAdapter, DashboardLibraryAdapter } from "./workspace-shell-types"
 import { AllBookmarksRow } from "./sidebar/AllBookmarksRow"
 import { BulkDeleteGroupsDialog, DeleteGroupDialog } from "./sidebar/DeleteGroupDialogs"
 import { GroupCreateCard } from "./sidebar/GroupCreateCard"
@@ -39,67 +40,18 @@ const IconPickerPopover = dynamic<IconPickerPopoverProps>(
 )
 
 interface DashboardSidebarProps {
-  groups: GroupRow[]
-  activeGroupId: string
-  setActiveGroupId: (id: string) => void
-  onReorderGroups: (newOrder: GroupRow[]) => void
-  handleOpenGroup: (groupId: string) => void
-  editingGroupId: string | null
-  setEditingGroupId: (value: string | null) => void
-  editGroupName: string
-  setEditGroupName: (value: string) => void
-  editGroupIcon: string
-  setEditGroupIcon: (value: string) => void
-  editGroupColor: string | null
-  setEditGroupColor: (value: string | null) => void
-  isUpdatingGroup: boolean
-  handleSidebarGroupUpdate: (groupId: string, onError?: () => void) => void
-  onDeleteGroup: (groupId: string) => void
-  isInlineCreating: boolean
-  setIsInlineCreating: (value: boolean) => void
-  newGroupName: string
-  setNewGroupName: (value: string) => void
-  newGroupIcon: string
-  setNewGroupIcon: (value: string) => void
-  newGroupColor: string | null
-  setNewGroupColor: (value: string | null) => void
-  isCreatingGroup: boolean
-  handleInlineCreateGroup: (onError?: () => void) => void
-  onToggleHideFromAllBookmarks: (id: string, hide: boolean) => void
-  layoutDensity?: "compact" | "extended"
+  library: Pick<DashboardLibraryAdapter, "groups" | "bookmarks" | "activeGroupId" | "setActiveGroupId" | "layoutDensity"> & {
+    handleOpenGroup: (groupId: string) => void
+    reorderGroups: (newOrder: GroupRow[]) => Promise<void>
+  }
+  groupControls: DashboardGroupControlsAdapter
 }
 
 export function DashboardSidebar({
-  groups,
-  activeGroupId,
-  setActiveGroupId,
-  onReorderGroups,
-  handleOpenGroup,
-  editingGroupId,
-  setEditingGroupId,
-  editGroupName,
-  setEditGroupName,
-  editGroupIcon,
-  setEditGroupIcon,
-  editGroupColor,
-  setEditGroupColor,
-  isUpdatingGroup,
-  handleSidebarGroupUpdate,
-  onDeleteGroup,
-  isInlineCreating,
-  setIsInlineCreating,
-  newGroupName,
-  setNewGroupName,
-  newGroupIcon,
-  setNewGroupIcon,
-  newGroupColor,
-  setNewGroupColor,
-  isCreatingGroup,
-  handleInlineCreateGroup,
-  onToggleHideFromAllBookmarks,
-  layoutDensity = "compact",
+  library,
+  groupControls,
 }: DashboardSidebarProps) {
-  const reorderableGroups = groups.filter((g) => g.id !== NO_GROUP_ID)
+  const reorderableGroups = library.groups.filter((g) => g.id !== NO_GROUP_ID)
 
   const [viewportWidth, setViewportWidth] = useState<number>(0)
   const [isPinnedOpen, setIsPinnedOpen] = useState(false)
@@ -116,12 +68,12 @@ export function DashboardSidebar({
   }, [])
 
   const canPin = useMemo(() => {
-    const mainMaxWidth = layoutDensity === "extended" ? 1600 : 768
+    const mainMaxWidth = library.layoutDensity === "extended" ? 1600 : 768
     const sidebarWidth = 240
     const gutters = 24 + 24
     const required = mainMaxWidth + sidebarWidth * 2 + gutters
     return viewportWidth >= required
-  }, [layoutDensity, viewportWidth])
+  }, [library.layoutDensity, viewportWidth])
 
   const scheduleClose = () => {
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
@@ -198,7 +150,7 @@ export function DashboardSidebar({
     exitSelectionMode,
     toggleSelected,
     requestBulkDelete,
-  } = useGroupSelection({ groups })
+  } = useGroupSelection({ groups: library.groups })
 
   const openDeleteDialog = (group: GroupRow) => {
     setDeleteTarget(group)
@@ -206,11 +158,11 @@ export function DashboardSidebar({
   }
 
   const { sensors, collisionDetection, activeGroup, handleGroupDragStart, handleGroupDragEnd } =
-    useGroupReorderDnd({ groups: reorderableGroups, onReorderGroups })
+    useGroupReorderDnd({ groups: reorderableGroups, onReorderGroups: library.reorderGroups })
 
   const handleDeleteConfirm = () => {
     if (deleteTarget) {
-      onDeleteGroup(deleteTarget.id)
+      void groupControls.handleDeleteGroup(deleteTarget.id)
     }
     setDeleteDialogOpen(false)
     setDeleteTarget(null)
@@ -218,17 +170,11 @@ export function DashboardSidebar({
 
   const handleConfirmBulkDelete = () => {
     if (selectedGroups.length === 0) return
-    selectedGroups.forEach((g) => onDeleteGroup(g.id))
+    selectedGroups.forEach((g) => {
+      void groupControls.handleDeleteGroup(g.id)
+    })
     setBulkDeleteDialogOpen(false)
     exitSelectionMode()
-  }
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (event.key === "Escape") {
-      event.preventDefault()
-      setEditingGroupId(null)
-      exitSelectionMode()
-    }
   }
 
   const sidebarBody = (
@@ -243,10 +189,10 @@ export function DashboardSidebar({
 
       <div className="flex flex-1 min-h-0 flex-col gap-1 cursor-default">
         <AllBookmarksRow
-          active={activeGroupId === ALL_BOOKMARKS_GROUP_ID}
+          active={library.activeGroupId === ALL_BOOKMARKS_GROUP_ID}
           selectionMode={selectionMode}
-          onSelectAll={() => setActiveGroupId(ALL_BOOKMARKS_GROUP_ID)}
-          onOpenAll={() => handleOpenGroup(ALL_BOOKMARKS_GROUP_ID)}
+          onSelectAll={() => library.setActiveGroupId(ALL_BOOKMARKS_GROUP_ID)}
+          onOpenAll={() => library.handleOpenGroup(ALL_BOOKMARKS_GROUP_ID)}
           onToggleSelectionMode={() => {
             if (selectionMode) exitSelectionMode()
             else enterSelectionMode()
@@ -255,10 +201,10 @@ export function DashboardSidebar({
         />
 
         <AllBookmarksRow
-          active={activeGroupId === MOST_VISITED_GROUP_ID}
+          active={library.activeGroupId === MOST_VISITED_GROUP_ID}
           selectionMode={selectionMode}
-          onSelectAll={() => setActiveGroupId(MOST_VISITED_GROUP_ID)}
-          onOpenAll={() => handleOpenGroup(MOST_VISITED_GROUP_ID)}
+          onSelectAll={() => library.setActiveGroupId(MOST_VISITED_GROUP_ID)}
+          onOpenAll={() => library.handleOpenGroup(MOST_VISITED_GROUP_ID)}
           onToggleSelectionMode={() => {
             if (selectionMode) exitSelectionMode()
             else enterSelectionMode()
@@ -283,11 +229,11 @@ export function DashboardSidebar({
             sensors={sensors}
             collisionDetection={collisionDetection}
             onDragStart={(event) => {
-              if (selectionMode || editingGroupId || isInlineCreating) return
+              if (selectionMode || groupControls.editingGroupId || groupControls.isInlineCreating) return
               handleGroupDragStart(event)
             }}
             onDragEnd={(event) => {
-              if (selectionMode || editingGroupId || isInlineCreating) return
+              if (selectionMode || groupControls.editingGroupId || groupControls.isInlineCreating) return
               handleGroupDragEnd(event)
             }}
             modifiers={[restrictToVerticalAxis]}
@@ -302,25 +248,25 @@ export function DashboardSidebar({
               strategy={verticalListSortingStrategy}
             >
               <div className="flex flex-col gap-1">
-                {groups.map((group) => {
+                {library.groups.map((group) => {
                   if (group.id === NO_GROUP_ID) {
-                    const isActive = activeGroupId === NO_GROUP_ID
+                    const isActive = library.activeGroupId === NO_GROUP_ID
                     const NoGroupIcon =
                       ALL_ICONS_MAP[group.icon || "folder"] ?? ALL_ICONS_MAP["folder"]
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={group.id}
-                        role="button"
-                        tabIndex={0}
+                        aria-label={NO_GROUP_NAME}
                         onClick={() => {
                           if (selectionMode) return
-                          setActiveGroupId(NO_GROUP_ID)
+                          library.setActiveGroupId(NO_GROUP_ID)
                         }}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault()
                             if (selectionMode) return
-                            setActiveGroupId(NO_GROUP_ID)
+                            library.setActiveGroupId(NO_GROUP_ID)
                           }
                         }}
                         className={`group flex items-center gap-3 px-2 py-1.5 transition-all duration-200 cursor-pointer active:scale-[0.97] outline-none ${
@@ -349,13 +295,16 @@ export function DashboardSidebar({
                             <span className="truncate max-w-32">{NO_GROUP_NAME}</span>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     )
                   }
 
-                  const isEditing = editingGroupId === group.id
+                  const isEditing = groupControls.editingGroupId === group.id
                   const dndDisabled =
-                    selectionMode || isInlineCreating || Boolean(editingGroupId) || isEditing
+                    selectionMode ||
+                    groupControls.isInlineCreating ||
+                    Boolean(groupControls.editingGroupId) ||
+                    isEditing
 
                   if (isEditing) {
                     return (
@@ -363,15 +312,15 @@ export function DashboardSidebar({
                         key={group.id}
                         group={group}
                         IconPickerPopover={IconPickerPopover}
-                        editGroupName={editGroupName}
-                        setEditGroupName={setEditGroupName}
-                        editGroupIcon={editGroupIcon}
-                        setEditGroupIcon={setEditGroupIcon}
-                        editGroupColor={editGroupColor}
-                        setEditGroupColor={setEditGroupColor}
-                        isUpdatingGroup={isUpdatingGroup}
-                        onCancel={() => setEditingGroupId(null)}
-                        onSave={() => handleSidebarGroupUpdate(group.id)}
+                        editGroupName={groupControls.editGroupName}
+                        setEditGroupName={groupControls.setEditGroupName}
+                        editGroupIcon={groupControls.editGroupIcon}
+                        setEditGroupIcon={groupControls.setEditGroupIcon}
+                        editGroupColor={groupControls.editGroupColor}
+                        setEditGroupColor={groupControls.setEditGroupColor}
+                        isUpdatingGroup={groupControls.isUpdatingGroup}
+                        onCancel={groupControls.cancelEditingGroup}
+                        onSave={() => groupControls.handleSidebarGroupUpdate(group.id)}
                       />
                     )
                   }
@@ -380,22 +329,17 @@ export function DashboardSidebar({
                     <SortableGroupRowItem key={group.id} id={group.id} disabled={dndDisabled}>
                       <GroupRowItem
                         group={group}
-                        active={activeGroupId === group.id}
+                        active={library.activeGroupId === group.id}
                         selectionMode={selectionMode}
                         isSelected={selectedGroupIds.has(group.id)}
                         onToggleSelected={() => toggleSelected(group.id)}
-                        onSelectGroup={() => setActiveGroupId(group.id)}
+                        onSelectGroup={() => library.setActiveGroupId(group.id)}
                         onEnterSelectionMode={enterSelectionMode}
-                        onOpenGroup={() => handleOpenGroup(group.id)}
-                        onEdit={() => {
-                          setEditingGroupId(group.id)
-                          setEditGroupName(group.name)
-                          setEditGroupIcon(group.icon || "folder")
-                          setEditGroupColor(group.color || "#6366f1")
-                        }}
+                        onOpenGroup={() => library.handleOpenGroup(group.id)}
+                        onEdit={() => groupControls.startEditingGroup(group)}
                         onRequestDelete={() => openDeleteDialog(group)}
                         onToggleHideFromAllBookmarks={(hide) =>
-                          onToggleHideFromAllBookmarks(group.id, hide)
+                          groupControls.handleToggleHideFromAllBookmarks(group.id, hide)
                         }
                         onActionMenuOpenChange={handleActionMenuOpenChange}
                       />
@@ -417,17 +361,17 @@ export function DashboardSidebar({
       </div>
 
       <GroupCreateCard
-        isInlineCreating={isInlineCreating}
-        setIsInlineCreating={setIsInlineCreating}
+        isInlineCreating={groupControls.isInlineCreating}
+        setIsInlineCreating={groupControls.setIsInlineCreating}
         IconPickerPopover={IconPickerPopover}
-        newGroupName={newGroupName}
-        setNewGroupName={setNewGroupName}
-        newGroupIcon={newGroupIcon}
-        setNewGroupIcon={setNewGroupIcon}
-        newGroupColor={newGroupColor}
-        setNewGroupColor={setNewGroupColor}
-        isCreatingGroup={isCreatingGroup}
-        onCreate={() => handleInlineCreateGroup()}
+        newGroupName={groupControls.newGroupName}
+        setNewGroupName={groupControls.setNewGroupName}
+        newGroupIcon={groupControls.newGroupIcon}
+        setNewGroupIcon={groupControls.setNewGroupIcon}
+        newGroupColor={groupControls.newGroupColor}
+        setNewGroupColor={groupControls.setNewGroupColor}
+        isCreatingGroup={groupControls.isCreatingGroup}
+        onCreate={() => groupControls.handleInlineCreateGroup()}
       />
     </>
   )
@@ -453,7 +397,7 @@ export function DashboardSidebar({
     </>
   )
 
-  if (layoutDensity !== "extended") {
+  if (library.layoutDensity !== "extended") {
     const canReveal = viewportWidth >= 900
 
     return (
@@ -462,8 +406,6 @@ export function DashboardSidebar({
           <aside
             className="fixed left-6 top-43 bottom-6 z-30 w-60 flex flex-col gap-2 text-sm text-muted-foreground"
             data-onboarding="groups-desktop"
-            onKeyDown={handleKeyDown}
-            tabIndex={-1}
           >
             {sidebarBody}
           </aside>
@@ -521,8 +463,6 @@ export function DashboardSidebar({
           canPin ? "" : "min-[1200px]:hidden"
         }`}
         data-onboarding="groups-desktop"
-        onKeyDown={handleKeyDown}
-        tabIndex={-1}
       >
         {sidebarBody}
       </aside>

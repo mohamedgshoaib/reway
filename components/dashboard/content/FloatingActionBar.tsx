@@ -24,6 +24,7 @@ interface FloatingActionBarProps {
   selectedCount: number
   groups: { id: string; name: string }[]
   onOpenSelected: () => void
+  onRefreshSelected: () => Promise<void>
   onBulkDelete: () => void
   onMoveSelectedToGroup: (groupId: string | null) => Promise<void>
   onCancelSelection: () => void
@@ -33,6 +34,7 @@ export function FloatingActionBar({
   selectedCount,
   groups,
   onOpenSelected,
+  onRefreshSelected,
   onBulkDelete,
   onMoveSelectedToGroup,
   onCancelSelection,
@@ -66,6 +68,16 @@ export function FloatingActionBar({
             aria-label="Open selected bookmarks"
           >
             Open
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void onRefreshSelected()
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 hover:bg-muted text-foreground font-medium text-sm transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none cursor-pointer"
+            aria-label="Refresh selected bookmark metadata"
+          >
+            Refresh
           </button>
           <Select
             value={moveValue}

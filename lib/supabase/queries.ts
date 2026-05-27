@@ -20,7 +20,10 @@ export async function getBookmarks() {
     return []
   }
 
-  return data
+  return data.map((bookmark) => ({
+    ...bookmark,
+    is_enriching: false,
+  }))
 }
 
 export async function getNotes() {

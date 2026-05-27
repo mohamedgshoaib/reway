@@ -6,6 +6,7 @@ import {
   Delete02Icon,
   MoreVerticalIcon,
   PencilEdit01Icon,
+  Refresh01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -20,7 +21,9 @@ import {
 
 interface MobileActionMenuProps {
   isCopied: boolean
+  isRefreshing?: boolean
   onEdit: (e?: React.MouseEvent) => void
+  onRefresh: (e?: React.MouseEvent) => void
   onCopyLink: (e?: React.MouseEvent) => void | Promise<void>
   onOpen: (e?: React.MouseEvent) => void
   onDelete: (e?: React.MouseEvent) => void
@@ -30,7 +33,9 @@ interface MobileActionMenuProps {
 
 export function MobileActionMenu({
   isCopied,
+  isRefreshing = false,
   onEdit,
+  onRefresh,
   onCopyLink,
   onOpen,
   onDelete,
@@ -77,6 +82,26 @@ export function MobileActionMenu({
             }}
           >
             <HugeiconsIcon icon={PencilEdit01Icon} size={16} /> Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="rounded-xl flex items-center gap-2 cursor-pointer"
+            disabled={isRefreshing}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRefresh()
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              onRefresh()
+            }}
+          >
+            <HugeiconsIcon
+              icon={Refresh01Icon}
+              size={16}
+              className={isRefreshing ? "animate-spin" : ""}
+            />
+            {isRefreshing ? "Refreshing..." : "Refresh Metadata"}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer"

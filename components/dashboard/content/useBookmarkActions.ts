@@ -9,6 +9,7 @@ import type { EnrichmentResult } from "./dashboard-types"
 
 interface UseBookmarkActionsOptions {
   activeGroupId: string
+  bookmarks: BookmarkRow[]
   initialBookmarks: BookmarkRow[]
   setBookmarks: React.Dispatch<React.SetStateAction<BookmarkRow[]>>
   sortBookmarks: (items: BookmarkRow[]) => BookmarkRow[]
@@ -26,6 +27,7 @@ interface UseBookmarkActionsOptions {
       apply_favicon_to_domain?: boolean
     },
   ) => Promise<void>
+  refreshBookmarkMetadata: (id: string) => Promise<EnrichmentResult>
   lastDeletedRef: React.MutableRefObject<{
     bookmark: BookmarkRow
     index: number
@@ -34,6 +36,7 @@ interface UseBookmarkActionsOptions {
 
 export function useBookmarkActions({
   activeGroupId,
+  bookmarks,
   initialBookmarks,
   setBookmarks,
   sortBookmarks,
@@ -41,6 +44,7 @@ export function useBookmarkActions({
   deleteBookmark,
   restoreBookmark,
   updateBookmark,
+  refreshBookmarkMetadata,
   lastDeletedRef,
 }: UseBookmarkActionsOptions) {
   const getActiveTargetGroupId = useCallback(() => {
@@ -85,10 +89,15 @@ export function useBookmarkActions({
 
   const applyEnrichment = useCallback(
     (id: string, enrichment?: EnrichmentResult) => {
-      if (!enrichment) return
       setBookmarks((prev) =>
         prev.map((item) => {
           if (item.id !== id) return item
+          if (!enrichment) {
+            return {
+              ...item,
+              is_enriching: false,
+            }
+          }
           if (enrichment.status === "failed") {
             return {
               ...item,
@@ -124,6 +133,114 @@ export function useBookmarkActions({
       )
     },
     [setBookmarks],
+  )
+
+  const markBookmarksRefreshing = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setBookmarks((prev) =>
+        prev.map((item) =>
+          idSet.has(item.id)
+            ? {
+                ...item,
+                is_enriching: true,
+                error_reason: null,
+              }
+            : item,
+        ),
+      )
+    },
+    [setBookmarks],
+  )
+
+  const clearBookmarksRefreshing = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setBookmarks((prev) =>
+        prev.map((item) =>
+          idSet.has(item.id)
+            ? {
+                ...item,
+                is_enriching: false,
+              }
+            : item,
+        ),
+      )
+    },
+    [setBookmarks],
+  )
+
+  const handleRefreshBookmarks = useCallback(
+    async (ids: string[]) => {
+      const refreshableIds = Array.from(new Set(ids)).filter((id) => {
+        const bookmark = bookmarks.find((item) => item.id === id) ?? null
+        return Boolean(id && bookmark)
+      })
+
+      const activeIds = refreshableIds.filter((id) => {
+        const bookmark = bookmarks.find((item) => item.id === id)
+        return Boolean(bookmark && !bookmark.is_enriching)
+      })
+
+      if (activeIds.length === 0) {
+        return { requested: 0, succeeded: 0, failed: 0 }
+      }
+
+      markBookmarksRefreshing(activeIds)
+
+      let succeeded = 0
+      let failed = 0
+
+      const results = await Promise.allSettled(
+        activeIds.map(async (id) => {
+          const enrichment = await refreshBookmarkMetadata(id)
+          applyEnrichment(id, enrichment)
+          if (enrichment.status === "ready") {
+            succeeded += 1
+          } else {
+            failed += 1
+          }
+        }),
+      )
+
+      const transportFailures = results.flatMap((result, index) => {
+        if (result.status === "fulfilled") return []
+        return [activeIds[index]]
+      })
+
+      if (transportFailures.length > 0) {
+        failed += transportFailures.length
+        clearBookmarksRefreshing(transportFailures)
+      }
+
+      return {
+        requested: activeIds.length,
+        succeeded,
+        failed,
+      }
+    },
+    [
+      applyEnrichment,
+      bookmarks,
+      clearBookmarksRefreshing,
+      markBookmarksRefreshing,
+      refreshBookmarkMetadata,
+    ],
+  )
+
+  const handleRefreshBookmark = useCallback(
+    async (id: string) => {
+      const bookmark = bookmarks.find((item) => item.id === id)
+      if (!bookmark || bookmark.is_enriching) return
+
+      const result = await handleRefreshBookmarks([id])
+      if (result.failed > 0) {
+        toast.error("Failed to refresh bookmark")
+      }
+    },
+    [bookmarks, handleRefreshBookmarks],
   )
 
   const handleFolderReorder = useCallback(
@@ -324,6 +441,8 @@ export function useBookmarkActions({
     addOptimisticBookmark,
     applyEnrichment,
     replaceBookmarkId,
+    handleRefreshBookmark,
+    handleRefreshBookmarks,
     handleFolderReorder,
     handleDeleteBookmark,
     handleReorder,

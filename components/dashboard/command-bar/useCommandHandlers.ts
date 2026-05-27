@@ -2,11 +2,19 @@
 
 import { useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { addBookmark, enrichCreatedBookmark } from "@/app/dashboard/actions/bookmarks"
+import {
+  addBookmark,
+  enrichCreatedBookmark,
+} from "@/app/dashboard/actions/bookmarks"
 import { useGlobalKeydown } from "@/hooks/useGlobalKeydown"
 import { isTypingTarget } from "@/lib/keyboard"
 import type { BookmarkRow } from "@/lib/supabase/queries"
 import { isAllBookmarksGroupId, isMostVisitedGroupId, isNoGroupId } from "@/lib/system-groups"
+import {
+  buildBookmarkEnrichmentFailure,
+  enrichBookmarkWithTimeout,
+  isBookmarkEnrichmentTimeoutError,
+} from "../content/bookmark-enrichment"
 import type { EnrichmentResult } from "../content/dashboard-types"
 import { extractUrlsFromText, isUrl } from "./helpers"
 
@@ -62,54 +70,63 @@ export function useCommandHandlers({
         const stableId = crypto.randomUUID()
         let createdId: string | null = null
         const targetGroupId = getActiveTargetGroupId()
-        const optimistic = {
+
+        onAddBookmark({
           id: stableId,
           url,
+          normalized_url: url,
+          domain: null,
           title: url,
-          favicon_url: null,
           description: null,
+          favicon_url: null,
+          og_image_url: null,
+          image_url: null,
+          screenshot_url: null,
           group_id: targetGroupId,
           user_id: "",
           created_at: new Date().toISOString(),
           order_index: Number.MIN_SAFE_INTEGER,
           status: "pending",
-          visit_count: 0,
+          is_enriching: true,
+          last_fetched_at: null,
           last_visited_at: null,
-        } as BookmarkRow
-
-        onAddBookmark(optimistic)
+          visit_count: 0,
+          error_reason: null,
+        })
 
         try {
-          const bookmarkId = await addBookmark({
+          const createdBookmark = await addBookmark({
             url,
-            id: stableId,
             group_id: targetGroupId ?? undefined,
           })
-          createdId = bookmarkId ?? null
-          if (bookmarkId) {
-            onReplaceBookmarkId?.(stableId, bookmarkId)
+          createdId = createdBookmark?.id ?? null
+          if (createdBookmark) {
+            onReplaceBookmarkId?.(stableId, createdBookmark.id)
+            onAddBookmark({ ...createdBookmark, is_enriching: true })
           }
-          if (!bookmarkId) {
+          if (!createdBookmark) {
             throw new Error("Failed to create bookmark")
           }
 
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error("Enrichment timeout")), 30000)
+          const enrichment = await enrichBookmarkWithTimeout({
+            bookmarkId: createdBookmark.id,
+            url,
+            timeoutMs: 30000,
+            enrichCreatedBookmark,
           })
-          const enrichmentPromise = enrichCreatedBookmark(bookmarkId, url)
-
-          const enrichment = (await Promise.race([enrichmentPromise, timeoutPromise])) as
-            | EnrichmentResult
-            | undefined
-
-          onApplyEnrichment?.(bookmarkId, enrichment)
+          onApplyEnrichment?.(createdBookmark.id, enrichment)
         } catch (error) {
           console.error("Failed to add bookmark:", error)
+          if (isBookmarkEnrichmentTimeoutError(error)) {
+            if (createdId) {
+              onApplyEnrichment?.(createdId)
+            }
+            return
+          }
           toast.error(`Failed to add ${url}`)
-          onApplyEnrichment?.(createdId ?? stableId, {
-            status: "failed",
-            error_reason: error instanceof Error ? error.message : "Failed to add",
-          })
+          if (createdId) {
+            onApplyEnrichment?.(createdId, buildBookmarkEnrichmentFailure(error))
+          }
         }
       }
 
@@ -119,55 +136,63 @@ export function useCommandHandlers({
         const stableId = crypto.randomUUID()
         let createdId: string | null = null
         const targetGroupId = getActiveTargetGroupId()
-        const optimistic = {
+
+        onAddBookmark({
           id: stableId,
           url: fullUrl,
+          normalized_url: fullUrl,
+          domain: null,
           title: fullUrl,
-          favicon_url: null,
           description: null,
+          favicon_url: null,
+          og_image_url: null,
+          image_url: null,
+          screenshot_url: null,
           group_id: targetGroupId,
           user_id: "",
           created_at: new Date().toISOString(),
           order_index: Number.MIN_SAFE_INTEGER,
           status: "pending",
           is_enriching: true,
-          visit_count: 0,
+          last_fetched_at: null,
           last_visited_at: null,
-        } as BookmarkRow
-
-        onAddBookmark(optimistic)
+          visit_count: 0,
+          error_reason: null,
+        })
 
         try {
-          const bookmarkId = await addBookmark({
+          const createdBookmark = await addBookmark({
             url: fullUrl,
-            id: stableId,
             group_id: targetGroupId ?? undefined,
           })
-          createdId = bookmarkId ?? null
-          if (bookmarkId) {
-            onReplaceBookmarkId?.(stableId, bookmarkId)
+          createdId = createdBookmark?.id ?? null
+          if (createdBookmark) {
+            onReplaceBookmarkId?.(stableId, createdBookmark.id)
+            onAddBookmark({ ...createdBookmark, is_enriching: true })
           }
-          if (!bookmarkId) {
+          if (!createdBookmark) {
             throw new Error("Failed to create bookmark")
           }
 
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error("Enrichment timeout")), 30000)
+          const enrichment = await enrichBookmarkWithTimeout({
+            bookmarkId: createdBookmark.id,
+            url: fullUrl,
+            timeoutMs: 30000,
+            enrichCreatedBookmark,
           })
-          const enrichmentPromise = enrichCreatedBookmark(bookmarkId, fullUrl)
-
-          const enrichment = (await Promise.race([enrichmentPromise, timeoutPromise])) as
-            | EnrichmentResult
-            | undefined
-
-          onApplyEnrichment?.(bookmarkId, enrichment)
+          onApplyEnrichment?.(createdBookmark.id, enrichment)
         } catch (error) {
           console.error("Failed to add bookmark:", error)
+          if (isBookmarkEnrichmentTimeoutError(error)) {
+            if (createdId) {
+              onApplyEnrichment?.(createdId)
+            }
+            return
+          }
           toast.error(`Failed to add ${fullUrl}`)
-          onApplyEnrichment?.(createdId ?? stableId, {
-            status: "failed",
-            error_reason: error instanceof Error ? error.message : "Failed to add",
-          })
+          if (createdId) {
+            onApplyEnrichment?.(createdId, buildBookmarkEnrichmentFailure(error))
+          }
         }
         return
       }
@@ -175,7 +200,12 @@ export function useCommandHandlers({
       const fullUrls = urls.map((u) => (u.startsWith("http") ? u : `https://${u}`))
       await Promise.all(fullUrls.map(executeAdd))
     },
-    [getActiveTargetGroupId, onAddBookmark, onApplyEnrichment, onReplaceBookmarkId],
+    [
+      getActiveTargetGroupId,
+      onAddBookmark,
+      onApplyEnrichment,
+      onReplaceBookmarkId,
+    ],
   )
 
   const handlePaste = useCallback(async (e: ClipboardEvent) => {

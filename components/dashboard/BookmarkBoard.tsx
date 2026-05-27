@@ -56,6 +56,7 @@ interface BookmarkBoardProps {
   activeGroupId: string
   onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
   onDeleteBookmark: (id: string) => void
+  onRefreshBookmark: (id: string) => Promise<void>
   onEditBookmark: (
     id: string,
     data: {
@@ -82,6 +83,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   activeGroupId,
   onReorder,
   onDeleteBookmark,
+  onRefreshBookmark,
   onEditBookmark,
   rowContent,
   viewMode,
@@ -320,6 +322,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                       bookmarkDragBucket !== activeDragBucket
                     }
                     onDelete={onDeleteBookmark}
+                    onRefresh={(id: string) => void onRefreshBookmark(id)}
                     onEdit={(id: string) => {
                       const target = bookmarks.find((bm) => bm.id === id)
                       if (target) {
@@ -344,6 +347,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                 <SortableBookmark
                   key={bookmark.id}
                   onDelete={onDeleteBookmark}
+                  onRefresh={(id: string) => void onRefreshBookmark(id)}
                   onEdit={(id: string) => {
                     const target = bookmarks.find((bm) => bm.id === id)
                     if (target) {

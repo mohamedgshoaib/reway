@@ -7,6 +7,7 @@ import {
   Copy01Icon,
   Delete02Icon,
   PencilEdit01Icon,
+  Refresh01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -35,6 +36,7 @@ interface SortableBookmarkCardProps {
   title: string
   url: string
   domain: string
+  status?: string
   favicon?: string
   isEnriching?: boolean
   createdAt: string
@@ -48,6 +50,7 @@ interface SortableBookmarkCardProps {
   onToggleSelection?: (id: string) => void
   onEnterSelectionMode?: () => void
   onDelete?: (id: string) => void
+  onRefresh?: (id: string) => void
   onEdit?: (id: string) => void
   onPreview?: (id: string) => void
   dragDimmed?: boolean
@@ -59,6 +62,7 @@ export function SortableBookmarkCard({
   title,
   url,
   domain,
+  status = "ready",
   favicon,
   isEnriching = false,
   createdAt,
@@ -72,6 +76,7 @@ export function SortableBookmarkCard({
   onToggleSelection,
   onEnterSelectionMode,
   onDelete,
+  onRefresh,
   onEdit,
   onPreview,
   dragDimmed = false,
@@ -150,10 +155,17 @@ export function SortableBookmarkCard({
     onEdit?.(id)
   }
 
+  const handleRefresh = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    onRefresh?.(id)
+  }
+
   const handlePreview = (e?: React.MouseEvent) => {
     e?.stopPropagation()
     onPreview?.(id)
   }
+
+  const needsRefresh = status === "pending" && !isEnriching
 
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -237,6 +249,7 @@ export function SortableBookmarkCard({
                     domain={domain}
                     title={title}
                     isEnriching={isEnriching}
+                    needsRefresh={needsRefresh}
                     className="size-8"
                   />
                 </a>
@@ -289,11 +302,13 @@ export function SortableBookmarkCard({
             </div>
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="truncate max-w-[70%]">{metaLabel}</span>
+              <span className="truncate max-w-[70%] transition-opacity duration-200 md:group-hover:opacity-0">
+                {needsRefresh ? "Refresh needed" : isEnriching ? "Refreshing..." : metaLabel}
+              </span>
               <div
                 role="presentation"
                 className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                onClickCapture={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
@@ -306,6 +321,20 @@ export function SortableBookmarkCard({
                   aria-label="Edit bookmark"
                 >
                   <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  onClick={handleRefresh}
+                  aria-label={isEnriching ? "Refreshing metadata" : "Refresh metadata"}
+                  disabled={isEnriching}
+                >
+                  <HugeiconsIcon
+                    icon={Refresh01Icon}
+                    size={14}
+                    className={isEnriching ? "animate-spin" : ""}
+                  />
                 </Button>
                 <Button
                   variant="ghost"
@@ -352,9 +381,11 @@ export function SortableBookmarkCard({
           onPreview={handlePreview}
           onCopyLink={handleCopy}
           onEdit={handleEdit}
+          onRefresh={handleRefresh}
           onDelete={handleDeleteRequest}
           onBulkSelect={handleBulkSelect}
           showBulkSelect={!selectionMode}
+          isRefreshing={isEnriching}
         />
       </ContextMenu>
 

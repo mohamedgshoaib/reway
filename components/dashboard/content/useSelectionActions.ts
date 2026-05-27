@@ -34,6 +34,11 @@ interface UseSelectionActionsOptions {
   deleteBookmark: (id: string) => Promise<void>
   restoreBookmark: (bookmark: BookmarkRow) => Promise<void>
   moveBookmarksToGroup: (ids: string[], targetGroupId: string | null) => Promise<void>
+  refreshBookmarks: (ids: string[]) => Promise<{
+    requested: number
+    succeeded: number
+    failed: number
+  }>
   lastBulkDeletedRef: React.MutableRefObject<{ bookmark: BookmarkRow; index: number }[]>
 }
 
@@ -47,6 +52,7 @@ export function useSelectionActions({
   deleteBookmark,
   restoreBookmark,
   moveBookmarksToGroup,
+  refreshBookmarks,
   lastBulkDeletedRef,
 }: UseSelectionActionsOptions) {
   const pendingRequestsRef = useRef(
@@ -212,6 +218,33 @@ export function useSelectionActions({
     setSelectionMode,
   ])
 
+  const handleRefreshSelected = useCallback(async () => {
+    const idsToRefresh = Array.from(selectedIds)
+    if (idsToRefresh.length === 0) return
+
+    const result = await refreshBookmarks(idsToRefresh)
+    if (result.requested === 0) {
+      toast.info("Selected bookmarks are already refreshing")
+      return
+    }
+
+    if (result.failed === 0) {
+      toast.success(
+        `Refreshing ${result.succeeded} bookmark${result.succeeded === 1 ? "" : "s"}`,
+      )
+      return
+    }
+
+    if (result.succeeded === 0) {
+      toast.error("Failed to refresh selected bookmarks")
+      return
+    }
+
+    toast.error(
+      `Refreshed ${result.succeeded} bookmark${result.succeeded === 1 ? "" : "s"}, ${result.failed} failed`,
+    )
+  }, [refreshBookmarks, selectedIds])
+
   const handleMoveSelectedToGroup = useCallback(
     async (targetGroupId: string | null) => {
       const idsToMove = Array.from(selectedIds)
@@ -303,6 +336,7 @@ export function useSelectionActions({
   return {
     handleToggleSelection,
     handleOpenSelected,
+    handleRefreshSelected,
     handleBulkDelete,
     handleMoveSelectedToGroup,
     handleCancelSelection,
