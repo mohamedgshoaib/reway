@@ -3,7 +3,7 @@ import { MAX_NAME_LENGTH } from "./js/config.js"
 import { loadGrabbedLinks, createGroupFromLinks } from "./js/grabber.js"
 import { fetchPageMeta } from "./js/metadata.js"
 import { loadTabSession, saveTabSession } from "./js/sessions.js"
-import { elements, showSection, setStatus, switchTab, setLoading } from "./js/ui.js"
+import { elements, setStatus, switchTab, setLoading } from "./js/ui.js"
 
 const destinationState = {
   save: { mode: "existing" },
@@ -11,7 +11,42 @@ const destinationState = {
   session: { mode: "existing" },
 }
 
+const popupState = {
+  groups: "loading",
+  metadata: "loading",
+  baseUrl: null,
+}
+
 const groupSelects = {}
+const GROUP_CACHE_MAX_AGE_MS = 5 * 60 * 1000
+
+function getNow() {
+  return Date.now()
+}
+
+function isFreshTimestamp(timestamp) {
+  return Number.isFinite(timestamp) && getNow() - timestamp < GROUP_CACHE_MAX_AGE_MS
+}
+
+async function readCachedGroups() {
+  const { rewayGroups, rewayGroupsFetchedAt } = await chrome.storage.local.get([
+    "rewayGroups",
+    "rewayGroupsFetchedAt",
+  ])
+
+  return {
+    groups: Array.isArray(rewayGroups) ? rewayGroups : [],
+    fetchedAt: typeof rewayGroupsFetchedAt === "number" ? rewayGroupsFetchedAt : null,
+  }
+}
+
+async function clearGroupCache() {
+  await chrome.storage.local.remove(["rewayGroups", "rewayGroupsFetchedAt"])
+}
+
+function getFlowStatusTarget(flow) {
+  return flow === "save" ? elements.status : document.getElementById(`${flow}-status`)
+}
 
 function setPopupHeader(mode) {
   const titleEl = document.getElementById("popup-header-title")
@@ -19,13 +54,142 @@ function setPopupHeader(mode) {
   if (!titleEl || !subtitleEl) return
 
   if (mode === "auth") {
-    titleEl.textContent = "Hello"
-    subtitleEl.textContent = "Please log in to save to Reway"
+    titleEl.textContent = "Save to Reway"
+    subtitleEl.textContent = "Log in to sync groups and keep capture fast"
+    return
+  }
+
+  if (mode === "error") {
+    titleEl.textContent = "Save to Reway"
+    subtitleEl.textContent = "The popup is ready while Reway finishes reconnecting"
     return
   }
 
   titleEl.textContent = "Save to Reway"
   subtitleEl.textContent = "Choose one of the 3 options below"
+}
+
+function setButtonDisabled(button, disabled) {
+  if (!button) return
+  button.disabled = disabled
+}
+
+function getActionButtons() {
+  return {
+    save: elements.saveBookmarkBtn,
+    links: document.getElementById("create-group-from-links"),
+    session: document.getElementById("save-session"),
+  }
+}
+
+function syncActionAvailability() {
+  const buttons = getActionButtons()
+  const groupsReady = popupState.groups === "ready"
+
+  Object.keys(destinationState).forEach((flow) => {
+    const button = buttons[flow]
+    if (!button) return
+
+    const requiresReadyGroups = !groupsReady
+    setButtonDisabled(button, requiresReadyGroups)
+  })
+}
+
+function updateStartupPanel() {
+  const panel = document.getElementById("startup-panel")
+  const title = document.getElementById("startup-panel-title")
+  const message = document.getElementById("startup-panel-message")
+  const loginButton = document.getElementById("login-button")
+  const retryButton = document.getElementById("retry-startup")
+
+  if (!panel || !title || !message || !loginButton || !retryButton) return
+
+  if (popupState.groups === "auth_required") {
+    panel.classList.remove("hidden")
+    title.textContent = "Connect to Reway"
+    message.textContent = "Log in to load your groups and start saving."
+    loginButton.classList.remove("hidden")
+    retryButton.classList.add("hidden")
+    setPopupHeader("auth")
+    return
+  }
+
+  if (popupState.groups === "error") {
+    panel.classList.remove("hidden")
+    title.textContent = "Groups are taking longer than expected"
+    message.textContent = "You can keep preparing your save while Reway reconnects."
+    loginButton.classList.add("hidden")
+    retryButton.classList.remove("hidden")
+    setPopupHeader("error")
+    return
+  }
+
+  panel.classList.add("hidden")
+  loginButton.classList.add("hidden")
+  retryButton.classList.add("hidden")
+  setPopupHeader("main")
+}
+
+function setGroupUiState(flow, state, message = "") {
+  const select = groupSelects[flow]
+  const trigger = document.getElementById(`${flow}-group-trigger`)
+  const statusTarget = getFlowStatusTarget(flow)
+  const existingToggle = document.querySelector(
+    `.destination-toggle-button[data-flow="${flow}"][data-mode="existing"]`,
+  )
+  const newToggle = document.querySelector(
+    `.destination-toggle-button[data-flow="${flow}"][data-mode="new"]`,
+  )
+
+  let placeholder = flow === "save" ? "No group" : "Select a group"
+  let disabled = false
+
+  if (state === "loading") {
+    placeholder = "Loading groups..."
+    disabled = true
+  } else if (state === "auth_required") {
+    placeholder = "Log in to load groups"
+    disabled = true
+  } else if (state === "error") {
+    placeholder = "Couldn’t load groups"
+    disabled = true
+  }
+
+  select?.setDisabled(disabled)
+  select?.setPlaceholder(placeholder)
+  trigger?.setAttribute("aria-busy", String(state === "loading"))
+  trigger?.setAttribute("data-loading", String(state === "loading"))
+
+  if (existingToggle) {
+    existingToggle.disabled = state !== "ready"
+  }
+
+  if (newToggle) {
+    newToggle.disabled = state !== "ready"
+  }
+
+  setStatus(message, message ? "error" : "", statusTarget)
+}
+
+function applyGroupsState(state) {
+  popupState.groups = state
+
+  if (state === "loading") {
+    ;["save", "links", "session"].forEach((flow) => setGroupUiState(flow, state))
+  } else if (state === "auth_required") {
+    ;["save", "links", "session"].forEach((flow) =>
+      setGroupUiState(flow, state, "Log in to choose a group and save."),
+    )
+  } else if (state === "error") {
+    ;["save", "links", "session"].forEach((flow) =>
+      setGroupUiState(flow, state, "Couldn’t load groups right now. Try again."),
+    )
+  } else {
+    ;["save", "links", "session"].forEach((flow) => setGroupUiState(flow, state))
+  }
+
+  updateStartupPanel()
+  syncActionAvailability()
 }
 
 function setDestinationMode(flow, mode) {
@@ -47,8 +211,19 @@ function setDestinationMode(flow, mode) {
     groupSelects[flow]?.close()
   }
 
-  const statusTarget = flow === "save" ? elements.status : document.getElementById(`${flow}-status`)
-  setStatus("", "", statusTarget)
+  setStatus("", "", getFlowStatusTarget(flow))
+
+  if (popupState.groups !== "ready" && mode === "existing") {
+    const stateMessage =
+      popupState.groups === "auth_required"
+        ? "Log in to choose a group and save."
+        : popupState.groups === "error"
+          ? "Couldn’t load groups right now. Try again."
+          : ""
+    setStatus(stateMessage, popupState.groups === "loading" ? "" : "error", getFlowStatusTarget(flow))
+  }
+
+  syncActionAvailability()
 }
 
 function createGroupSelect(flow) {
@@ -56,12 +231,14 @@ function createGroupSelect(flow) {
   const label = document.getElementById(`${flow}-group-label`)
   const menu = document.getElementById(`${flow}-group-menu`)
   const container = trigger?.closest(".select")
-  const placeholder = flow === "save" ? "No group" : "Select a group"
+  const defaultPlaceholder = flow === "save" ? "No group" : "Select a group"
 
   if (!trigger || !label || !menu || !container) return null
 
   let options = []
   let selectedId = ""
+  let disabled = false
+  let placeholder = defaultPlaceholder
 
   const updateLabel = () => {
     const selected = options.find((option) => option.id === selectedId)
@@ -110,13 +287,15 @@ function createGroupSelect(flow) {
   }
 
   const open = () => {
-    if (options.length === 0) return
+    if (disabled || options.length === 0) return
     container.classList.add("open")
     trigger.setAttribute("aria-expanded", "true")
     focusSelectedOrFirst()
   }
 
   const toggle = () => {
+    if (disabled) return
+
     if (container.classList.contains("open")) {
       close()
       return
@@ -128,6 +307,8 @@ function createGroupSelect(flow) {
 
   trigger.addEventListener("click", toggle)
   trigger.addEventListener("keydown", (event) => {
+    if (disabled) return
+
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault()
       toggle()
@@ -174,6 +355,17 @@ function createGroupSelect(flow) {
 
   return {
     close,
+    setDisabled(nextDisabled) {
+      disabled = nextDisabled
+      trigger.disabled = nextDisabled
+      if (nextDisabled) {
+        close()
+      }
+    },
+    setPlaceholder(nextPlaceholder) {
+      placeholder = nextPlaceholder || defaultPlaceholder
+      updateLabel()
+    },
     setOptions(groups) {
       options =
         flow === "save"
@@ -244,6 +436,16 @@ async function saveBookmark() {
   const existingGroupId = groupSelects.save?.getValue() || ""
   const newGroupName = document.getElementById("save-group-name")?.value.trim() || ""
 
+  if (mode === "existing" && popupState.groups !== "ready") {
+    setStatus("Wait for your groups to finish loading.", "error", statusTarget)
+    return
+  }
+
+  if (mode === "new" && popupState.groups !== "ready") {
+    setStatus("Finish reconnecting to Reway before creating a group.", "error", statusTarget)
+    return
+  }
+
   if (mode === "new" && !newGroupName) {
     setStatus("Enter a new group name", "error", statusTarget)
     return
@@ -268,6 +470,14 @@ async function saveBookmark() {
             "error",
             statusTarget,
           )
+          return
+        }
+
+        if (error?.status === 401) {
+          await handleAuthRequired({
+            flow: "save",
+            message: "Log in to create a group and save.",
+          })
           return
         }
 
@@ -299,6 +509,22 @@ async function saveBookmark() {
   } catch (error) {
     setLoading(elements.saveBookmarkBtn, false, "Save bookmark")
 
+    if (error?.status === 401) {
+      await handleAuthRequired({
+        flow: "save",
+        message: "Log in to keep saving to Reway.",
+      })
+      return
+    }
+
+    if (error?.status === 400) {
+      await handleInvalidGroup({
+        flow: "save",
+        message: "That group is no longer available. Refreshing your groups now.",
+      })
+      return
+    }
+
     if (error?.status === 409) {
       setStatus(
         mode === "existing"
@@ -314,7 +540,6 @@ async function saveBookmark() {
   }
 }
 
-// Dev Mode Helpers
 let currentDevEnv = "prod"
 function switchEnv(env) {
   currentDevEnv = env
@@ -323,7 +548,7 @@ function switchEnv(env) {
   elements.envProd.classList.toggle("ghost", !isProd)
   elements.envLocal.classList.toggle("secondary", !isProd)
   elements.envLocal.classList.toggle("ghost", isProd)
-  elements.localPortField.style.display = isProd ? "none" : "block"
+  elements.localPortField.classList.toggle("hidden", isProd)
 }
 
 async function handleSaveDevSettings() {
@@ -351,17 +576,7 @@ function handleLogoClick() {
   logoClickTimeout = setTimeout(() => (logoClickCount = 0), 1000)
 }
 
-async function init() {
-  document.querySelector(".shell").style.opacity = "1"
-  const loadingView = document.getElementById("loading-view")
-  const footerLinks = document.getElementById("footer-links")
-
-  setupGroupSelects()
-  setDestinationMode("save", "existing")
-  setDestinationMode("links", "existing")
-  setDestinationMode("session", "existing")
-
-  await getSettings()
+async function hydrateEnvironmentControls() {
   const { rewayBaseUrl } = await chrome.storage.local.get("rewayBaseUrl")
 
   if (rewayBaseUrl && rewayBaseUrl.includes("localhost")) {
@@ -371,54 +586,132 @@ async function init() {
     } catch {
       elements.localPort.value = "3000"
     }
-  } else {
-    switchEnv("prod")
+    return
   }
 
-  try {
-    const data = await apiFetch("/api/extension/groups")
-    const groups = data.groups || []
-    await chrome.storage.local.set({ rewayGroups: groups })
-    renderGroups(groups)
-    showSection("main-section")
-    setPopupHeader("main")
+  switchEnv("prod")
+}
 
+async function hydrateFooterLinks() {
+  try {
     const { baseUrl } = await getSettings()
+    popupState.baseUrl = baseUrl
+
     if (elements.footerHomepage) {
       elements.footerHomepage.setAttribute("href", `${baseUrl}/`)
     }
     if (elements.footerDashboard) {
       elements.footerDashboard.setAttribute("href", `${baseUrl}/dashboard`)
     }
-    footerLinks?.classList.remove("hidden")
-  } catch {
-    showSection("auth-section")
-    setPopupHeader("auth")
-    footerLinks?.classList.add("hidden")
-  } finally {
-    if (loadingView) {
-      loadingView.classList.add("hidden")
-      setTimeout(() => {
-        loadingView.style.display = "none"
-        loadingView.remove()
-      }, 200)
-    }
-  }
 
-  fetchMeta()
+    document.getElementById("footer-links")?.classList.remove("hidden")
+  } catch {
+    document.getElementById("footer-links")?.classList.add("hidden")
+  }
 }
 
-async function fetchMeta() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-  if (!tab) return
+async function hydrateGroups() {
+  const cached = await readCachedGroups()
+  const hasCachedGroups = cached.groups.length > 0
 
-  elements.pageUrl.textContent = tab.url || ""
-  elements.favicon.src = tab.favIconUrl || "icons/icon16.png"
-  elements.title.value = tab.title || ""
+  if (hasCachedGroups) {
+    renderGroups(cached.groups)
+    applyGroupsState("ready")
+  } else {
+    applyGroupsState("loading")
+  }
 
-  const meta = await fetchPageMeta(tab.id)
-  if (meta?.description) {
-    elements.description.value = meta.description
+  const shouldShowLoadingState = !hasCachedGroups
+  const shouldSkipFetch = !hasCachedGroups && isFreshTimestamp(cached.fetchedAt)
+
+  if (shouldSkipFetch) {
+    return
+  }
+
+  if (shouldShowLoadingState) {
+    applyGroupsState("loading")
+  }
+
+  try {
+    const data = await apiFetch("/api/extension/groups")
+    const groups = data.groups || []
+    await chrome.storage.local.set({
+      rewayGroups: groups,
+      rewayGroupsFetchedAt: getNow(),
+    })
+    renderGroups(groups)
+    applyGroupsState("ready")
+  } catch (error) {
+    if (error?.status === 401) {
+      await clearGroupCache()
+      applyGroupsState("auth_required")
+      return
+    }
+
+    if (!hasCachedGroups) {
+      applyGroupsState("error")
+    }
+  }
+}
+
+async function handleAuthRequired(detail = {}) {
+  await clearGroupCache()
+  applyGroupsState("auth_required")
+
+  if (detail.flow) {
+    setStatus(
+      detail.message || "Log in to keep saving to Reway.",
+      "error",
+      getFlowStatusTarget(detail.flow),
+    )
+  }
+}
+
+async function handleInvalidGroup(detail = {}) {
+  await clearGroupCache()
+  applyGroupsState("loading")
+  void hydrateGroups()
+
+  if (detail.flow) {
+    setStatus(
+      detail.message || "That group is no longer available. Refreshing your groups now.",
+      "error",
+      getFlowStatusTarget(detail.flow),
+    )
+  }
+}
+
+async function hydratePageMeta() {
+  const pageMetaCard = document.getElementById("page-meta-card")
+  const metaStatus = document.getElementById("page-meta-status")
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    if (!tab) {
+      popupState.metadata = "unavailable"
+      metaStatus?.classList.add("hidden")
+      pageMetaCard?.classList.remove("is-loading")
+      return
+    }
+
+    elements.pageUrl.textContent = tab.url || ""
+    elements.favicon.src = tab.favIconUrl || "icons/icon16.png"
+    elements.title.value = tab.title || ""
+
+    const meta = await fetchPageMeta(tab.id)
+    if (meta?.title) {
+      elements.title.value = meta.title
+    }
+    if (meta?.description) {
+      elements.description.value = meta.description
+    }
+
+    popupState.metadata = meta ? "ready" : "unavailable"
+  } catch {
+    popupState.metadata = "unavailable"
+  } finally {
+    pageMetaCard?.classList.remove("is-loading")
+    metaStatus?.classList.add("hidden")
   }
 }
 
@@ -427,6 +720,25 @@ function updateChars(input, countEl) {
   const len = input.value.length
   countEl.textContent = `${len}/${MAX_NAME_LENGTH}`
   countEl.classList.toggle("error", len >= MAX_NAME_LENGTH)
+}
+
+function initializeShell() {
+  document.querySelector(".shell").style.opacity = "1"
+
+  setupGroupSelects()
+  setDestinationMode("save", "existing")
+  setDestinationMode("links", "existing")
+  setDestinationMode("session", "existing")
+  applyGroupsState("loading")
+}
+
+function init() {
+  initializeShell()
+
+  void hydrateEnvironmentControls()
+  void hydrateFooterLinks()
+  void hydrateGroups()
+  void hydratePageMeta()
 }
 
 document.addEventListener("DOMContentLoaded", init)
@@ -439,6 +751,19 @@ if (elements.loginButton) {
     chrome.tabs.create({ url: `${baseUrl}/login` })
   })
 }
+
+document.getElementById("retry-startup")?.addEventListener("click", () => {
+  void hydrateFooterLinks()
+  void hydrateGroups()
+})
+
+document.addEventListener("reway:auth-required", (event) => {
+  void handleAuthRequired(event.detail || {})
+})
+
+document.addEventListener("reway:invalid-group", (event) => {
+  void handleInvalidGroup(event.detail || {})
+})
 
 elements.logo?.addEventListener("click", handleLogoClick)
 elements.envProd?.addEventListener("click", () => switchEnv("prod"))

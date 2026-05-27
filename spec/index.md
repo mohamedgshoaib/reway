@@ -89,6 +89,16 @@ This project is not meant to become:
 - Capture surface is the extension.
 - Data/auth surface is Supabase-backed server actions and route handlers.
 
+#### Extension Internals
+
+- `extension/manifest.json` defines a lean MV3 split: popup (`popup.html` + `popup.js`), service worker (`background.js`), dashboard bridge content script (`content-script.js`), and X/Twitter capture content script (`twitter-content-script.js`).
+- The popup is the primary extension UI. It owns 3 capture jobs: Save Page, Save Links, and Tab Session. The current startup contract is: paint immediately, hydrate groups and metadata after paint, cache groups in `chrome.storage.local`, and revalidate groups in the background on every open.
+- `extension/js/api.js` is the popup transport seam. It resolves the active base URL, handles authenticated fetches to `/api/extension/*`, and clears cached groups on `401`.
+- `extension/js/grabber.js` and `extension/js/sessions.js` own the batch flows. Grabbed links are extension-local until commit; session capture filters out Chrome internal tabs and Reway dashboard tabs before saving.
+- `extension/background.js` owns privileged browser work and sidecar flows: grabbed-link storage, badge count, dashboard-origin `openGroup` requests, and X/Twitter bookmark capture into the special `X Bookmarks` group.
+- `extension/content-script.js` is the dashboard bridge. It relays `broadcastBookmark` saves into the page and forwards `reway_open_group` requests back to the worker so the dashboard can ask the extension to open bookmark groups as tabs.
+- The server contract for extension writes and reads lives at `app/api/extension/groups/route.ts` and `app/api/extension/bookmarks/route.ts`, with auth and realtime broadcast shaping centralized in `app/api/extension/route-adapter.ts`. If an extension behavior looks wrong, inspect that seam before duplicating logic in the popup or worker.
+
 #### Composition Model
 
 - `components/dashboard/DashboardContent.tsx` is the orchestration hub.

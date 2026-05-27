@@ -67,7 +67,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   if (!response.ok) {
     if (response.status === 401) {
-      await chrome.storage.local.remove("rewayGroups")
+      await chrome.storage.local.remove(["rewayGroups", "rewayGroupsFetchedAt"])
     }
 
     let bodyText = ""

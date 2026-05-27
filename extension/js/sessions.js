@@ -2,6 +2,10 @@ import { apiFetch } from "./api.js"
 import { isDashboardUrl } from "./config.js"
 import { setStatus, setLoading } from "./ui.js"
 
+function notifyPopup(type, detail) {
+  document.dispatchEvent(new CustomEvent(type, { detail }))
+}
+
 export async function loadTabSession() {
   const tabCountEl = document.getElementById("tab-count")
   const sessionPreview = document.getElementById("session-preview")
@@ -180,6 +184,12 @@ export async function saveTabSession(destination) {
     let message = "Failed to save session"
     if (err.status === 409) {
       message = "A group with this name already exists. Switch to Add to existing group."
+    } else if (err.status === 401) {
+      message = "Log in to keep saving sessions to Reway."
+      notifyPopup("reway:auth-required", { flow: "session", message })
+    } else if (err.status === 400) {
+      message = "That group is no longer available. Refreshing your groups now."
+      notifyPopup("reway:invalid-group", { flow: "session", message })
     } else if (mode === "existing") {
       message = "Failed to add tabs to group"
     }

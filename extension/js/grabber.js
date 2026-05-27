@@ -1,6 +1,10 @@
 import { apiFetch } from "./api.js"
 import { setStatus, setLoading } from "./ui.js"
 
+function notifyPopup(type, detail) {
+  document.dispatchEvent(new CustomEvent(type, { detail }))
+}
+
 export async function loadGrabbedLinks() {
   const listContainer = document.getElementById("grabbed-links-list")
   const emptyState = document.getElementById("links-empty")
@@ -171,6 +175,12 @@ export async function createGroupFromLinks(destination) {
     let message = "Failed to create group"
     if (err.status === 409) {
       message = "A group with this name already exists. Switch to Add to existing group."
+    } else if (err.status === 401) {
+      message = "Log in to keep saving links to Reway."
+      notifyPopup("reway:auth-required", { flow: "links", message })
+    } else if (err.status === 400) {
+      message = "That group is no longer available. Refreshing your groups now."
+      notifyPopup("reway:invalid-group", { flow: "links", message })
     } else if (mode === "existing") {
       message = "Failed to add links to group"
     }

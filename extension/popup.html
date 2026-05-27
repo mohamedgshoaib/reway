@@ -18,44 +18,7 @@
         </div>
       </header>
 
-      <div id="loading-view" class="loading-view">
-        <div class="spinner"></div>
-        <div>Initializing...</div>
-      </div>
-
-      <section id="auth-section" class="card settings hidden">
-        <div class="settings-header">
-          <div>
-            <h2>Connect to Reway</h2>
-            <p>Please log in to your dashboard to use the extension.</p>
-          </div>
-        </div>
-
-        <button id="login-button" class="primary">Log in to Reway</button>
-
-        <div id="dev-mode-panel" class="dev-panel">
-          <div class="field" style="margin-top: 20px">
-            <span>Environment</span>
-            <div style="display: flex; gap: 8px; margin-top: 8px">
-              <button id="env-prod" class="secondary" style="flex: 1; font-size: 11px">
-                Production
-              </button>
-              <button id="env-local" class="ghost" style="flex: 1; font-size: 11px">Local</button>
-            </div>
-          </div>
-
-          <label id="local-port-field" class="field" style="margin-top: 12px; display: none">
-            <span>Local Port</span>
-            <input id="local-port" type="number" placeholder="3000" />
-          </label>
-
-          <button id="save-dev-settings" class="secondary" style="width: 100%; margin-top: 12px">
-            Apply Changes
-          </button>
-        </div>
-      </section>
-
-      <section id="main-section" class="card hidden">
+      <section id="main-section" class="card">
         <!-- Tab Navigation -->
         <div class="tabs" id="real-content" role="tablist" aria-label="Extension features">
           <button
@@ -90,6 +53,19 @@
           </button>
         </div>
 
+        <div id="startup-panel" class="inline-panel hidden" role="status" aria-live="polite">
+          <div class="inline-panel-copy">
+            <h2 id="startup-panel-title" class="inline-panel-title">Connect to Reway</h2>
+            <p id="startup-panel-message" class="inline-panel-message">
+              Log in to load your groups and start saving.
+            </p>
+          </div>
+          <div class="inline-panel-actions">
+            <button id="login-button" class="secondary hidden">Log in to Reway</button>
+            <button id="retry-startup" class="ghost hidden" type="button">Retry</button>
+          </div>
+        </div>
+
         <!-- Tab Content: Save Bookmark -->
         <div
           id="tab-save"
@@ -97,11 +73,12 @@
           role="tabpanel"
           aria-labelledby="tab-save-btn"
         >
-          <div class="page-meta">
+          <div id="page-meta-card" class="page-meta is-loading">
             <img id="favicon" class="favicon" alt="" />
             <div class="page-meta-content">
               <div class="label">Current page</div>
               <div id="page-url" class="url"></div>
+              <div id="page-meta-status" class="meta-status">Fetching page details…</div>
             </div>
           </div>
 
@@ -322,6 +299,32 @@
           </div>
         </div>
       </section>
+
+      <div id="dev-mode-panel" class="dev-panel card">
+        <div class="settings-header">
+          <div>
+            <h2>Environment</h2>
+            <p>Use this only when testing the extension against a local Reway app.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <span>Target</span>
+          <div style="display: flex; gap: 8px; margin-top: 8px">
+            <button id="env-prod" class="secondary" style="flex: 1; font-size: 11px">
+              Production
+            </button>
+            <button id="env-local" class="ghost" style="flex: 1; font-size: 11px">Local</button>
+          </div>
+        </div>
+
+        <label id="local-port-field" class="field hidden">
+          <span>Local Port</span>
+          <input id="local-port" type="number" placeholder="3000" />
+        </label>
+
+        <button id="save-dev-settings" class="secondary">Apply Changes</button>
+      </div>
 
       <div id="footer-links" class="footer-links hidden">
         <a id="footer-homepage-link" class="link" href="#" target="_blank" rel="noreferrer">
