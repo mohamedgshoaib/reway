@@ -12,6 +12,8 @@ export const selectors = {
   loginButton: "#login-button",
   devPanel: "#dev-mode-panel",
   settingsToggle: "#settings-toggle",
+  advancedSettingsToggle: "#advanced-settings-toggle",
+  advancedSettingsPanel: "#advanced-settings-panel",
   envProd: "#env-prod",
   envLocal: "#env-local",
   localPortField: "#local-port-field",

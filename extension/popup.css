@@ -81,6 +81,11 @@ button[disabled] {
   --popover-padding: 6px;
   --popover-radius: calc(var(--control-radius) + var(--popover-padding));
   --popover-item-radius: var(--control-radius);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 140ms;
+  --duration-base: 180ms;
+  --duration-popover: 160ms;
 }
 
 * {
@@ -102,7 +107,7 @@ body {
   flex-direction: column;
   gap: 12px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--duration-fast) var(--ease-out);
 }
 
 .shell.settings-open #main-section {
@@ -174,10 +179,17 @@ body {
 .settings-button svg {
   width: 15px;
   height: 15px;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out);
 }
 
 .settings-icon-close {
   display: none;
+  opacity: 0;
+  filter: blur(4px);
+  transform: scale(0.25);
 }
 
 .shell.settings-open .settings-icon-gear {
@@ -186,6 +198,9 @@ body {
 
 .shell.settings-open .settings-icon-close {
   display: block;
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
 }
 
 .shell.settings-open .settings-button {
@@ -220,7 +235,7 @@ body {
   min-height: var(--control-height);
   padding: 5px 10px;
   border-radius: var(--control-radius);
-  background: var(--muted);
+  background: color-mix(in oklab, var(--muted), transparent 32%);
   margin-bottom: 10px;
   position: relative;
   isolation: isolate;
@@ -266,9 +281,9 @@ body {
 }
 
 .url {
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.35;
-  color: color-mix(in oklab, var(--foreground), transparent 15%);
+  color: color-mix(in oklab, var(--foreground), transparent 28%);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -277,8 +292,8 @@ body {
 
 .meta-status {
   margin-top: 2px;
-  font-size: 11px;
-  color: var(--muted-foreground);
+  font-size: 10px;
+  color: color-mix(in oklab, var(--muted-foreground), transparent 12%);
 }
 
 .meta-status.hidden {
@@ -291,6 +306,20 @@ body {
   flex-direction: column;
   gap: 6px;
   margin-bottom: 10px;
+}
+
+.field-secondary {
+  gap: 5px;
+}
+
+.field-secondary span {
+  color: color-mix(in oklab, var(--muted-foreground), var(--foreground) 22%);
+}
+
+.field-secondary textarea {
+  min-height: 46px;
+  font-size: 13px;
+  background: color-mix(in oklab, var(--input), transparent 88%);
 }
 
 .destination-toggle {
@@ -326,11 +355,11 @@ body {
   border-radius: var(--rail-item-radius);
   box-shadow: none;
   transition:
-    color 0.16s ease,
-    background-color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease,
-    opacity 0.16s ease;
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
 }
 
 .destination-toggle-button:hover,
@@ -395,7 +424,7 @@ body {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: color-mix(in oklab, var(--muted-foreground), transparent 50%);
-  transition: color 0.18s ease;
+  transition: color var(--duration-base) var(--ease-out);
 }
 
 .char-count.warning {
@@ -421,9 +450,9 @@ body {
   border-radius: var(--control-radius);
   outline: none;
   transition:
-    background-color 0.18s ease,
-    box-shadow 0.18s ease,
-    color 0.18s ease;
+    background-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
 }
 
@@ -479,11 +508,11 @@ button {
   white-space: nowrap;
   user-select: none;
   transition:
-    background-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease,
-    opacity 0.18s ease;
+    background-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    opacity var(--duration-base) var(--ease-out);
   position: relative;
   isolation: isolate;
 }
@@ -726,9 +755,9 @@ button.success::after {
   outline: none;
   cursor: pointer;
   transition:
-    background-color 0.16s ease,
-    box-shadow 0.16s ease,
-    color 0.16s ease;
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -762,8 +791,10 @@ button.success::after {
   height: 12px;
   flex-shrink: 0;
   color: var(--muted-foreground);
-  transition: transform 0.15s ease;
-  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .select-chevron::before {
@@ -773,7 +804,7 @@ button.success::after {
   height: 6px;
   border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg) translateY(-2px);
+  transform: translateY(-1px) rotate(45deg);
 }
 
 .select.open .select-chevron {
@@ -804,11 +835,12 @@ button.success::after {
   background: var(--popover);
   border: none;
   border-radius: var(--popover-radius);
-  padding: var(--popover-padding) 2px var(--popover-padding) var(--popover-padding);
+  padding: var(--popover-padding);
   overflow-y: auto;
   overflow-x: hidden;
   display: none;
-  animation: slideInDown 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInDown var(--duration-popover) var(--ease-out);
+  transform-origin: bottom center;
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%),
     inset 0 0 0 1px color-mix(in oklab, white, transparent 95%),
@@ -871,10 +903,10 @@ button.success::after {
   text-align: left;
   outline: none;
   transition:
-    background-color 0.14s ease,
-    color 0.14s ease,
-    box-shadow 0.14s ease,
-    transform 0.14s ease;
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
   white-space: nowrap;
   overflow: hidden;
   justify-content: space-between;
@@ -930,8 +962,8 @@ button.success::after {
   opacity: 0;
   transform: scale(0.8);
   transition:
-    opacity 0.14s ease,
-    transform 0.14s ease;
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .select-option-check svg {
@@ -978,10 +1010,10 @@ button.success::after {
   border-radius: var(--rail-item-radius);
   cursor: pointer;
   transition:
-    background-color 0.16s ease,
-    color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1084,8 +1116,53 @@ button.success::after {
   margin-bottom: 10px;
   border-radius: var(--inset-radius);
   background: var(--muted);
-  padding: var(--nested-surface-padding) 2px var(--nested-surface-padding)
-    var(--nested-surface-padding);
+  padding: var(--nested-surface-padding);
+}
+
+.link-tab-item {
+  min-height: 42px;
+  gap: 9px;
+  padding: 3px 4px 3px 8px;
+}
+
+.link-tab-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.link-tab-title {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.link-tab-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1.25;
+  color: color-mix(in oklab, var(--muted-foreground), transparent 12%);
+}
+
+.link-tab-item .session-tab-remove {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: calc(var(--nested-item-radius) - 2px);
+}
+
+.link-tab-item .session-tab-remove::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+
+.link-tab-item .session-tab-remove svg {
+  width: 13px;
+  height: 13px;
 }
 
 .session-tab-item {
@@ -1158,9 +1235,9 @@ button.success::after {
     inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 92%),
     inset 0 0 0 1px color-mix(in oklab, white, transparent 95%);
   transition:
-    background-color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .session-tab-check-indicator svg {
@@ -1169,8 +1246,8 @@ button.success::after {
   opacity: 0;
   transform: scale(0.8);
   transition:
-    opacity 0.14s ease,
-    transform 0.14s ease;
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .session-tab-check:hover .session-tab-check-indicator {
@@ -1210,9 +1287,9 @@ button.success::after {
   justify-content: center;
   border-radius: var(--nested-item-radius);
   transition:
-    color 0.16s ease,
-    background-color 0.16s ease,
-    transform 0.16s ease;
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .session-tab-remove:hover {
@@ -1259,6 +1336,47 @@ button.success::after {
 
 .settings-actions {
   margin-top: 0;
+}
+
+.settings-advanced {
+  margin-top: 2px;
+}
+
+.advanced-toggle {
+  width: 100%;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: color-mix(in oklab, var(--input), transparent 84%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
+}
+
+.advanced-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.advanced-chevron::before {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.advanced-toggle[aria-expanded="true"] .advanced-chevron {
+  transform: rotate(180deg);
+}
+
+.advanced-panel {
+  margin-top: 10px;
 }
 
 /* Scrollbar styling */
@@ -1350,4 +1468,15 @@ button.success::after {
 }
 .success-text {
   color: #10b981 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }

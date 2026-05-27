@@ -140,6 +140,11 @@ function setSettingsPanelOpen(isOpen) {
   elements.settingsToggle?.setAttribute("title", isOpen ? "Close settings" : "Settings")
 }
 
+function setAdvancedSettingsOpen(isOpen) {
+  elements.advancedSettingsToggle?.setAttribute("aria-expanded", String(isOpen))
+  elements.advancedSettingsPanel?.classList.toggle("hidden", !isOpen)
+}
+
 function setGroupUiState(flow, state, message = "") {
   const select = groupSelects[flow]
   const trigger = document.getElementById(`${flow}-group-trigger`)
@@ -729,6 +734,22 @@ function updateChars(input, countEl) {
   countEl.classList.toggle("error", len >= MAX_NAME_LENGTH)
 }
 
+async function fetchManualLinkMetadata(url) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 1600)
+
+  try {
+    return await apiFetch(`/api/metadata?url=${encodeURIComponent(url)}`, {
+      method: "GET",
+      signal: controller.signal,
+    })
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 function initializeShell() {
   document.querySelector(".shell").style.opacity = "1"
 
@@ -773,6 +794,10 @@ document.addEventListener("reway:invalid-group", (event) => {
 elements.settingsToggle?.addEventListener("click", () => {
   const isOpen = elements.devPanel?.classList.contains("open")
   setSettingsPanelOpen(!isOpen)
+})
+elements.advancedSettingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.advancedSettingsToggle?.getAttribute("aria-expanded") === "true"
+  setAdvancedSettingsOpen(!isOpen)
 })
 elements.envProd?.addEventListener("click", () => switchEnv("prod"))
 elements.envLocal?.addEventListener("click", () => switchEnv("local"))
@@ -822,9 +847,12 @@ if (addManualLinkBtn && manualLinkInput) {
     }
 
     try {
+      const metadata = await fetchManualLinkMetadata(urlToAdd)
       const response = await chrome.runtime.sendMessage({
         type: "addGrabbedLink",
         url: urlToAdd,
+        title: metadata?.title || "",
+        favIconUrl: metadata?.favicon || null,
         source: "manual",
       })
 

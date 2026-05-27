@@ -114,9 +114,9 @@
             <input id="title" type="text" placeholder="Edit the saved title" />
           </label>
 
-          <label class="field">
+          <label class="field field-secondary">
             <span>Description</span>
-            <textarea id="description" rows="3" placeholder="Add a short summary"></textarea>
+            <textarea id="description" rows="2" placeholder="Optional summary"></textarea>
           </label>
 
           <div class="field">
@@ -342,22 +342,39 @@
           </div>
         </div>
 
-        <div class="field">
-          <span>Environment</span>
-          <div class="env-toggle" role="group" aria-label="Environment target">
-            <button id="env-prod" class="env-toggle-button active" type="button">Production</button>
-            <button id="env-local" class="env-toggle-button" type="button">Local</button>
+        <div class="settings-advanced">
+          <button
+            id="advanced-settings-toggle"
+            class="advanced-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="advanced-settings-panel"
+          >
+            <span>Advanced</span>
+            <span class="advanced-chevron" aria-hidden="true"></span>
+          </button>
+
+          <div id="advanced-settings-panel" class="advanced-panel hidden">
+            <div class="field">
+              <span>Environment</span>
+              <div class="env-toggle" role="group" aria-label="Environment target">
+                <button id="env-prod" class="env-toggle-button active" type="button">
+                  Production
+                </button>
+                <button id="env-local" class="env-toggle-button" type="button">Local</button>
+              </div>
+              <p class="field-hint">Use Local only when testing against a local Reway app.</p>
+            </div>
+
+            <label id="local-port-field" class="field hidden">
+              <span>Local Port</span>
+              <input id="local-port" type="number" placeholder="3000" />
+            </label>
+
+            <div class="actions settings-actions">
+              <button id="save-dev-settings" class="secondary">Apply Changes</button>
+            </div>
           </div>
-          <p class="field-hint">Use Local only when testing against a local Reway app.</p>
-        </div>
-
-        <label id="local-port-field" class="field hidden">
-          <span>Local Port</span>
-          <input id="local-port" type="number" placeholder="3000" />
-        </label>
-
-        <div class="actions settings-actions">
-          <button id="save-dev-settings" class="secondary">Apply Changes</button>
         </div>
       </div>
     </div>

@@ -41,7 +41,7 @@ export async function loadGrabbedLinks() {
 
   links.forEach((link) => {
     const item = document.createElement("div")
-    item.className = "session-tab-item"
+    item.className = "session-tab-item link-tab-item"
 
     const favicon = document.createElement("img")
     favicon.className = "session-tab-favicon"
@@ -50,9 +50,18 @@ export async function loadGrabbedLinks() {
       favicon.src = "icons/icon16.png"
     }
 
+    const copy = document.createElement("div")
+    copy.className = "link-tab-copy"
+
     const title = document.createElement("div")
-    title.className = "session-tab-title"
-    title.textContent = link.url
+    title.className = "session-tab-title link-tab-title"
+    title.textContent = link.title || link.url
+    title.title = link.title || link.url
+
+    const url = document.createElement("div")
+    url.className = "link-tab-url"
+    url.textContent = link.url
+    url.title = link.url
 
     const removeBtn = document.createElement("button")
     removeBtn.className = "session-tab-remove"
@@ -89,8 +98,11 @@ export async function loadGrabbedLinks() {
       loadGrabbedLinks()
     })
 
+    copy.appendChild(title)
+    copy.appendChild(url)
+
     item.appendChild(favicon)
-    item.appendChild(title)
+    item.appendChild(copy)
     item.appendChild(removeBtn)
     listContainer.appendChild(item)
   })

@@ -9,21 +9,21 @@ async function getSettings() {
   }
 }
 
-const __rewayWorkerLogSeen = new Map()
+const rewayWorkerLogSeen = new Map()
 
-function __rewayErrorOnce(key, ...args) {
+function rewayErrorOnce(key, ...args) {
   const now = Date.now()
-  const last = __rewayWorkerLogSeen.get(key) || 0
+  const last = rewayWorkerLogSeen.get(key) || 0
   if (now - last < 60_000) return
-  __rewayWorkerLogSeen.set(key, now)
+  rewayWorkerLogSeen.set(key, now)
   console.error(...args)
 }
 
-function __rewayWarnOnce(key, ...args) {
+function rewayWarnOnce(key, ...args) {
   const now = Date.now()
-  const last = __rewayWorkerLogSeen.get(key) || 0
+  const last = rewayWorkerLogSeen.get(key) || 0
   if (now - last < 60_000) return
-  __rewayWorkerLogSeen.set(key, now)
+  rewayWorkerLogSeen.set(key, now)
   console.warn(...args)
 }
 
@@ -61,7 +61,7 @@ async function addGrabbedLink(url, title, source = "manual", favIconUrl = null) 
       fetchedTitle = urlObj.hostname
       fetchedFavIcon = `${urlObj.origin}/favicon.ico`
     } catch (error) {
-      __rewayWarnOnce("derive-metadata-failed", "Failed to derive metadata:", error)
+      rewayWarnOnce("derive-metadata-failed", "Failed to derive metadata:", error)
     }
   }
 
@@ -145,7 +145,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message?.type === "addGrabbedLink") {
     ;(async () => {
-      const result = await addGrabbedLink(message.url, message.title, message.source)
+      const result = await addGrabbedLink(
+        message.url,
+        message.title,
+        message.source,
+        message.favIconUrl,
+      )
       sendResponse(result)
     })()
     return true
@@ -284,13 +289,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         sendResponse({ success: true })
       } catch (error) {
-        const message = String(error?.message || "Failed")
+        const errorMessage = String(error?.message || "Failed")
         if (REWAY_DEBUG) {
           console.error("Twitter bookmark failed:", error)
         } else {
-          __rewayWarnOnce(`twitter-bookmark-failed:${message}`, "Twitter bookmark failed:", message)
+          rewayWarnOnce(
+            `twitter-bookmark-failed:${errorMessage}`,
+            "Twitter bookmark failed:",
+            errorMessage,
+          )
         }
-        sendResponse({ success: false, error: message })
+        sendResponse({ success: false, error: errorMessage })
       }
     })()
     return true
@@ -312,9 +321,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const directUrls = Array.isArray(message.urls) ? message.urls.filter(Boolean) : []
 
         const normalizedUrls = directUrls
-          .flatMap((url) => {
+          .flatMap((candidateUrl) => {
             try {
-              const parsed = new URL(url)
+              const parsed = new URL(candidateUrl)
               if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
                 return []
               }
@@ -326,7 +335,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           .slice(0, 25)
 
         if (normalizedUrls.length > 0) {
-          await Promise.all(normalizedUrls.map((url) => chrome.tabs.create({ url, active: false })))
+          await Promise.all(
+            normalizedUrls.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
+          )
           sendResponse({ ok: true, count: normalizedUrls.length })
           return
         }
@@ -362,12 +373,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           })
           .slice(0, 25)
 
-        await Promise.all(bookmarkUrls.map((url) => chrome.tabs.create({ url, active: false })))
+        await Promise.all(
+          bookmarkUrls.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
+        )
 
         sendResponse({ ok: true, count: bookmarkUrls.length })
       } catch (error) {
         const msg = String(error?.message || "Failed")
-        __rewayErrorOnce(`open-group-failed:${msg}`, "Open group failed:", error)
+        rewayErrorOnce(`open-group-failed:${msg}`, "Open group failed:", error)
         sendResponse({ ok: false, error: error?.message || "Failed" })
       }
     })()
