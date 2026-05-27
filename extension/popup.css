@@ -60,8 +60,13 @@ button[disabled] {
   --input: oklch(0.25 0 0);
   --ring: oklch(0.98 0 0);
   --radius: 0.75rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --radius-control: 8px;
 }
 
 * {
@@ -168,9 +173,9 @@ body {
 .page-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-control);
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
   background: var(--muted);
   margin-bottom: 12px;
   position: relative;
@@ -180,6 +185,10 @@ body {
 .page-meta-content {
   min-width: 0;
   flex: 1;
+}
+
+.page-meta .url {
+  margin-top: 0;
 }
 
 .page-meta.is-loading .favicon {
@@ -198,7 +207,7 @@ body {
 .favicon {
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-sm);
   background: var(--card);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
   object-fit: contain;
@@ -345,7 +354,7 @@ body {
   color: var(--foreground);
   background: color-mix(in oklab, var(--input), transparent 80%);
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   outline: none;
   transition: all 0.2s ease;
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
@@ -355,6 +364,7 @@ body {
   height: auto;
   min-height: 90px;
   padding: 10px 12px;
+  border-radius: var(--radius-xl);
   resize: vertical;
 }
 
@@ -396,7 +406,7 @@ button {
   color: var(--foreground);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   outline: none;
   cursor: pointer;
   white-space: nowrap;
@@ -532,7 +542,7 @@ button.success::after {
   gap: 12px;
   margin-bottom: 16px;
   padding: 14px;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   background: color-mix(in oklab, var(--muted), transparent 15%);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 94%);
 }
@@ -635,7 +645,7 @@ button.success::after {
   color: var(--foreground);
   background: color-mix(in oklab, var(--input), transparent 80%);
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   outline: none;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -714,8 +724,8 @@ button.success::after {
   max-height: 280px;
   background: var(--popover);
   border: none;
-  border-radius: var(--radius-control);
-  padding: 6px;
+  border-radius: var(--radius-2xl);
+  padding: 6px 2px 6px 6px;
   overflow-y: auto;
   overflow-x: hidden;
   display: none;
@@ -776,7 +786,7 @@ button.success::after {
   color: var(--foreground);
   background: transparent;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-xl);
   cursor: pointer;
   text-align: left;
   outline: none;
@@ -842,7 +852,7 @@ button.success::after {
   margin-bottom: 20px;
   padding: 4px;
   background: var(--muted);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-xl);
   overflow: hidden; /* Prevent hover state overflow */
 }
 
@@ -854,7 +864,7 @@ button.success::after {
   color: var(--muted-foreground);
   background: transparent;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -951,7 +961,7 @@ button.success::after {
   max-height: 180px;
   overflow-y: auto;
   margin-bottom: 14px;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-xl);
   background: var(--muted);
   padding: 8px;
 }
@@ -963,7 +973,7 @@ button.success::after {
   padding: 8px 10px;
   margin-bottom: 4px;
   background: var(--card);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   font-size: 11px;
 }
 
@@ -974,7 +984,7 @@ button.success::after {
 .session-tab-favicon {
   width: 16px;
   height: 16px;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-sm);
   background: var(--muted);
   object-fit: contain;
   flex-shrink: 0;
@@ -1014,7 +1024,7 @@ button.success::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   transition: all 0.15s ease;
 }
 
@@ -1066,7 +1076,7 @@ button.success::after {
 /* Skeleton Loading */
 .skeleton {
   background-color: var(--muted);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-lg);
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   pointer-events: none;
 }
