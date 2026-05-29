@@ -262,6 +262,7 @@ export function DashboardContent({
 
   const {
     handleToggleSelection,
+    handleSelectBookmarks,
     handleOpenSelected,
     handleRefreshSelected,
     handleBulkDelete,
@@ -389,6 +390,7 @@ export function DashboardContent({
     selectedIds: dashboard.selectedIds,
     setSelectionMode: dashboard.setSelectionMode,
     handleToggleSelection,
+    handleSelectBookmarks,
     handleOpenSelected,
     handleRefreshSelected,
     handleBulkDelete,

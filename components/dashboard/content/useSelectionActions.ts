@@ -93,6 +93,17 @@ export function useSelectionActions({
     [setSelectedIds, setSelectionMode],
   )
 
+  const handleSelectBookmarks = useCallback(
+    (ids: string[]) => {
+      const uniqueIds = Array.from(new Set(ids)).filter(Boolean)
+      if (uniqueIds.length === 0) return
+
+      setSelectedIds(new Set(uniqueIds))
+      setSelectionMode(true)
+    },
+    [setSelectedIds, setSelectionMode],
+  )
+
   const handleOpenSelected = useCallback(() => {
     if (selectedIds.size === 0) return
     const selectedBookmarks = bookmarks.filter((b) => selectedIds.has(b.id))
@@ -335,6 +346,7 @@ export function useSelectionActions({
 
   return {
     handleToggleSelection,
+    handleSelectBookmarks,
     handleOpenSelected,
     handleRefreshSelected,
     handleBulkDelete,

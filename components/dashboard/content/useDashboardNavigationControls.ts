@@ -14,6 +14,7 @@ export function useDashboardNavigationControls({
   const [importSheetOpen, setImportSheetOpen] = useState(false)
   const [exportSheetOpen, setExportSheetOpen] = useState(false)
   const [duplicatesSheetOpen, setDuplicatesSheetOpen] = useState(false)
+  const [enrichmentHealthSheetOpen, setEnrichmentHealthSheetOpen] = useState(false)
   const [notesTodosSheetOpen, setNotesTodosSheetOpen] = useState(false)
   const [selectedImportGroups, setSelectedImportGroups] = useState<string[]>([])
   const [selectedExportGroups, setSelectedExportGroups] = useState<string[]>([])
@@ -57,16 +58,19 @@ export function useDashboardNavigationControls({
   const openImportSheet = useCallback(() => setImportSheetOpen(true), [])
   const openExportSheet = useCallback(() => setExportSheetOpen(true), [])
   const openDuplicatesSheet = useCallback(() => setDuplicatesSheetOpen(true), [])
+  const openEnrichmentHealthSheet = useCallback(() => setEnrichmentHealthSheetOpen(true), [])
 
   return {
     importSheetOpen,
     exportSheetOpen,
     duplicatesSheetOpen,
+    enrichmentHealthSheetOpen,
     notesTodosSheetOpen,
     selectedImportGroups,
     selectedExportGroups,
     setNotesTodosSheetOpen,
     setDuplicatesSheetOpen,
+    setEnrichmentHealthSheetOpen,
     handleImportOpenChange,
     handleExportOpenChange,
     handleToggleImportGroup,
@@ -74,5 +78,6 @@ export function useDashboardNavigationControls({
     openImportSheet,
     openExportSheet,
     openDuplicatesSheet,
+    openEnrichmentHealthSheet,
   }
 }

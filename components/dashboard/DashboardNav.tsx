@@ -5,12 +5,14 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
 import RewayLogo from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import type { BookmarkRow } from "@/lib/supabase/queries"
 import type {
   DashboardNavigationAdapter,
   DashboardNavigationControlsAdapter,
   DashboardNotesTodosAdapter,
 } from "./content/workspace-shell-types"
 import { DuplicatesSheet } from "./nav/DuplicatesSheet"
+import { EnrichmentHealthSheet } from "./nav/EnrichmentHealthSheet"
 import { ExportSheet } from "./nav/ExportSheet"
 import { GroupMenu } from "./nav/GroupMenu"
 import { ImportSheet } from "./nav/ImportSheet"
@@ -24,12 +26,19 @@ interface DashboardNavProps {
   navigation: DashboardNavigationAdapter
   navigationControls: DashboardNavigationControlsAdapter
   notesTodos: DashboardNotesTodosAdapter
+  enrichmentHealth: {
+    bookmarks: BookmarkRow[]
+    onRefreshBookmark: (id: string) => Promise<void>
+    onLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
+    onSelectBookmarks: (ids: string[]) => void
+  }
 }
 
 export function DashboardNav({
   navigation,
   navigationControls,
   notesTodos,
+  enrichmentHealth,
 }: DashboardNavProps) {
   const router = useRouter()
 
@@ -88,6 +97,15 @@ export function DashboardNav({
         onOpenChange={navigationControls.setDuplicatesSheetOpen}
         bookmarks={navigation.bookmarks}
         onRemoveBookmarks={navigation.importExport.handleOptimisticRemoveBookmarks}
+      />
+
+      <EnrichmentHealthSheet
+        open={navigationControls.enrichmentHealthSheetOpen}
+        onOpenChange={navigationControls.setEnrichmentHealthSheetOpen}
+        bookmarks={enrichmentHealth.bookmarks}
+        onRefreshBookmark={enrichmentHealth.onRefreshBookmark}
+        onLoadBookmarkDetails={enrichmentHealth.onLoadBookmarkDetails}
+        onSelectBookmarks={enrichmentHealth.onSelectBookmarks}
       />
 
       <nav
@@ -184,6 +202,8 @@ export function DashboardNav({
               onOpenImportSheet={navigationControls.openImportSheet}
               onOpenExportSheet={navigationControls.openExportSheet}
               onOpenDuplicatesSheet={navigationControls.openDuplicatesSheet}
+              bookmarks={enrichmentHealth.bookmarks}
+              onOpenEnrichmentHealthSheet={navigationControls.openEnrichmentHealthSheet}
             />
           </div>
         </div>

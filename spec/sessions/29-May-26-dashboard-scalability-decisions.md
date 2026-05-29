@@ -1,6 +1,6 @@
 # Session 5 — Dashboard Scalability Decisions
 
-**Time:** 3:53 AM-6:22 AM (Cairo Time, UTC+02:00)
+**Time:** 3:53 AM-7:45 AM (Cairo Time, UTC+02:00)
 
 ---
 
@@ -35,6 +35,24 @@
 - Verified payload-shaping changes with `pnpm typecheck` and targeted `oxlint` on changed files.
 - Reviewed the payload-shaping implementation for stale detail-field dependencies across board rendering, preview/edit, search/Open Group, realtime merge, import/enrichment, duplicate cleanup, export, and undo/restore.
 - Removed stale detail-field props from `BookmarkBoard` display shaping and removed the unused `description` prop from `SortableBookmark`.
+- Ran an authenticated browser smoke test on `http://localhost:3001/dashboard` after a user login and import of about 144 bookmarks.
+- Verified the dashboard renders the imported bookmark library, view switching keeps bookmarks visible, and search mode filters by title and URL/domain without description matching.
+- Verified group filtering under an active search query keeps the matching URL/title result and excludes unrelated bookmark titles.
+- Verified Quick Glance opens from the bookmark context menu after the detail fetch settles, and the edit sheet opens with title, URL, description, group, and save controls present.
+- Verified metadata refresh on an existing bookmark returns to the dashboard with no browser console errors.
+- Verified the Import sheet and Duplicates sheet open from the user menu; the Duplicates sheet reports the current no-duplicates state without destructive action.
+- User manually verified import completion: after the sheet reports import complete and closes, newly imported bookmarks appear in the dashboard while many remain visibly enriching, which matches the capture-first/enrich-later contract.
+- User manually verified the Add flow works correctly on the authenticated dashboard.
+- Measured live dashboard bookmark payload sizes from Supabase: the 158-bookmark account shape saves about 49.6 KB / 36.3% uncompressed, and the 22-user aggregate saves about 331.6 KB / 34.0% weighted.
+- Added the first enrichment observability cut: an avatar-menu `Enrichment health` sheet that reports active count, oldest active age, failed count, and stuck-over-15-minute count from existing bookmark fields.
+- Moved enrichment health out of the main dashboard surface and into the avatar dropdown sheet after user feedback that the visible strip was too large and not actionable enough.
+- Added retry actions for failed/stuck enrichment rows and a retry-all action for actionable rows.
+- Added a `Select affected` action in the enrichment health sheet that hands failed/stuck bookmarks to the existing bulk action bar for refresh/retry or delete/remove.
+- Tightened enrichment failed detection so rows with useful metadata are not flagged just because `status = failed` is stale.
+- Added refresh-needed bookmarks to enrichment health: pending rows that are no longer actively enriching now appear in the sheet and count toward the avatar-menu attention badge.
+- Adjusted the `Needs attention` header so the label does not wrap when action buttons sit beside it.
+- Verified the main dashboard strip is gone, the avatar menu exposes `Enrichment health`, and the sheet opens on `http://localhost:3001/dashboard` through the in-app browser DOM snapshot.
+- Verified the enrichment health change with `pnpm typecheck`, targeted `oxlint`, and React Doctor at 100/100.
 
 ---
 
@@ -51,7 +69,10 @@
 - Treat the remaining Auth leaked-password protection advisor as accepted/no-action while on the Supabase free plan.
 - Dashboard search and Open Group filtering should use title+URL only; `description` is too broad for the dashboard search contract.
 - First payload-shaping cut should remove `description`, `og_image_url`, `image_url`, `screenshot_url`, `last_fetched_at`, and `error_reason` from the initial dashboard select.
-- Next step is authenticated browser smoke testing for the first payload-shaping cut, especially preview/edit detail fetch behavior and search/Open Group behavior.
+- Authenticated browser smoke testing is complete enough for this phase; realtime-specific coverage is accepted as skipped.
+- Realtime-specific smoke testing is skipped for this phase as accepted residual risk because the payload-shaping cut did not intentionally change realtime subscription wiring.
+- Next scalability decision is whether enrichment observability needs persisted attempt tracking, or whether the current client-side signal is enough until metrics show pain.
+- First enrichment observability cut should remain client-side until retry count / last-attempt data proves a server-side attempt model is worth the added surface.
 
 ---
 

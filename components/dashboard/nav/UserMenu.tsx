@@ -9,10 +9,11 @@ import {
   FileImportIcon,
   FileExportIcon,
   Wrench01Icon,
+  Alert02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { signOut } from "@/app/dashboard/actions/auth"
 import { ExtensionInstallDialog } from "@/components/extension-install-dialog"
@@ -25,8 +26,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { BookmarkRow } from "@/lib/supabase/queries"
 import type { DashboardPaletteTheme } from "@/lib/themes"
 import { SettingsDialog } from "../SettingsDialog"
+import { getEnrichmentHealthSummary } from "./EnrichmentHealthSheet"
 import type { User } from "./types"
 
 function LogoutItem() {
@@ -68,6 +71,8 @@ interface UserMenuProps {
   onOpenImportSheet: () => void
   onOpenExportSheet: () => void
   onOpenDuplicatesSheet: () => void
+  bookmarks: BookmarkRow[]
+  onOpenEnrichmentHealthSheet: () => void
 }
 
 export function UserMenu({
@@ -86,9 +91,14 @@ export function UserMenu({
   onOpenImportSheet,
   onOpenExportSheet,
   onOpenDuplicatesSheet,
+  bookmarks,
+  onOpenEnrichmentHealthSheet,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
+  const enrichmentSummary = useMemo(() => getEnrichmentHealthSummary(bookmarks), [bookmarks])
+  const enrichmentAttentionCount =
+    enrichmentSummary.failed + enrichmentSummary.stuck + enrichmentSummary.needsRefresh
 
   const goToHomepage = () => {
     document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
@@ -216,6 +226,23 @@ export function UserMenu({
           >
             <HugeiconsIcon icon={Wrench01Icon} size={16} />
             Duplicates
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            className="rounded-xl flex items-center gap-2 cursor-pointer focus:bg-muted focus:text-foreground font-medium px-2.5 py-2"
+            onSelect={(event) => {
+              event.preventDefault()
+              setOpen(false)
+              onOpenEnrichmentHealthSheet()
+            }}
+          >
+            <HugeiconsIcon icon={Alert02Icon} size={16} />
+            <span className="min-w-0 flex-1">Enrichment health</span>
+            {enrichmentAttentionCount > 0 ? (
+              <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-amber-500">
+                {enrichmentAttentionCount}
+              </span>
+            ) : null}
           </DropdownMenuItem>
 
           <ExtensionInstallDialog>

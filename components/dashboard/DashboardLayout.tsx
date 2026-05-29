@@ -88,6 +88,12 @@ export function DashboardLayout({
               navigation={navigation}
               navigationControls={navigationControls}
               notesTodos={notesTodos}
+              enrichmentHealth={{
+                bookmarks: library.bookmarks,
+                onRefreshBookmark: library.handleRefreshBookmark,
+                onLoadBookmarkDetails: library.handleLoadBookmarkDetails,
+                onSelectBookmarks: selection.handleSelectBookmarks,
+              }}
             />
             <div className="pt-4 md:pt-6">
               <CommandBar

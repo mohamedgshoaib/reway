@@ -101,11 +101,13 @@ export interface DashboardNavigationControlsAdapter {
   importSheetOpen: boolean
   exportSheetOpen: boolean
   duplicatesSheetOpen: boolean
+  enrichmentHealthSheetOpen: boolean
   notesTodosSheetOpen: boolean
   selectedImportGroups: string[]
   selectedExportGroups: string[]
   setNotesTodosSheetOpen: Dispatch<SetStateAction<boolean>>
   setDuplicatesSheetOpen: Dispatch<SetStateAction<boolean>>
+  setEnrichmentHealthSheetOpen: Dispatch<SetStateAction<boolean>>
   handleImportOpenChange: (open: boolean) => void
   handleExportOpenChange: (open: boolean) => void
   handleToggleImportGroup: (name: string) => void
@@ -113,6 +115,7 @@ export interface DashboardNavigationControlsAdapter {
   openImportSheet: () => void
   openExportSheet: () => void
   openDuplicatesSheet: () => void
+  openEnrichmentHealthSheet: () => void
 }
 
 export interface DashboardLibraryAdapter {
@@ -152,6 +155,7 @@ export interface DashboardSelectionAdapter {
   selectedIds: Set<string>
   setSelectionMode: Dispatch<SetStateAction<boolean>>
   handleToggleSelection: (id: string) => void
+  handleSelectBookmarks: (ids: string[]) => void
   handleOpenSelected: () => void
   handleRefreshSelected: () => Promise<void>
   handleBulkDelete: () => Promise<void>

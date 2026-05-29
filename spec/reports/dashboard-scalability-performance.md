@@ -376,9 +376,45 @@ Outcome:
 
 ### Do Now
 
-- Manually smoke-test the first payload-shaping cut in the browser with an authenticated session: dashboard load, list/card/folder view, search, Open Group under a search query, preview, edit sheet, refresh metadata, import, duplicate sheet, and realtime updates.
-- Confirm detail fetch behavior feels instant enough for preview/edit. If not, add a small loading state or prefetch on action open.
-- Measure the dashboard bookmark payload size before moving to the next scaling cut.
+- Decide whether enrichment observability needs a server-side persisted attempt model, or whether the client-side dashboard signal is enough until metrics show repeated failures.
+
+Completed browser smoke coverage on 29-May-26:
+
+- Authenticated dashboard load on `http://localhost:3001/dashboard` after a user import of about 144 bookmarks.
+- Imported bookmark library renders and view switching keeps bookmarks visible.
+- Search mode filters by title and URL/domain only; description matching remains intentionally out of the dashboard search contract.
+- Group filtering under an active search query keeps the matching title/URL result and excludes unrelated bookmark titles.
+- Quick Glance opens from the bookmark context menu after the targeted detail fetch settles.
+- Edit sheet opens with full detail controls, including description, after the detail load path.
+- Metadata refresh returns to the dashboard without browser console errors.
+- Import and Duplicates sheets open from the user menu; Duplicates reports the current no-duplicates state without destructive action.
+- User manually verified import completion: after the sheet reports import complete and closes, newly imported bookmarks appear in the dashboard while many remain visibly enriching. This matches Reway's capture-first/enrich-later contract.
+- User manually verified the Add flow works correctly on the authenticated dashboard.
+
+Remaining browser smoke gap:
+
+- Realtime-specific coverage was intentionally skipped for this phase as accepted residual risk because payload shaping did not intentionally change realtime subscription wiring.
+
+Completed payload-size measurement on 29-May-26:
+
+- Method: live Supabase SQL measured uncompressed UTF-8 JSON text for the current initial bookmark field set versus the prior detail-inclusive field set.
+- Current 158-bookmark account shape: initial payload about 86.9 KB, previous full shape about 136.5 KB, saving about 49.6 KB / 36.3%.
+- Largest measured account shape: 247 bookmarks, initial payload about 146.4 KB, previous full shape about 228.7 KB, saving about 82.3 KB / 36.0%.
+- Across 22 measured users and 1,081 bookmarks: initial payload about 642.5 KB, previous full shape about 974.1 KB, saving about 331.6 KB / 34.0% weighted.
+- Average measured row cost: about 542 bytes per bookmark in the initial shape versus about 825 bytes per bookmark in the prior full shape.
+
+Completed first enrichment observability cut on 29-May-26:
+
+- Added an avatar-menu `Enrichment health` sheet computed from existing initial bookmark fields.
+- The user menu shows a small attention badge only when stuck or failed enrichment work exists.
+- The sheet reports active enrichment/backlog count, refresh-needed count, oldest active age, failed count, and items stuck over 15 minutes.
+- Refresh-needed means a bookmark is `pending` but no longer actively enriching, which can happen after a reload or interrupted import/enrichment worker.
+- Failed/stuck rows are actionable: each row can retry enrichment, and the sheet can retry all actionable rows.
+- The sheet can also select all affected rows, including refresh-needed rows, handing off to the existing bulk action bar for refresh/retry or delete/remove instead of duplicating bulk actions.
+- Failed rows show recorded error detail when available through the detail-load path.
+- The failed count intentionally ignores rows that still have useful metadata, because `status = failed` can be stale after later metadata fields are present.
+- The first stuck heuristic uses `created_at` for pending/enriching bookmarks because `last_fetched_at` is detail-only after payload shaping.
+- This is intentionally client-side and non-persistent; retry count and last-attempt tracking still require a later server-side attempt model if metrics justify it.
 
 Completed Supabase migration work:
 
