@@ -1,15 +1,7 @@
 "use client"
 
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
-
-function StatusSpinner() {
-  return (
-    <span
-      className="inline-block size-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground"
-      aria-hidden="true"
-    />
-  )
-}
+import { DashboardLoadingState } from "../LoadingState"
 
 interface CommandBarInputProps {
   mode: "add" | "search"
@@ -66,10 +58,10 @@ export function CommandBarInput({
             }}
             placeholder={
               mode === "search"
-                ? "Search bookmarks..."
+                ? "Search bookmarks…"
                 : mode === "add" && isAddBusy && addStatus
                   ? ""
-                  : "Paste a link to save..."
+                  : "Paste a link to save…"
             }
             className="w-full bg-transparent p-0 pl-1.5 text-sm font-medium outline-none placeholder:text-muted-foreground selection:bg-primary/20 disabled:opacity-50"
             disabled={mode === "add" && isAddBusy}
@@ -79,8 +71,7 @@ export function CommandBarInput({
           />
           {mode === "add" && isAddBusy && addStatus ? (
             <div className="pointer-events-none absolute inset-0 flex items-center gap-2 pl-1.5 text-sm font-medium text-muted-foreground">
-              <StatusSpinner />
-              <span className="truncate">{addStatus}</span>
+              <DashboardLoadingState label={addStatus} />
             </div>
           ) : null}
         </div>

@@ -3,6 +3,7 @@ import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import React from "react"
 import { Button as UIButton } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { Input } from "@/components/ui/input"
 import type { GroupRow } from "@/lib/supabase/queries"
 import type { IconPickerPopoverProps } from "../../IconPickerPopover"
@@ -102,7 +103,7 @@ export function GroupEditRow({
             onClick={() => onUpdateGroup(group.id)}
             disabled={!editGroupName.trim() || isUpdating}
           >
-            {isUpdating ? "Saving..." : "Save"}
+            {isUpdating ? <DashboardLoadingState label="Saving" /> : "Save"}
           </UIButton>
         </div>
       </div>

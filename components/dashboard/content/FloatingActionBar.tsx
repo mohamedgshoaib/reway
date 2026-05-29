@@ -99,7 +99,7 @@ export function FloatingActionBar({
               className="h-8 rounded-lg bg-muted/50 hover:bg-muted text-foreground font-medium text-sm"
               aria-label="Move selected bookmarks to a group"
             >
-              <SelectValue placeholder={isMoving ? "Moving..." : "Move to"} />
+              <SelectValue placeholder={isMoving ? "Moving…" : "Move to"} />
             </SelectTrigger>
             <SelectContent>
               {moveOptions.map((group) => (

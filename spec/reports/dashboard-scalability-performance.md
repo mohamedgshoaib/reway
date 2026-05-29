@@ -365,6 +365,23 @@ Outcome:
 - More layout-specific implementation complexity.
 - Highest value after payload shaping.
 
+Implementation status on 29-May-26:
+
+- First reusable virtualization foundation was added with `@tanstack/react-virtual`.
+- `components/dashboard/virtualization/VirtualizedList.tsx` owns the shared one-dimensional virtualizer contract: stable keys, measured rows, overscan, real scroll-container wiring, and selected-index `scrollToIndex`.
+- `components/dashboard/bookmark-board/VirtualizedBookmarkList.tsx` wires compact bookmark list rows to that foundation.
+- Compact list view now virtualizes at 50 or more visible bookmarks; search results are included because the same filtered bookmark array feeds the board.
+- `components/dashboard/bookmark-board/VirtualizedBookmarkCardRows.tsx` virtualizes card view as rows of cards at 50 or more visible bookmarks, preserving responsive column measurement through `useBookmarkGrid`.
+- `components/dashboard/folder-board/VirtualizedFolderSections.tsx` virtualizes compact folder view at 20 or more visible folder sections.
+- Extended grid-like list view and extended folder grid intentionally remain on their previous renderers for this phase because their column-distributed layouts need separate design.
+- Active compact-list drag increases overscan so nearby drop targets stay mounted; `DragOverlay` remains outside the virtualized rows.
+- Active card-view drag increases row overscan so nearby card rows stay mounted; card items still use stable bookmark IDs inside the shared `SortableContext`.
+- Active compact-folder drag increases section overscan so nearby folder droppables stay mounted; bookmark grids inside each mounted folder section keep their existing dnd-kit sortable behavior.
+- Refresh-specific blank-list bug was fixed by passing the resolved dashboard scroll element through state instead of a ref object that could be `null` during virtualizer initialization.
+- Follow-up compact/TanStack Virtual audit fixed copy timer cleanup, safe external opens, compact action hit areas, visible focus rings, dashboard loading affordances, count-aware folder section estimates, memoized virtualizer callbacks, virtual-row transform hints, and virtualized child `content-visibility` leftovers.
+- Dashboard loading states now reuse the extension popup's three-bar loading affordance through `components/dashboard/LoadingState.tsx`.
+- Verification: `pnpm typecheck`, targeted `oxlint`, React Doctor 100/100, `git diff --check`, and focused source scans passed.
+
 ### 7. Enrichment Background Work
 
 Decision: keep current concurrency-limited enrichment path for now, but add observability before considering Supabase Queues.
@@ -448,6 +465,7 @@ Completed Supabase migration work:
 ### Do Soon
 
 - Browser-smoke rank reorder across bookmark list/card/folder views, sidebar group reorder, import-created ranks, extension-created saves, and realtime reorder propagation.
+- Review compact-list, card-view, and compact-folder virtualization in an authenticated browser when available, especially refresh, keyboard selection scroll, drag reorder near viewport edges, search results over 50 rows, responsive card column changes, folder collapse/expand, and group switching.
 - Secondary DnD audit: use the dnd-kit skill before virtualization to profile current drag performance, with special attention to large card/folder boards, active-drag rerenders, collision strategy cost, sensor activation constraints, and whether migrating from legacy `@dnd-kit/core` / `@dnd-kit/sortable` to the newer `@dnd-kit/react` API is worth doing before TanStack Virtual.
 - Monitor `groups_user_id_rank_idx`; its initial unused-index lint is expected immediately after creation and should be revisited only after reorder/read traffic has exercised the new path.
 - Add focused UI or diagnostics for enrichment failure details now that `error_reason` is detail-only.
@@ -461,7 +479,7 @@ Payload split guardrails:
 
 ### Do Later
 
-- Implement TanStack Virtual with dnd-kit in phases.
+- Continue TanStack Virtual with dnd-kit in phases: extended grid-like list only if it proves distinct from card rows, and extended folder grid only after a separate column-aware design.
 
 Rank migration guardrails:
 

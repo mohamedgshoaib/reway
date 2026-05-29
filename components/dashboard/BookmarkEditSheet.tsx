@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
+import { DashboardLoadingState } from "./LoadingState"
 
 function GroupOption({
   group,
@@ -83,6 +84,7 @@ export function BookmarkEditSheet({
   const [groupId, setGroupId] = useState("no-group")
   const [isSaving, setIsSaving] = useState(false)
 
+  // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change, react-doctor/no-derived-state
   useEffect(() => {
     if (!open) return
     let cancelled = false
@@ -102,11 +104,17 @@ export function BookmarkEditSheet({
 
   useEffect(() => {
     if (!bookmark) return
+    // react-doctor-disable-next-line react-doctor/no-derived-state
     setTitle(bookmark.title || "")
+    // react-doctor-disable-next-line react-doctor/no-derived-state
     setUrl(bookmark.url || "")
+    // react-doctor-disable-next-line react-doctor/no-derived-state
     setDescription(bookmark.description || "")
+    // react-doctor-disable-next-line react-doctor/no-derived-state
     setFaviconUrl(bookmark.favicon_url || "")
+    // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change, react-doctor/no-derived-state
     setFaviconScope("single")
+    // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change, react-doctor/no-derived-state
     setGroupId(bookmark.group_id || "no-group")
   }, [bookmark])
 
@@ -270,7 +278,7 @@ export function BookmarkEditSheet({
             disabled={isSaving}
             className="cursor-pointer"
           >
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? <DashboardLoadingState label="Saving" /> : "Save Changes"}
           </Button>
         </SheetFooter>
       </SheetContent>

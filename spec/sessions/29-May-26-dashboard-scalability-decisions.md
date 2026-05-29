@@ -1,6 +1,6 @@
 # Session 5 — Dashboard Scalability Decisions
 
-**Time:** 3:53 AM-7:45 AM (Cairo Time, UTC+02:00)
+**Time:** 3:53 AM-12:24 PM (Cairo Time, UTC+02:00)
 
 ---
 
@@ -64,6 +64,23 @@
 - Used the dnd-kit skill to review the current DnD surface, memoized card/folder icon sortable bookmark components, and stabilized board item action handlers to reduce active-drag rerender pressure.
 - Verified the rank implementation with `pnpm typecheck`, targeted `oxlint`, and React Doctor at 100/100.
 - Reloaded the authenticated dashboard at `http://localhost:3001/dashboard`; the dashboard rendered without a build/runtime overlay after the rank changes.
+- Prepared virtualization scope with `grill-me`, `dnd-kit-react`, and `tanstack-virtual`: reusable foundation, compact list view first, card/folder later, threshold set to 50 visible bookmarks after pushback that 20 would mask row-render cost without evidence.
+- Added `@tanstack/react-virtual` and a reusable one-dimensional virtualizer at `components/dashboard/virtualization/VirtualizedList.tsx`.
+- Added `components/dashboard/bookmark-board/VirtualizedBookmarkList.tsx` and wired compact list mode in `BookmarkBoard`; card view, extended grid-like list view, and folder view remain unchanged for this phase.
+- Passed the dashboard scroll container from `DashboardLayout` into `BookmarkBoard` so virtual keyboard selection can call `scrollToIndex` against the real scroll surface.
+- Fixed the compact-list refresh blank state by passing the resolved dashboard scroll element through state instead of relying on a ref object that could be `null` when TanStack Virtual initialized.
+- After user confirmed compact list felt solid, added `components/dashboard/bookmark-board/VirtualizedBookmarkCardRows.tsx` and wired card view virtualization as rows of cards at 50 or more visible bookmarks.
+- Preserved card responsive behavior by keeping `useBookmarkGrid` as the column-count source and virtualizing card rows rather than individual cards.
+- After user confirmed card view felt solid, added `components/dashboard/folder-board/VirtualizedFolderSections.tsx` and wired compact folder view virtualization at 20 or more visible folder sections.
+- Left extended folder grid unvirtualized because its column-distributed layout needs a separate column-aware design instead of reusing compact section virtualization.
+- Verified the compact-list, card-row, and compact-folder virtualization cuts with `pnpm typecheck`, targeted `oxlint`, React Doctor at 100/100, and `git diff --check`.
+- Investigated dev server crashes during virtualization testing: pinned `turbopack.root` in `next.config.ts` to the physical config directory instead of `process.cwd()`, added webpack fallback scripts, and started a webpack dev server on `http://localhost:3001`.
+- Fixed a generated Next route type error exposed by the webpack dev server by moving `getUser` out of `app/dashboard/layout.tsx` into `lib/dashboard/server/user.ts`; route segment files now export only valid Next route exports.
+- Reviewed compact list/card/folder virtualization against the TanStack Virtual guidance and compact UI findings after user testing.
+- Fixed the 11-item audit batch: copy feedback timers now clean up, dashboard external opens use `noopener,noreferrer`, compact action hit areas are larger, sortable roots have visible focus rings, loading states use the extension popup's three-bar loading affordance, folder virtualization has count-aware estimates, virtualizer callbacks are memoized, virtual rows use transform hints, virtualized children no longer use `content-visibility`, and card row keys no longer remount on responsive column changes.
+- Re-ran verification for the audit batch: `pnpm typecheck`, targeted `oxlint`, React Doctor 100/100, `git diff --check`, and focused source scans passed.
+- Follow-up list-view polish reduced the desktop inline action cluster to edit/copy/menu, moved open/preview/refresh/bulk/delete into the menu, gave the right edge optical padding again, and moved pending/enriching loading animation into the favicon slot instead of duplicating it beside status text.
+- Second list-view polish pass split compact and extended behavior: compact desktop rows now show only edit/copy inline, extended desktop rows keep the overflow menu, action hover surfaces sit in an equal-inset lane, and extended list cards use a slightly wider minimum width to reduce title/URL truncation.
 
 ---
 
@@ -86,6 +103,7 @@
 - First enrichment observability cut should remain client-side until retry count / last-attempt data proves a server-side attempt model is worth the added surface.
 - `order_index` should remain frozen as rollback data after the rank cutover; do not drop it until dashboard, extension, imports, realtime, and smoke tests are verified.
 - A secondary DnD performance audit should happen before virtualization: profile current large-board drag behavior, collision costs, sensor constraints, and whether a legacy dnd-kit to `@dnd-kit/react` migration is worthwhile before TanStack Virtual.
+- Compact list virtualization should start at 50 visible bookmarks; keep this as a tunable constant and lower it only from profiling evidence.
 
 ---
 
@@ -95,3 +113,4 @@
 2. Local Supabase migration listing is blocked until the local database is started on `127.0.0.1:54322`; live transaction rollback and post-apply verification succeeded.
 3. Full `pnpm lint` is blocked by pre-existing unrelated lint findings; targeted lint for the changed rank/payload files passes.
 4. Post-rank performance advisor reports `groups_user_id_rank_idx` as unused immediately after creation. This is expected until traffic exercises the new group-rank read path; bookmark rank ordering already uses `bookmarks_user_id_group_id_rank_idx` in a representative plan.
+5. Turbopack dev server previously reached a Node heap OOM after minutes of use; current workaround is the webpack dev server fallback while the app-side virtualization changes are tested.

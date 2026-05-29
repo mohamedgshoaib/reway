@@ -288,7 +288,7 @@ export function useCommandHandlers({
       isSubmittingRef.current = true
 
       if (isUrl(value) && !value.includes(" ")) {
-        setAddStatus("Adding link...", true)
+        setAddStatus("Adding link", true)
         try {
           await processUrls([value])
         } finally {
@@ -296,11 +296,11 @@ export function useCommandHandlers({
           isSubmittingRef.current = false
         }
       } else {
-        setAddStatus("Extracting links from text...", true)
+        setAddStatus("Extracting links from text", true)
         try {
           const urls = extractUrlsFromText(value)
           if (urls.length > 0) {
-            setAddStatus("Adding links from text...", true)
+            setAddStatus("Adding links from text", true)
             await processUrls(urls)
           } else {
             toast.error("No links found")

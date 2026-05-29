@@ -8,10 +8,12 @@ import {
   PencilEdit01Icon,
   Refresh01Icon,
   Tick01Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { DashboardLoadingState } from "../LoadingState"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +28,7 @@ interface MobileActionMenuProps {
   onRefresh: (e?: React.MouseEvent) => void
   onCopyLink: (e?: React.MouseEvent) => void | Promise<void>
   onOpen: (e?: React.MouseEvent) => void
+  onPreview?: () => void
   onDelete: (e?: React.MouseEvent) => void
   onBulkSelect?: () => void
   showBulkSelect?: boolean
@@ -38,6 +41,7 @@ export function MobileActionMenu({
   onRefresh,
   onCopyLink,
   onOpen,
+  onPreview,
   onDelete,
   onBulkSelect,
   showBulkSelect = false,
@@ -53,7 +57,7 @@ export function MobileActionMenu({
             size="icon"
             // Issue: `suppressHydrationWarning` should only be used when a mismatch is expected.
             // Fix: remove it here; the trigger is deterministic and should hydrate consistently.
-            className="size-8 -mr-2 rounded-lg hover:bg-muted/50 cursor-pointer"
+            className="size-10 -mr-2 rounded-lg hover:bg-muted/50 cursor-pointer"
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
@@ -83,6 +87,22 @@ export function MobileActionMenu({
           >
             <HugeiconsIcon icon={PencilEdit01Icon} size={16} /> Edit
           </DropdownMenuItem>
+          {onPreview ? (
+            <DropdownMenuItem
+              className="rounded-xl flex items-center gap-2 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                onPreview()
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                onPreview()
+              }}
+            >
+              <HugeiconsIcon icon={ViewIcon} size={16} /> Quick Glance
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer"
             disabled={isRefreshing}
@@ -96,12 +116,14 @@ export function MobileActionMenu({
               onRefresh()
             }}
           >
-            <HugeiconsIcon
-              icon={Refresh01Icon}
-              size={16}
-              className={isRefreshing ? "animate-spin" : ""}
-            />
-            {isRefreshing ? "Refreshing..." : "Refresh Metadata"}
+            {isRefreshing ? (
+              <DashboardLoadingState label="Refreshing" />
+            ) : (
+              <>
+                <HugeiconsIcon icon={Refresh01Icon} size={16} />
+                Refresh Metadata
+              </>
+            )}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="rounded-xl flex items-center gap-2 cursor-pointer"

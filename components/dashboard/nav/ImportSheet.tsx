@@ -17,6 +17,7 @@ import {
   SheetFooter,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { DashboardLoadingState } from "../LoadingState"
 
 interface ImportSheetProps {
   open: boolean
@@ -115,30 +116,21 @@ export function ImportSheet({
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
                   {importProgress.status === "importing"
-                    ? "Importing…"
+                    ? <DashboardLoadingState label="Importing" />
                     : importProgress.status === "stopping"
-                      ? "Stopping…"
+                      ? <DashboardLoadingState label="Stopping" />
                       : importProgress.status}
                 </span>
                 <span>
                   {importProgress.processed}/{importProgress.total}
                 </span>
               </div>
-              <div
-                className="h-2 w-full overflow-hidden rounded-full bg-muted"
-                role="progressbar"
+              <progress
+                className="h-2 w-full overflow-hidden rounded-full bg-muted [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-primary"
                 aria-label="Import progress"
-                aria-valuemin={0}
-                aria-valuemax={importProgress.total}
-                aria-valuenow={importProgress.processed}
-              >
-                <div
-                  className="h-2 w-full origin-left rounded-full bg-primary transition-transform"
-                  style={{
-                    transform: `scaleX(${importProgress.total === 0 ? 0 : importProgress.processed / importProgress.total})`,
-                  }}
-                />
-              </div>
+                max={importProgress.total}
+                value={importProgress.processed}
+              />
               <p className="sr-only" aria-live="polite">
                 Import {importProgress.status}. {importProgress.processed} of {importProgress.total}
                 .
@@ -321,7 +313,7 @@ export function ImportSheet({
                 onClick={() => onConfirmImport(selectedImportGroups)}
                 disabled={selectedImportGroups.length === 0 || isImporting || isStopping}
               >
-                {isImporting ? "Importing…" : "Import selected"}
+                {isImporting ? <DashboardLoadingState label="Importing" /> : "Import selected"}
               </Button>
               {isImporting || isStopping ? (
                 <Button
@@ -333,7 +325,7 @@ export function ImportSheet({
                     onClearImport()
                   }}
                 >
-                  {isStopping ? "Stopping…" : "Stop"}
+                  {isStopping ? <DashboardLoadingState label="Stopping" /> : "Stop"}
                 </Button>
               ) : (
                 <Button

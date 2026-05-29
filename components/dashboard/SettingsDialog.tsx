@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DashboardLoadingState } from "./LoadingState"
 import {
   Select,
   SelectContent,
@@ -401,7 +402,7 @@ export function SettingsDialog({
                       disabled={!isConfirmMatch || isDeleting}
                       onClick={handleDeleteAccount}
                     >
-                      {isDeleting ? "Deleting..." : "Delete Account"}
+                      {isDeleting ? <DashboardLoadingState label="Deleting" /> : "Delete Account"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

@@ -2,6 +2,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { NOTE_COLORS } from "./config"
@@ -96,7 +97,7 @@ export function NoteCreateCard({
               onClick={onCreate}
               disabled={!text.trim() || isCreating}
             >
-              {isCreating ? "Creating..." : "Create"}
+              {isCreating ? <DashboardLoadingState label="Creating" /> : "Create"}
             </Button>
           </div>
         </div>

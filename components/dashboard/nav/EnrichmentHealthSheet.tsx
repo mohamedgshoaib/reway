@@ -14,10 +14,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { LoadingBarsIcon } from "@/components/dashboard/LoadingState"
 import type { BookmarkRow } from "@/lib/supabase/queries"
 import { getDomain } from "@/lib/utils"
+import {
+  formatEnrichmentAge,
+  getCreatedAge,
+  getEnrichmentHealthSummary,
+  isStuck,
+  needsFailedAttention,
+  needsRefresh,
+} from "./enrichment-health"
 
-const STUCK_AFTER_MS = 15 * 60 * 1000
 const DETAIL_LOAD_LIMIT = 20
 
 interface EnrichmentHealthSheetProps {
@@ -27,77 +35,6 @@ interface EnrichmentHealthSheetProps {
   onRefreshBookmark: (id: string) => Promise<void>
   onLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
   onSelectBookmarks: (ids: string[]) => void
-}
-
-export interface EnrichmentHealthSummary {
-  active: number
-  needsRefresh: number
-  failed: number
-  stuck: number
-  oldestActiveAge: number
-}
-
-function formatAge(ageMs: number) {
-  const minutes = Math.max(0, Math.floor(ageMs / 60000))
-  if (minutes < 1) return "<1m"
-  if (minutes < 60) return `${minutes}m`
-
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  if (hours < 24) {
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
-  }
-
-  return `${Math.floor(hours / 24)}d`
-}
-
-function getCreatedAge(bookmark: BookmarkRow, now: number) {
-  const createdAt = Date.parse(bookmark.created_at)
-  return Number.isNaN(createdAt) ? 0 : Math.max(0, now - createdAt)
-}
-
-function isActiveEnrichment(bookmark: BookmarkRow) {
-  return Boolean(bookmark.is_enriching || bookmark.status === "pending")
-}
-
-function needsRefresh(bookmark: BookmarkRow) {
-  return bookmark.status === "pending" && !bookmark.is_enriching
-}
-
-function hasUsefulMetadata(bookmark: BookmarkRow) {
-  return Boolean(bookmark.favicon_url || bookmark.title?.trim() || bookmark.description?.trim())
-}
-
-function needsFailedAttention(bookmark: BookmarkRow) {
-  return bookmark.status === "failed" && !hasUsefulMetadata(bookmark)
-}
-
-function isStuck(bookmark: BookmarkRow, now: number) {
-  return isActiveEnrichment(bookmark) && getCreatedAge(bookmark, now) >= STUCK_AFTER_MS
-}
-
-export function getEnrichmentHealthSummary(
-  bookmarks: BookmarkRow[],
-  now = Date.now(),
-): EnrichmentHealthSummary {
-  let active = 0
-  let needsRefreshCount = 0
-  let failed = 0
-  let stuck = 0
-  let oldestActiveAge = 0
-
-  for (const bookmark of bookmarks) {
-    if (needsRefresh(bookmark)) needsRefreshCount += 1
-    if (needsFailedAttention(bookmark)) failed += 1
-    if (!isActiveEnrichment(bookmark)) continue
-
-    active += 1
-    const age = getCreatedAge(bookmark, now)
-    oldestActiveAge = Math.max(oldestActiveAge, age)
-    if (age >= STUCK_AFTER_MS) stuck += 1
-  }
-
-  return { active, needsRefresh: needsRefreshCount, failed, stuck, oldestActiveAge }
 }
 
 export function EnrichmentHealthSheet({
@@ -111,6 +48,11 @@ export function EnrichmentHealthSheet({
   const [now, setNow] = useState(() => Date.now())
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(() => new Set())
   const loadedDetailIdsRef = useRef<Set<string>>(new Set())
+  const onLoadBookmarkDetailsRef = useRef(onLoadBookmarkDetails)
+
+  useEffect(() => {
+    onLoadBookmarkDetailsRef.current = onLoadBookmarkDetails
+  }, [onLoadBookmarkDetails])
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 60_000)
@@ -139,15 +81,18 @@ export function EnrichmentHealthSheet({
   useEffect(() => {
     if (!open) return
 
-    const failedWithoutDetails = actionableBookmarks
-      .filter((bookmark) => needsFailedAttention(bookmark) && !loadedDetailIdsRef.current.has(bookmark.id))
-      .slice(0, DETAIL_LOAD_LIMIT)
+    const failedWithoutDetails: BookmarkRow[] = []
+    for (const bookmark of actionableBookmarks) {
+      if (failedWithoutDetails.length >= DETAIL_LOAD_LIMIT) break
+      if (!needsFailedAttention(bookmark) || loadedDetailIdsRef.current.has(bookmark.id)) continue
+      failedWithoutDetails.push(bookmark)
+    }
 
-    failedWithoutDetails.forEach((bookmark) => {
+    for (const bookmark of failedWithoutDetails) {
       loadedDetailIdsRef.current.add(bookmark.id)
-      void onLoadBookmarkDetails(bookmark.id)
-    })
-  }, [actionableBookmarks, onLoadBookmarkDetails, open])
+      void onLoadBookmarkDetailsRef.current(bookmark.id)
+    }
+  }, [actionableBookmarks, open])
 
   const refreshOne = async (id: string) => {
     setRefreshingIds((prev) => new Set(prev).add(id))
@@ -163,9 +108,10 @@ export function EnrichmentHealthSheet({
   }
 
   const refreshActionable = async () => {
-    const ids = actionableBookmarks
-      .filter((bookmark) => !bookmark.is_enriching)
-      .map((bookmark) => bookmark.id)
+    const ids: string[] = []
+    for (const bookmark of actionableBookmarks) {
+      if (!bookmark.is_enriching) ids.push(bookmark.id)
+    }
 
     if (ids.length === 0) return
 
@@ -222,7 +168,7 @@ export function EnrichmentHealthSheet({
             <div className="rounded-xl bg-muted/15 px-3 py-2 text-xs text-muted-foreground ring-1 ring-foreground/8">
               Oldest active enrichment:{" "}
               <span className="font-semibold text-foreground tabular-nums">
-                {formatAge(summary.oldestActiveAge)}
+                {formatEnrichmentAge(summary.oldestActiveAge)}
               </span>
             </div>
           ) : null}
@@ -292,11 +238,11 @@ export function EnrichmentHealthSheet({
                           onClick={() => void refreshOne(bookmark.id)}
                           aria-label="Retry enrichment"
                         >
-                          <HugeiconsIcon
-                            icon={Refresh01Icon}
-                            size={16}
-                            className={refreshing ? "animate-spin" : ""}
-                          />
+                          {refreshing ? (
+                            <LoadingBarsIcon />
+                          ) : (
+                            <HugeiconsIcon icon={Refresh01Icon} size={16} />
+                          )}
                         </Button>
                       </div>
 
@@ -314,7 +260,7 @@ export function EnrichmentHealthSheet({
                         ) : null}
                         {stuck ? (
                           <span className="rounded-lg bg-amber-500/10 px-2 py-1 text-amber-500">
-                            Stuck {formatAge(getCreatedAge(bookmark, now))}
+                            Stuck {formatEnrichmentAge(getCreatedAge(bookmark, now))}
                           </span>
                         ) : null}
                       </div>

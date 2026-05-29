@@ -11,7 +11,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { memo, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import {
@@ -29,6 +29,7 @@ import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { recordBookmarkVisit } from "@/lib/bookmark-visits"
 import { GroupRow } from "@/lib/supabase/queries"
 import { Favicon } from "./Favicon"
+import { DashboardLoadingState, LoadingBarsIcon } from "./LoadingState"
 import { BookmarkContextMenu } from "./sortable-bookmark/BookmarkContextMenu"
 
 interface SortableBookmarkCardProps {
@@ -84,6 +85,7 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
 }: SortableBookmarkCardProps) {
   const [isCopied, setIsCopied] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -128,7 +130,10 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
       await navigator.clipboard.writeText(url)
       setIsCopied(true)
       toast.success("URL copied to clipboard")
-      setTimeout(() => setIsCopied(false), 2000)
+      if (copyResetTimerRef.current) {
+        clearTimeout(copyResetTimerRef.current)
+      }
+      copyResetTimerRef.current = setTimeout(() => setIsCopied(false), 2000)
     } catch {
       toast.error("Failed to copy URL")
     }
@@ -167,17 +172,26 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
 
   const needsRefresh = status === "pending" && !isEnriching
 
+  useEffect(() => {
+    const timerRef = copyResetTimerRef
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
+
   return (
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
             ref={setNodeRef}
-            style={{ ...style, contentVisibility: "auto" }}
+            style={style}
             {...attributes}
             {...(selectionMode ? {} : listeners)}
             data-slot="bookmark-card"
-            className={`group relative flex flex-col gap-3 rounded-2xl bg-muted/20 p-3 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden ${
+            className={`group relative flex flex-col gap-3 rounded-2xl bg-muted/20 p-3 ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
               selectionMode
                 ? "cursor-pointer"
                 : dragDisabled
@@ -197,7 +211,7 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
                     event.stopPropagation()
                     onToggleSelection?.(id)
                   }}
-                  className="size-8 shrink-0 flex items-center justify-center rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
+                  className="size-10 shrink-0 flex items-center justify-center rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
                   aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
                 >
                   <div
@@ -303,7 +317,13 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="truncate max-w-[70%] transition-opacity duration-200 md:group-hover:opacity-0">
-                {needsRefresh ? "Refresh needed" : isEnriching ? "Refreshing..." : metaLabel}
+                {needsRefresh ? (
+                  "Refresh needed"
+                ) : isEnriching ? (
+                  <DashboardLoadingState label="Refreshing" />
+                ) : (
+                  metaLabel
+                )}
               </span>
               <div
                 role="presentation"
@@ -316,7 +336,7 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-10 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleEdit}
                   aria-label="Edit bookmark"
                 >
@@ -325,21 +345,21 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-10 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleRefresh}
                   aria-label={isEnriching ? "Refreshing metadata" : "Refresh metadata"}
                   disabled={isEnriching}
                 >
-                  <HugeiconsIcon
-                    icon={Refresh01Icon}
-                    size={14}
-                    className={isEnriching ? "animate-spin" : ""}
-                  />
+                  {isEnriching ? (
+                    <LoadingBarsIcon />
+                  ) : (
+                    <HugeiconsIcon icon={Refresh01Icon} size={14} />
+                  )}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-10 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleCopy}
                   aria-label={isCopied ? "URL copied" : "Copy link"}
                 >
@@ -357,7 +377,7 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-10 rounded-lg hover:bg-background hover:text-primary cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleOpen}
                   aria-label="Open link"
                 >
@@ -366,7 +386,7 @@ export const SortableBookmarkCard = memo(function SortableBookmarkCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-lg transition-transform duration-150 ease-out cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-[0.97] motion-reduce:transition-none"
+                  className="size-10 rounded-lg transition-transform duration-150 ease-out cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-[0.97] motion-reduce:transition-none"
                   onClick={handleDeleteRequest}
                   aria-label="Delete bookmark"
                 >

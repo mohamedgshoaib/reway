@@ -1,6 +1,7 @@
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { Input } from "@/components/ui/input"
 import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
 import type { IconPickerPopoverProps } from "../../IconPickerPopover"
@@ -98,7 +99,7 @@ export function GroupCreateCard({
                 onClick={onCreate}
                 disabled={!newGroupName.trim() || isCreatingGroup}
               >
-                {isCreatingGroup ? "Creating..." : "Create"}
+                {isCreatingGroup ? <DashboardLoadingState label="Creating" /> : "Create"}
               </Button>
             </div>
           </div>

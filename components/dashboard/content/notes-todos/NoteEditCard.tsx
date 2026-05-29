@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { Input } from "@/components/ui/input"
 import type { NoteRow } from "@/lib/supabase/queries"
 import { ColorPicker } from "./pickers"
@@ -58,7 +59,7 @@ export function NoteEditCard({
           onClick={onSave}
           disabled={!editText.trim() || isUpdating}
         >
-          {isUpdating ? "Saving..." : "Save"}
+          {isUpdating ? <DashboardLoadingState label="Saving" /> : "Save"}
         </Button>
       </div>
     </div>

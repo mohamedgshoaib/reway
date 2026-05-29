@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { BookmarkRow } from "@/lib/supabase/queries"
 import type { DashboardPaletteTheme } from "@/lib/themes"
+import { DashboardLoadingState } from "../LoadingState"
 import { SettingsDialog } from "../SettingsDialog"
-import { getEnrichmentHealthSummary } from "./EnrichmentHealthSheet"
+import { getEnrichmentHealthSummary } from "./enrichment-health"
 import type { User } from "./types"
 
 function LogoutItem() {
@@ -49,7 +50,7 @@ function LogoutItem() {
         aria-disabled={pending ? "true" : "false"}
       >
         <HugeiconsIcon icon={Logout01Icon} size={16} />
-        {pending ? "Logging out..." : "Log out"}
+        {pending ? <DashboardLoadingState label="Logging out" /> : "Log out"}
       </button>
     </DropdownMenuItem>
   )

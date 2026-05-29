@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
+    "dev:webpack:3001": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "oxlint",
@@ -22,6 +24,7 @@
     "@hugeicons/react": "^1.1.6",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
+    "@tanstack/react-virtual": "^3.13.26",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "driver.js": "^1.4.0",

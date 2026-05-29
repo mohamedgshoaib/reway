@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { useState, memo } from "react"
+import { useEffect, useRef, useState, memo } from "react"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -39,6 +39,7 @@ interface SortableBookmarkProps {
   onEdit?: (id: string) => void
   onPreview?: (id: string) => void
   rowContent?: "date" | "group"
+  layoutDensity?: "compact" | "extended"
   groupsMap?: Map<string, GroupRow>
   selectionMode?: boolean
   isSelectionChecked?: boolean
@@ -65,6 +66,7 @@ export const SortableBookmark = memo(function SortableBookmark({
   onEdit,
   onPreview,
   rowContent = "date",
+  layoutDensity = "compact",
   groupsMap,
   selectionMode = false,
   isSelectionChecked = false,
@@ -75,6 +77,7 @@ export const SortableBookmark = memo(function SortableBookmark({
 }: SortableBookmarkProps) {
   const [isCopied, setIsCopied] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -97,7 +100,7 @@ export const SortableBookmark = memo(function SortableBookmark({
   const openInNewTab = (e?: React.MouseEvent) => {
     e?.stopPropagation()
     recordBookmarkVisit(id)
-    window.open(url, "_blank")
+    window.open(url, "_blank", "noopener,noreferrer")
   }
 
   const handleAnchorClick = (event: React.MouseEvent) => {
@@ -118,7 +121,10 @@ export const SortableBookmark = memo(function SortableBookmark({
       await navigator.clipboard.writeText(url)
       setIsCopied(true)
       toast.success("URL copied to clipboard")
-      setTimeout(() => setIsCopied(false), 2000)
+      if (copyResetTimerRef.current) {
+        clearTimeout(copyResetTimerRef.current)
+      }
+      copyResetTimerRef.current = setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
       console.error("Failed to copy:", err)
       toast.error("Failed to copy URL")
@@ -152,6 +158,22 @@ export const SortableBookmark = memo(function SortableBookmark({
   }
 
   const needsRefresh = status === "pending" && !isEnriching
+  const isExtendedLayout = layoutDensity === "extended"
+  const actionLaneClass = isExtendedLayout ? "min-w-[8rem]" : "min-w-[13.5rem]"
+  const textBlockClass = isExtendedLayout
+    ? "min-w-0 flex-1 max-w-[11.5rem]"
+    : "min-w-0 flex-1 max-w-[20rem]"
+  const titleRowClass = "h-5 w-full"
+  const metaRowClass = "h-4 w-full"
+
+  useEffect(() => {
+    const timerRef = copyResetTimerRef
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
 
   // Normal Bookmark View
   return (
@@ -160,7 +182,7 @@ export const SortableBookmark = memo(function SortableBookmark({
         <ContextMenuTrigger asChild>
           <div
             ref={setNodeRef}
-            className={`group relative flex items-center justify-between rounded-xl px-3 py-2 ${
+            className={`group relative flex items-center justify-between rounded-xl p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
               status === "pending"
                 ? "hover:bg-muted/50 cursor-default"
                 : selectionMode
@@ -171,7 +193,7 @@ export const SortableBookmark = memo(function SortableBookmark({
             } ${dragStyle} ${dragDimmed ? "opacity-40 saturate-0" : ""} ${
               isDragging ? "opacity-0" : "opacity-100"
             }`}
-            style={{ ...style, contentVisibility: "auto" }}
+            style={style}
             {...attributes}
             {...(selectionMode ? {} : listeners)}
             data-slot="bookmark-card"
@@ -186,7 +208,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                     e.stopPropagation()
                     onToggleSelection?.(id)
                   }}
-                  className="size-8 shrink-0 flex items-center justify-center rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
+                  className="size-10 shrink-0 flex items-center justify-center rounded-lg border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-transform duration-150 active:scale-95"
                   aria-label={isSelectionChecked ? "Deselect bookmark" : "Select bookmark"}
                 >
                   <div
@@ -244,15 +266,15 @@ export const SortableBookmark = memo(function SortableBookmark({
                 </a>
               )}
 
-              <div className="min-w-0 flex-1">
-                <div className="w-fit max-w-full h-5">
+              <div className={textBlockClass}>
+                <div className={titleRowClass}>
                   {status === "pending" ? (
-                    <span className="block truncate text-sm font-semibold">
-                      {title || "Loading..."}
+                    <span className="block w-full truncate text-sm font-semibold">
+                      {title || "Loading"}
                     </span>
                   ) : (
                     <a
-                      className="block truncate text-sm font-semibold cursor-pointer text-foreground group-hover:text-primary! hover:text-primary! transition-colors duration-200"
+                      className="block w-full truncate text-sm font-semibold cursor-pointer text-foreground group-hover:text-primary! hover:text-primary! transition-colors duration-200"
                       href={url}
                       target="_blank"
                       rel="noreferrer"
@@ -271,18 +293,18 @@ export const SortableBookmark = memo(function SortableBookmark({
                     </a>
                   )}
                 </div>
-                <div className="w-fit max-w-full h-4">
+                <div className={metaRowClass}>
                   {status === "pending" ? (
-                    <span className="block truncate text-xs font-medium text-muted-foreground">
-                      {isEnriching ? "Fetching details..." : "Pending"}
+                    <span className="block w-full truncate text-xs font-medium text-muted-foreground">
+                      {isEnriching ? "Fetching details" : "Pending"}
                     </span>
                   ) : isEnriching ? (
-                    <span className="block truncate text-xs font-medium text-muted-foreground">
-                      Refreshing details...
+                    <span className="block w-full truncate text-xs font-medium text-muted-foreground">
+                      Refreshing details
                     </span>
                   ) : (
                     <a
-                      className="block truncate text-xs font-medium cursor-pointer text-muted-foreground group-hover:text-muted-foreground"
+                      className="block w-full truncate text-xs font-medium cursor-pointer text-muted-foreground group-hover:text-muted-foreground"
                       href={url}
                       target="_blank"
                       rel="noreferrer"
@@ -305,15 +327,15 @@ export const SortableBookmark = memo(function SortableBookmark({
             </div>
 
             {/* Actions / Date Container */}
-            <div className="relative flex shrink-0 items-center min-w-28 md:min-w-48 justify-end">
+            <div className={`relative flex shrink-0 items-center justify-end ${actionLaneClass}`}>
               {/* Desktop Date: Fades out on hover if not mobile */}
               {status === "pending" ? (
                 <span className="text-xs font-medium text-muted-foreground tabular-nums transition-opacity duration-200 group-hover:opacity-0">
-                  {isEnriching ? "Enriching..." : "Refresh needed"}
+                  {isEnriching ? "Enriching" : "Refresh needed"}
                 </span>
               ) : isEnriching ? (
                 <span className="text-xs font-medium text-muted-foreground tabular-nums transition-opacity duration-200 group-hover:opacity-0">
-                  Refreshing...
+                  Refreshing
                 </span>
               ) : (
                 <span className="text-xs font-medium text-muted-foreground transition-opacity duration-200 tabular-nums md:block group-hover:opacity-0 max-w-20 truncate text-right">
@@ -341,7 +363,11 @@ export const SortableBookmark = memo(function SortableBookmark({
                   onRefresh={handleRefresh}
                   onCopyLink={handleCopyLink}
                   onOpen={openInNewTab}
+                  onPreview={() => onPreview?.(id)}
                   onDelete={handleDeleteRequest}
+                  onBulkSelect={handleBulkSelect}
+                  showBulkSelect={!selectionMode}
+                  variant={layoutDensity}
                 />
               ) : null}
 
@@ -354,6 +380,7 @@ export const SortableBookmark = memo(function SortableBookmark({
                   onRefresh={handleRefresh}
                   onCopyLink={handleCopyLink}
                   onOpen={openInNewTab}
+                  onPreview={() => onPreview?.(id)}
                   onDelete={handleDeleteRequest}
                   onBulkSelect={handleBulkSelect}
                   showBulkSelect={!selectionMode}

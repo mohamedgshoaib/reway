@@ -1,5 +1,6 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { Input } from "@/components/ui/input"
 import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
 import type { GroupRow } from "@/lib/supabase/queries"
@@ -89,7 +90,7 @@ export function GroupEditCard({
             onClick={onSave}
             disabled={!editGroupName.trim() || isUpdatingGroup}
           >
-            {isUpdatingGroup ? "Saving..." : "Save"}
+            {isUpdatingGroup ? <DashboardLoadingState label="Saving" /> : "Save"}
           </Button>
         </div>
       </div>

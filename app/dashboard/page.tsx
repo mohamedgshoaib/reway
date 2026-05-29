@@ -2,13 +2,13 @@ import { DashboardContent } from "@/components/dashboard/DashboardContent"
 
 import { cookies } from "next/headers"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { getUser } from "@/lib/dashboard/server/user"
 import { getBookmarks, getGroups, getNotes, getTodos } from "@/lib/supabase/queries"
 import {
   getPaletteThemeClassName,
   isDashboardPaletteTheme,
   type DashboardPaletteTheme,
 } from "@/lib/themes"
-import { getUser } from "./layout"
 
 export const metadata = {
   title: "Dashboard",

@@ -26,6 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { DashboardLoadingState } from "@/components/dashboard/LoadingState"
 import { normalizeUrl } from "@/lib/metadata"
 import type { BookmarkRow } from "@/lib/supabase/queries"
 
@@ -94,9 +95,13 @@ export function DuplicatesSheet({
   useEffect(() => {
     if (!open) return
 
+    // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change
     setIsReviewing(true)
+    // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change
     setReviewedDuplicateGroups([])
+    // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change
     setReviewedDuplicateCount(0)
+    // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change
     setSelectedDuplicateIds(new Set())
 
     const id = window.setTimeout(() => {
@@ -162,7 +167,9 @@ export function DuplicatesSheet({
 
         <SheetBody className="space-y-4">
           {isReviewing ? (
-            <div className="text-sm text-muted-foreground">Reviewing…</div>
+            <div className="text-sm text-muted-foreground">
+              <DashboardLoadingState label="Reviewing" />
+            </div>
           ) : reviewedDuplicateCount === 0 ? (
             <div className="text-sm text-muted-foreground">No duplicates found.</div>
           ) : (
@@ -242,7 +249,7 @@ export function DuplicatesSheet({
                 className="w-full rounded-lg cursor-pointer"
                 disabled={selectedDuplicateIds.size === 0 || isCleaning}
               >
-                {isCleaning ? "Deleting..." : "Delete selected"}
+                {isCleaning ? <DashboardLoadingState label="Deleting" /> : "Delete selected"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="sm:max-w-md">

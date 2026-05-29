@@ -17,6 +17,7 @@ import {
   ContextMenuShortcut,
 } from "@/components/ui/context-menu"
 import { useShowShortcuts } from "@/hooks/useShowShortcuts"
+import { DashboardLoadingState } from "../LoadingState"
 
 interface BookmarkContextMenuProps {
   onOpen: MouseEventHandler<HTMLDivElement>
@@ -95,12 +96,14 @@ export function BookmarkContextMenu({
         onClick={onRefresh}
         disabled={isRefreshing}
       >
-        <HugeiconsIcon
-          icon={Refresh01Icon}
-          size={16}
-          className={isRefreshing ? "text-muted-foreground animate-spin" : "text-muted-foreground"}
-        />
-        <span>{isRefreshing ? "Refreshing..." : "Refresh Metadata"}</span>
+        {isRefreshing ? (
+          <DashboardLoadingState label="Refreshing" />
+        ) : (
+          <>
+            <HugeiconsIcon icon={Refresh01Icon} size={16} className="text-muted-foreground" />
+            <span>Refresh Metadata</span>
+          </>
+        )}
       </ContextMenuItem>
       <ContextMenuItem
         variant="destructive"

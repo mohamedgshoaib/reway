@@ -3,6 +3,7 @@ import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import React from "react"
 import { Button as UIButton } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import type { IconPickerPopoverProps } from "../../IconPickerPopover"
@@ -104,7 +105,7 @@ export function GroupCreateRow({
               onClick={() => onInlineCreate()}
               disabled={!newGroupName.trim() || isCreating}
             >
-              {isCreating ? "Creating..." : "Save"}
+              {isCreating ? <DashboardLoadingState label="Creating" /> : "Save"}
             </UIButton>
           </div>
         </div>

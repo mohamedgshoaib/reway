@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { DashboardLoadingState } from "../../LoadingState"
 import { Input } from "@/components/ui/input"
 import type { TodoRow } from "@/lib/supabase/queries"
 import { PriorityPicker } from "./pickers"
@@ -59,7 +60,7 @@ export function TodoEditCard({
           onClick={onSave}
           disabled={!editText.trim() || isUpdating}
         >
-          {isUpdating ? "Saving..." : "Save"}
+          {isUpdating ? <DashboardLoadingState label="Saving" /> : "Save"}
         </Button>
       </div>
     </div>

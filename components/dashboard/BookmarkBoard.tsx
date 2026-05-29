@@ -38,6 +38,15 @@ import { BookmarkDragOverlay } from "./bookmark-board/BookmarkDragOverlay"
 import { EmptyState } from "./bookmark-board/EmptyState"
 import { useBookmarkGrid } from "./bookmark-board/useBookmarkGrid"
 import { useBookmarkKeyboardNav } from "./bookmark-board/useBookmarkKeyboardNav"
+import {
+  BOOKMARK_CARD_VIRTUALIZATION_THRESHOLD,
+  VirtualizedBookmarkCardRows,
+} from "./bookmark-board/VirtualizedBookmarkCardRows"
+import {
+  BOOKMARK_LIST_VIRTUALIZATION_THRESHOLD,
+  type DisplayBookmark,
+  VirtualizedBookmarkList,
+} from "./bookmark-board/VirtualizedBookmarkList"
 import { BookmarkEditSheet } from "./BookmarkEditSheet"
 import { QuickGlanceDialog } from "./QuickGlanceDialog"
 import { SortableBookmark } from "./SortableBookmark"
@@ -77,6 +86,7 @@ interface BookmarkBoardProps {
   selectedIds?: Set<string>
   onToggleSelection?: (id: string) => void
   onEnterSelectionMode?: () => void
+  scrollElement?: HTMLElement | null
 }
 
 export const BookmarkBoard = memo(function BookmarkBoard({
@@ -95,6 +105,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   selectedIds,
   onToggleSelection,
   onEnterSelectionMode,
+  scrollElement = null,
 }: BookmarkBoardProps) {
   const stableSelectedIds = useMemo(() => selectedIds ?? new Set<string>(), [selectedIds])
   const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId)
@@ -108,12 +119,13 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   const dndContextId = useId()
   const isExtendedListGrid = viewMode === "list" && layoutDensity === "extended"
   const isGridView = viewMode !== "list" || isExtendedListGrid
+  const isCompactListView = viewMode === "list" && !isExtendedListGrid
   const minCardWidth = layoutDensity === "extended" ? 260 : 320
   const boardRef = useRef<HTMLDivElement>(null)
   const gridColumns = useBookmarkGrid({
     viewMode,
     isGridView,
-    minItemWidth: viewMode === "card" ? minCardWidth : isExtendedListGrid ? 360 : undefined,
+    minItemWidth: viewMode === "card" ? minCardWidth : isExtendedListGrid ? 380 : undefined,
     boardRef,
   })
 
@@ -144,7 +156,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     return isAllBookmarksGroupId(activeGroupId) ? orderedBookmarks : bookmarks
   }, [activeGroupId, bookmarks, orderedBookmarks])
 
-  const renderedDisplayBookmarks = useMemo(() => {
+  const renderedDisplayBookmarks = useMemo<DisplayBookmark[]>(() => {
     return renderedBookmarks.map((b) => ({
       id: b.id,
       title: getDisplayTitle({
@@ -162,6 +174,32 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       status: b.status || "ready",
     }))
   }, [renderedBookmarks])
+
+  const shouldVirtualizeList =
+    isCompactListView && renderedDisplayBookmarks.length >= BOOKMARK_LIST_VIRTUALIZATION_THRESHOLD
+  const shouldVirtualizeCards =
+    viewMode === "card" && renderedDisplayBookmarks.length >= BOOKMARK_CARD_VIRTUALIZATION_THRESHOLD
+  const renderedBookmarkGroupIds = useMemo(
+    () => renderedBookmarks.map((bookmark) => bookmark.group_id),
+    [renderedBookmarks],
+  )
+  const boardClassName = useMemo(() => {
+    if (shouldVirtualizeList || shouldVirtualizeCards) return "bookmark-board-empty-space"
+
+    if (viewMode === "list") {
+      return isExtendedListGrid
+        ? "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(360px,100%),1fr))] bookmark-board-empty-space"
+        : "flex flex-col gap-1 bookmark-board-empty-space"
+    }
+
+    if (viewMode === "card") {
+      return layoutDensity === "extended"
+        ? "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] bookmark-board-empty-space"
+        : "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] bookmark-board-empty-space"
+    }
+
+    return "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(120px,100%),1fr))] bookmark-board-empty-space"
+  }, [isExtendedListGrid, layoutDensity, shouldVirtualizeCards, shouldVirtualizeList, viewMode])
 
   // Pre-calculate groups map for O(1) lookups in children
   const groupsMap = useMemo(() => {
@@ -232,7 +270,10 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     [openPreview],
   )
 
-  const getDragBucket = (groupId?: string | null) => groupId ?? UNGROUPED_DRAG_BUCKET
+  const getDragBucket = useCallback(
+    (groupId?: string | null) => groupId ?? UNGROUPED_DRAG_BUCKET,
+    [],
+  )
 
   const activeDragBucket = activeBookmark ? getDragBucket(activeBookmark.group_id) : null
 
@@ -333,74 +374,115 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         >
           <div
             ref={boardRef}
-            className={
-              viewMode === "list"
-                ? isExtendedListGrid
-                  ? "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(360px,100%),1fr))] bookmark-board-empty-space"
-                  : "flex flex-col gap-1 bookmark-board-empty-space"
-                : viewMode === "card"
-                  ? layoutDensity === "extended"
-                    ? "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] bookmark-board-empty-space"
-                    : "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] bookmark-board-empty-space"
-                  : "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(120px,100%),1fr))] bookmark-board-empty-space"
-            }
+            className={boardClassName}
             data-slot="bookmark-board"
           >
-            {renderedDisplayBookmarks.map((bookmark, index) => {
-              const bookmarkDragBucket = getDragBucket(renderedBookmarks[index]?.group_id ?? null)
+            {shouldVirtualizeList ? (
+              <VirtualizedBookmarkList
+                bookmarks={renderedDisplayBookmarks}
+                rawGroupIds={renderedBookmarkGroupIds}
+                scrollElement={scrollElement}
+                selectedIndex={clampedSelectedIndex}
+                selectionMode={selectionMode}
+                selectedIds={stableSelectedIds}
+                onToggleSelection={onToggleSelection}
+                onEnterSelectionMode={onEnterSelectionMode}
+                groupsMap={groupsMap}
+                activeGroupId={activeGroupId}
+                isMostVisitedGroup={isMostVisitedGroup}
+                rowContent={rowContent}
+                layoutDensity={layoutDensity}
+                isDragActive={Boolean(activeId)}
+                isGroupRestrictedDragActive={isGroupRestrictedDragActive}
+                activeDragBucket={activeDragBucket}
+                getDragBucket={getDragBucket}
+                onDelete={onDeleteBookmark}
+                onRefresh={handleRefreshItem}
+                onEdit={handleEditItem}
+                onPreview={handlePreviewItem}
+              />
+            ) : shouldVirtualizeCards ? (
+              <VirtualizedBookmarkCardRows
+                bookmarks={renderedDisplayBookmarks}
+                rawGroupIds={renderedBookmarkGroupIds}
+                scrollElement={scrollElement}
+                gridColumns={gridColumns}
+                selectedIndex={clampedSelectedIndex}
+                selectionMode={selectionMode}
+                selectedIds={stableSelectedIds}
+                onToggleSelection={onToggleSelection}
+                onEnterSelectionMode={onEnterSelectionMode}
+                groupsMap={groupsMap}
+                activeGroupId={activeGroupId}
+                isMostVisitedGroup={isMostVisitedGroup}
+                rowContent={rowContent}
+                isDragActive={Boolean(activeId)}
+                isGroupRestrictedDragActive={isGroupRestrictedDragActive}
+                activeDragBucket={activeDragBucket}
+                getDragBucket={getDragBucket}
+                onDelete={onDeleteBookmark}
+                onRefresh={handleRefreshItem}
+                onEdit={handleEditItem}
+                onPreview={handlePreviewItem}
+              />
+            ) : (
+              renderedDisplayBookmarks.map((bookmark, index) => {
+                const bookmarkDragBucket = getDragBucket(renderedBookmarks[index]?.group_id ?? null)
 
-              if (viewMode === "card") {
+                if (viewMode === "card") {
+                  return (
+                    <SortableBookmarkCard
+                      key={bookmark.id}
+                      isSelected={clampedSelectedIndex === index}
+                      selectionMode={selectionMode}
+                      isSelectionChecked={stableSelectedIds.has(bookmark.id)}
+                      onToggleSelection={onToggleSelection}
+                      onEnterSelectionMode={onEnterSelectionMode}
+                      groupsMap={groupsMap}
+                      activeGroupId={activeGroupId}
+                      dragDisabled={isMostVisitedGroup}
+                      dragDimmed={
+                        Boolean(isGroupRestrictedDragActive) &&
+                        activeDragBucket !== null &&
+                        bookmarkDragBucket !== activeDragBucket
+                      }
+                      onDelete={onDeleteBookmark}
+                      onRefresh={handleRefreshItem}
+                      onEdit={handleEditItem}
+                      onPreview={handlePreviewItem}
+                      rowContent={rowContent}
+                      {...bookmark}
+                    />
+                  )
+                }
+
                 return (
-                  <SortableBookmarkCard
+                  <SortableBookmark
                     key={bookmark.id}
+                    onDelete={onDeleteBookmark}
+                    onRefresh={handleRefreshItem}
+                    onEdit={handleEditItem}
                     isSelected={clampedSelectedIndex === index}
-                    selectionMode={selectionMode}
-                    isSelectionChecked={stableSelectedIds.has(bookmark.id)}
-                    onToggleSelection={onToggleSelection}
-                    onEnterSelectionMode={onEnterSelectionMode}
-                    groupsMap={groupsMap}
                     activeGroupId={activeGroupId}
                     dragDisabled={isMostVisitedGroup}
+                    onPreview={handlePreviewItem}
+                    rowContent={rowContent}
+                    groupsMap={groupsMap}
+                    selectionMode={selectionMode}
                     dragDimmed={
                       Boolean(isGroupRestrictedDragActive) &&
                       activeDragBucket !== null &&
                       bookmarkDragBucket !== activeDragBucket
                     }
-                    onDelete={onDeleteBookmark}
-                    onRefresh={handleRefreshItem}
-                    onEdit={handleEditItem}
-                    onPreview={handlePreviewItem}
-                    rowContent={rowContent}
+                    isSelectionChecked={stableSelectedIds.has(bookmark.id)}
+                    onToggleSelection={onToggleSelection}
+                    onEnterSelectionMode={onEnterSelectionMode}
+                    layoutDensity={layoutDensity}
                     {...bookmark}
                   />
                 )
-              }
-
-              return (
-                <SortableBookmark
-                  key={bookmark.id}
-                  onDelete={onDeleteBookmark}
-                  onRefresh={handleRefreshItem}
-                  onEdit={handleEditItem}
-                  isSelected={clampedSelectedIndex === index}
-                  activeGroupId={activeGroupId}
-                  dragDisabled={isMostVisitedGroup}
-                  onPreview={handlePreviewItem}
-                  rowContent={rowContent}
-                  groupsMap={groupsMap}
-                  selectionMode={selectionMode}
-                  dragDimmed={
-                    Boolean(isGroupRestrictedDragActive) &&
-                    activeDragBucket !== null &&
-                    bookmarkDragBucket !== activeDragBucket
-                  }
-                  isSelectionChecked={stableSelectedIds.has(bookmark.id)}
-                  onToggleSelection={onToggleSelection}
-                  onEnterSelectionMode={onEnterSelectionMode}
-                  {...bookmark}
-                />
-              )
-            })}
+              })
+            )}
           </div>
         </SortableContext>
 

@@ -142,11 +142,11 @@ export const SortableBookmarkIcon = memo(function SortableBookmarkIcon({
         <ContextMenuTrigger asChild>
           <div
             ref={setNodeRef}
-            style={{ ...style, contentVisibility: "auto" }}
+            style={style}
             {...attributes}
             {...(selectionMode ? {} : listeners)}
             data-slot="bookmark-card"
-            className={`group relative flex flex-col items-center gap-2.5 rounded-xl bg-muted/20 p-3 text-center ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden ${
+            className={`group relative flex flex-col items-center gap-2.5 rounded-xl bg-muted/20 p-3 text-center ring-1 ring-foreground/8 after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-white/5 after:pointer-events-none after:content-[''] shadow-none isolate hover:bg-muted/30 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
               dragDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing"
             } ${
               isSelectionChecked || isSelected ? "ring-2 ring-primary/30" : ""

@@ -1,9 +1,10 @@
 "use client"
 
-import { Bookmark01Icon, Refresh01Icon } from "@hugeicons/core-free-icons"
+import { Refresh01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { LoadingBarsIcon } from "./LoadingState"
 
 interface FaviconProps {
   url: string
@@ -142,7 +143,7 @@ function FaviconInner({
       className={cn(
         "flex size-8 shrink-0 items-center justify-center rounded-lg border transition-transform overflow-hidden",
         isEnriching
-          ? "animate-pulse bg-muted/30 border-muted/50"
+          ? "bg-muted/30 border-muted/50 text-muted-foreground"
           : needsRefresh
             ? "relative bg-muted/20 border-dashed border-muted-foreground/30 text-muted-foreground"
           : fallbackLevel === "letter"
@@ -152,7 +153,7 @@ function FaviconInner({
       )}
     >
       {isEnriching ? (
-        <HugeiconsIcon icon={Bookmark01Icon} size={20} className="text-muted-foreground/20" />
+        <LoadingBarsIcon className="size-4" />
       ) : shouldTryImage && currentImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         // react-doctor-disable-next-line react-doctor/nextjs-no-img-element, next/no-img-element

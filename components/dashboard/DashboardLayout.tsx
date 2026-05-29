@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { createNoGroupRow, NO_GROUP_ID } from "@/lib/system-groups"
 import { BookmarkBoard } from "./BookmarkBoard"
 import { CommandBar } from "./CommandBar"
@@ -36,6 +36,10 @@ export function DashboardLayout({
   notesTodos,
   isMac,
 }: DashboardLayoutProps) {
+  const [bookmarkScrollElement, setBookmarkScrollElement] = useState<HTMLDivElement | null>(null)
+  const setBookmarkScrollRef = useCallback((node: HTMLDivElement | null) => {
+    setBookmarkScrollElement(node)
+  }, [])
   const groupsWithNoGroup = useMemo(() => {
     const hasUngrouped = library.bookmarks.some((bookmark) => !bookmark.group_id)
     if (!hasUngrouped) return navigation.groups
@@ -116,7 +120,10 @@ export function DashboardLayout({
           </div>
 
           <div className="min-h-0 flex-1">
-            <div className="scrollbar-hover-only h-full min-h-0 overflow-y-auto overscroll-contain px-1 pb-6 pt-3 md:pt-2">
+            <div
+              ref={setBookmarkScrollRef}
+              className="scrollbar-hover-only h-full min-h-0 overflow-y-auto overscroll-contain px-1 pb-6 pt-3 md:pt-2"
+            >
               <div data-onboarding="drag-sort">
                 {navigation.preferences.viewMode === "folders" ? (
                   <FolderBoard
@@ -136,6 +143,7 @@ export function DashboardLayout({
                     onKeyboardContextChange={library.setKeyboardContext}
                     layoutDensity={library.layoutDensity}
                     folderHeaderTint={library.folderHeaderTint}
+                    scrollElement={bookmarkScrollElement}
                   />
                 ) : (
                   <BookmarkBoard
@@ -154,6 +162,7 @@ export function DashboardLayout({
                     onToggleSelection={selection.handleToggleSelection}
                     onEnterSelectionMode={() => selection.setSelectionMode(true)}
                     layoutDensity={library.layoutDensity}
+                    scrollElement={bookmarkScrollElement}
                   />
                 )}
               </div>
