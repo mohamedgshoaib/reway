@@ -1,337 +1,305 @@
-# Dashboard Scalability & Performance Future Concerns Report
+# Dashboard Scalability Decisions
 
-Scope: anticipate bottlenecks for **500+ concurrent users**, each with **50–100 groups** and **500–1000 bookmarks**, based on the performance guidance under:
+Status: decision record, not a benchmark report.
 
-- `.agents/skills/vercel-react-best-practices/*`
-- `.agents/skills/virtual-lists/*`
-- `.agents/skills/supabase-postgres-best-practices/*`
-- `.agents/skills/system-design/*`
+Scope: dashboard scalability for 500+ concurrent users, each with 50-100 groups and 500-1000 bookmarks.
 
-This document focuses on **future, high-impact risks** and **what to do when they show up** (symptoms, mitigations, expected gains) at the stated scale.
+Purpose: memory-loss guardian for future agents. If conversation context is compacted, this file is the source of truth for the current dashboard scalability decisions. Do not reopen settled decisions unless new code, live DB evidence, or user direction contradicts them.
 
-Validation note: the previous `react-performance-best-practices` source has been removed. The report remains useful, but should now be treated as a validated future-risk checklist, not a fully measured benchmark report.
+Use with: `spec/index.md`, latest `spec/sessions/*`, and `spec/skills.md`.
 
-Supabase validation note: the `supabase` skill was invoked after this review. Current Supabase guidance was checked against the Supabase changelog, and the local CLI was discovered through `pnpm exec supabase` at v2.101.0. Initial CLI validation was blocked because the workspace is not linked to the target project, the target project ref `josjxbrgsaugqsnyhdaf` is not visible in the authenticated CLI project list, no project `.mcp.json` exists, Docker/local Supabase is not running, and no direct Postgres `--db-url` is available in the repository. A later authenticated Supabase MCP session reached the live database and validated the index/query-plan items below.
+Non-negotiables:
 
-### Validation status legend
+- Preserve user-scoped auth boundaries.
+- Preserve instant capture: saves must not block on enrichment.
+- Preserve duplicate bookmarks: duplicates are allowed by design.
+- Preserve visual scanning: favicons stay in the initial bookmark payload.
+- Before implementing virtualization, load `.agents/skills/dnd-kit-react` and `.agents/skills/tanstack-virtual`.
+- Before implementing Supabase schema/security changes, use the `supabase` skill and inspect live definitions first.
 
-- **Validated in code**: confirmed from current repository files.
-- **Partially validated**: the code supports the claim, but production state or runtime profiling was not available.
-- **Not validated**: cannot be confirmed from the current repository alone.
-- **Outdated**: source or recommendation references removed/renamed material.
+Last material validation:
 
----
+- Repository read: current dashboard, extension, import, realtime, and mutation code.
+- Live Supabase MCP validation: previously reached production DB and captured indexes, RLS policy shape, row estimates, advisors, and representative query plans.
+- Current blocker: Supabase MCP now requires re-authentication before live function definitions/advisors can be rechecked.
 
-## System model (what “scale” means here)
+## Current Baseline
 
-### Expected hot paths
+- Dashboard data loads in parallel through `Promise.all` in `app/dashboard/page.tsx`.
+- Import flow limits writes to 3 concurrent creates and 2 concurrent enrichment jobs in `components/dashboard/content/useImportHandlers.ts`.
+- Bookmark and group reorder still writes one `order_index` update per item in the reordered list via `Promise.all` in `lib/dashboard/server/library-mutations.ts`.
+- `BookmarkBoard` and `FolderBoard` already use dnd-kit `DragOverlay`, which is required for virtualized drag surfaces.
+- `BookmarkBoard` still renders all visible bookmarks and currently passes `description`, `image_url`, and `og_image_url` into display data.
+- Duplicate bookmarks are allowed by product design.
 
-- **Cold dashboard load** (`/dashboard`): fetch user + initial bookmarks/groups/notes/todos.
-- **Steady-state interaction**: searching, selection mode, drag-and-drop reorder, opening preview/edit sheet.
-- **Write-heavy bursts**: importing bookmarks (hundreds/thousands) + enrichment.
-- **Cross-tab/device updates**: realtime sync (broadcast updates) + optimistic updates.
+Important file anchors:
 
-### Primary resource constraints
+- Dashboard load: `app/dashboard/page.tsx`.
+- Bookmark reads: `lib/library/server/reads.ts`.
+- Server mutations/reorder: `lib/dashboard/server/library-mutations.ts`.
+- Visit recording route: `app/api/bookmarks/visits/route.ts`.
+- Import/enrichment concurrency: `components/dashboard/content/useImportHandlers.ts`.
+- Realtime merge behavior: `components/dashboard/content/useDashboardRealtime.ts`.
+- Main board surface: `components/dashboard/BookmarkBoard.tsx`.
+- Folder board surface: `components/dashboard/FolderBoard.tsx`.
 
-- **Postgres query time**: sequential scans, missing indexes, inefficient RLS patterns.
-- **Postgres connection pressure**: too many concurrent queries during imports/enrichment.
-- **Next.js server action latency**: avoid waterfalls; reduce “fetch then filter in JS”.
-- **Client CPU/render time**: avoid re-rendering large lists; avoid expensive per-item work; use `content-visibility`.
-- **Network egress**: avoid sending entire datasets repeatedly; avoid unnecessary serialization.
+## Live Database Evidence
 
----
+Validated live row estimates at the time of MCP access:
 
-## Findings by layer
+- `bookmarks`: about 935 rows.
+- `groups`: about 105 rows.
+- `notes`: about 135 rows.
+- `todos`: about 161 rows.
 
-## 1) Database (Supabase/Postgres)
+Validated indexes:
 
-### 1.1 Missing/incorrect indexes for common filters
-
-**Risk**: CRITICAL. Missing indexes on columns used in `WHERE` (including RLS columns like `user_id`) can cause sequential scans and exponential slowdowns as row counts grow.
-
-**Validation status**: Validated live with Supabase MCP.
-
-The repository does not include Supabase migration/index DDL under `supabase/`; only email templates are present. Live MCP inspection confirmed that the deployed database does have the critical user-scope indexes, but the migration source of truth is still missing from the repository.
-
-Validated live database state:
-
-- Postgres version: `17.6`.
-- Current live row estimates: `bookmarks` 935, `groups` 105, `notes` 135, `todos` 161.
-- RLS is enabled on `bookmarks`, `groups`, `notes`, and `todos`.
-- RLS policies use `(select auth.uid()) = user_id`, which is the performant wrapped form Supabase recommends for RLS auth function predicates.
-- `bookmarks_user_id_idx` exists.
-- `bookmarks_user_id_group_id_order_index_idx` exists and covers the group-filtered bookmark path better than a plain `(user_id, group_id)` index.
-- `bookmarks_user_id_normalized_url_idx` exists for duplicate checks.
-- `groups_user_id_idx`, `notes_user_id_idx`, and `todos_user_id_idx` exist.
+- `bookmarks_user_id_idx`.
+- `bookmarks_user_id_group_id_order_index_idx`.
+- `bookmarks_user_id_normalized_url_idx` (intentionally non-unique).
+- `bookmarks_user_visit_rank_idx`.
+- `idx_bookmarks_visit_count`.
+- `groups_user_id_idx`.
+- `groups_user_id_name_idx`.
+- `notes_user_id_idx`, `notes_created_at_idx`.
+- `todos_user_id_idx`, `todos_created_at_idx`, `todos_completed_idx`.
 
 Representative live plans:
 
-- Dashboard bookmark read under authenticated RLS: `Index Scan using bookmarks_user_id_idx`, 248 rows for the largest current user, execution about `0.67ms`.
-- Extension all-bookmarks read with explicit `user_id`: `Index Scan using bookmarks_user_id_idx`, 248 rows, execution about `0.54ms`.
-- Extension group-filtered bookmark read: `Index Scan using bookmarks_user_id_group_id_order_index_idx`, 43 rows, execution about `0.22ms`.
-- Duplicate check by `user_id + normalized_url`: `Index Scan using bookmarks_user_id_normalized_url_idx`, execution about `1.62ms` for a sampled duplicated URL.
-- Notes/todos reads use `notes_user_id_idx` and `todos_user_id_idx`, then sort the small per-user result sets.
+- Dashboard bookmark read used `bookmarks_user_id_idx`, about `0.67ms` for 248 rows.
+- Extension all-bookmarks read used `bookmarks_user_id_idx`, about `0.54ms` for 248 rows.
+- Extension group-filtered read used `bookmarks_user_id_group_id_order_index_idx`, about `0.22ms` for 43 rows.
+- Duplicate check used `bookmarks_user_id_normalized_url_idx`, about `1.62ms`.
+- Notes/todos reads used user indexes and sorted small per-user result sets.
 
-New validated concern: `bookmarks_user_id_normalized_url_idx` is not unique, and live data contains duplicate `(user_id, normalized_url)` pairs. The largest sampled duplicate had 9 rows for one user and normalized URL. The app-level duplicate check can detect existing rows, but the database does not enforce the invariant under concurrent saves/imports.
+## Locked Decisions
 
-Recommendation:
+### 1. Duplicate Bookmarks
 
-- Keep the current user-scope indexes.
-- Before adding a unique `(user_id, normalized_url)` constraint, decide whether historical duplicates should be merged, preserved, or allowed for different capture contexts.
-- If dashboard accounts grow far beyond the current scale, consider order-aware indexes such as `(user_id, order_index, created_at desc)` for dashboard reads/new-bookmark order lookup, and `(user_id, completed, order_index, created_at desc)` for todos. Current plans sort small per-user sets cheaply, so this is not urgent.
+Decision: duplicates are allowed. Do not add a unique `(user_id, normalized_url)` constraint.
 
-### 1.2 Import & enrichment write bursts
+Why:
 
-**Risk**: MEDIUM-HIGH.
+- Reway intentionally allows the same normalized URL to be saved more than once in different groups, sessions, or contexts.
+- Existing duplicate rows are expected state, not corruption.
 
-**Validation status**: Validated in code.
+Outcome:
 
-When users import 500–1000 bookmarks, the app can generate:
+- Keep `bookmarks_user_id_normalized_url_idx` non-unique.
+- Duplicate UI can still detect and display duplicates, but the database should not reject them.
 
-- many inserts
-- many enrichment updates
-- many concurrent network requests
+### 2. Indexes
 
-**Current state**: generally good.
+Decision:
 
-- Import uses explicit concurrency limits.
-- Enrichment is performed with separate concurrency.
+- Keep `bookmarks_user_visit_rank_idx`.
+- Remove or explicitly defer `idx_bookmarks_visit_count`.
+- Defer cleanup of `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx` to a migration sprint.
 
-Validated references:
+Why:
 
-- `components/dashboard/content/useImportHandlers.ts` uses `CREATE_CONCURRENCY = 3`.
-- `components/dashboard/content/useImportHandlers.ts` uses `ENRICH_CONCURRENCY = 2`.
-- Enrichment still runs through server actions/request-triggered work, so saturation risk remains if many users import at once.
+- `bookmarks_user_visit_rank_idx` supports Reway's Most Visited / visit-aware ranking mechanic.
+- `idx_bookmarks_visit_count` supports a global/admin visit leaderboard; no such feature is planned.
+- The notes/todos single-column indexes are weak shapes for user-scoped dashboard reads, but current row counts are small and user indexes cover the important filter.
 
-**Scaling concern**: if 500 users import concurrently, DB can get hammered.
+Outcome:
 
-**Recommendation (only if you observe DB saturation)**:
+- Keep the index that supports product retrieval.
+- Avoid write overhead from a global visit-count index that has no planned query.
+- Do not churn notes/todos indexes until that cleanup can be measured or bundled with related schema work.
 
-- Consider moving enrichment to a background worker/queue (Edge Function + queue, or external worker) rather than doing it in the request lifecycle.
-- Add server-side throttling per user.
+### 3. Security Definer Functions
 
----
+Decision: inspect live function definitions before writing migrations. Then revoke direct client execution from privileged/internal `SECURITY DEFINER` functions and keep them out of exposed schemas where possible.
 
-## 2) Next.js server actions & data fetching
+Known local correction:
 
-### 2.1 Waterfalls on dashboard load
+- Older report data named `bump_bookmark_open`.
+- Current generated types and route code show the visit RPC as `increment_bookmark_visits`.
+- `app/api/bookmarks/visits/route.ts` authenticates the user server-side and calls `increment_bookmark_visits` through `supabaseAdmin`.
 
-**Risk**: CRITICAL if sequential; otherwise fine.
+Target direction:
 
-**Validation status**: Validated in code.
+- `increment_bookmark_visits`: keep server-only if it uses elevated privileges, or make it invoker-safe if it ever becomes a direct client RPC.
+- `handle_new_user`: trigger helper; keep privileged behavior if needed, but revoke direct client execution and consider a private schema.
+- `notify_bookmarks_changes` / `notify_groups_changes`: revoke direct client execution, set safe search paths, and audit channel/payload scoping. Do not add `auth.uid()` guards blindly because trigger execution context may not have a client JWT.
 
-`app/dashboard/page.tsx` currently loads `getUser()`, `getBookmarks()`, `getGroups()`, `getNotes()`, and `getTodos()` through `Promise.all`, so the hot dashboard load path is parallel today.
+Outcome:
 
-**Recommendation**:
+- Advisor warnings should clear.
+- Privileged functions remain usable internally.
+- Clients cannot call privileged RPCs directly.
 
-- Keep data fetches independent and parallel.
-- If new data sources are added later, avoid adding them sequentially.
+### 4. Payload Shaping
 
-### 2.2 Serialization pressure (RSC boundary)
+Decision: split initial bookmark list data from preview/detail data.
 
-**Risk**: MEDIUM-HIGH.
+Initial list fields should stay focused on scanning, grouping, sorting, and status:
 
-**Validation status**: Validated in code.
+- `id`, `url`, `normalized_url`, `domain`, `title`, `favicon_url`.
+- `group_id`, `user_id`, `created_at`, `order_index` or future `rank`.
+- `status`, `is_enriching`, `last_visited_at`, `visit_count`.
 
-At 1000 bookmarks, the payload can be large.
+Preview/detail fields should load on demand:
 
-Current dashboard bookmark select includes `description`, `favicon_url`, `og_image_url`, `image_url`, `screenshot_url`, status/enrichment fields, visit fields, and ordering fields in `lib/library/server/reads.ts`. That is appropriate for a rich first paint, but it makes payload size a real scalability lever.
+- `description`, `og_image_url`, `image_url`, `screenshot_url`, `last_fetched_at`, `error_reason`.
 
-**Recommendation (only if you see slow TTFB / large HTML payloads)**:
+Constraints:
 
-- Reduce fields returned by `getBookmarks()` to only what the dashboard needs for initial paint.
-- Lazy-load heavy fields (screenshots, OG images) on demand.
-- Consider streaming with Suspense boundaries if you introduce additional panels.
+- Keep `favicon_url` in the initial payload because it is a core visual scanning aid.
+- Audit `BookmarkBoard`, card view, preview, edit sheet, and realtime merge behavior before changing the select list.
 
----
+Outcome:
 
-## 3) Client rendering & interaction
+- Smaller initial dashboard payload.
+- Preview/detail opens with a targeted extra fetch.
+- Less RSC/client prop serialization at high bookmark counts.
 
-### 3.1 Long list rendering cost (500–1000 bookmarks)
+### 5. Reorder Scaling
 
-**Risk**: HIGH.
+Decision: migrate bookmarks and groups from integer `order_index` reorder writes to string fractional ranks.
 
-**Validation status**: Validated in code.
+Target shape:
 
-Even with good memoization, rendering 1000 React nodes with images can be costly.
+- Add `rank text collate "C"` while keeping `order_index` during migration as fallback.
+- Backfill rank from current `order_index`.
+- Index bookmarks by `(user_id, group_id, rank)`.
+- Index groups by `(user_id, rank)`.
+- On drag end, update only the moved item rank.
+- Keep a rare rebalance RPC for rank strings that become too long.
 
-**Current mitigations observed**:
+Why:
 
-- Long-list optimization patterns exist in bookmark components (e.g., `content-visibility: auto` usage in places).
-- Favicons use `loading="lazy"`.
-- `BookmarkBoard` still maps and renders every visible bookmark into React nodes.
+- Current row lookup is fast; write amplification is the problem.
+- Float ranks can exhaust precision under repeated inserts into the same gap.
+- Full Jira-style LexoRank buckets are probably too much machinery at Reway's current scale.
+- String fractional ranks with `COLLATE "C"` preserve JS/Postgres sort compatibility.
 
-**When to introduce virtualization**:
+Outcome:
 
-- If you observe frame drops and slow interactions at 1000 items, evaluate virtualization for the `list` view.
-- For grid/card views, `content-visibility` + image lazy-loading can often be “good enough” until much higher counts.
-- Do not treat virtualization as a drop-in change: `BookmarkBoard` uses `@dnd-kit` `SortableContext`, keyboard navigation, selection state, and drag overlays. A virtualization sprint needs to preserve those interactions deliberately.
+- One drag becomes one row update instead of N row updates.
+- Optimistic UI remains possible.
+- Realtime reorder noise drops sharply.
 
-### 3.2 Expensive per-item computations
+### 6. Virtualization
 
-**Risk**: MEDIUM.
+Decision: use TanStack Virtual with dnd-kit, implemented in phases.
 
-**Validation status**: Partially validated.
+Skill requirement:
 
-Examples:
+- Before implementation, load `.agents/skills/dnd-kit-react` and `.agents/skills/tanstack-virtual`.
 
-- `toLocaleDateString` inside `.map` for every bookmark on every render.
+Phases:
 
-Current code is better than this example: `BookmarkBoard` uses a module-level `Intl.DateTimeFormat` and formats dates in a memoized display-map. Remaining per-item work includes `getDomain`, display-title normalization, array mapping, and `bookmarks.find(...)` callbacks inside rendered items.
+- List view first: virtualize rows directly, keep selection ID-based, and wire keyboard navigation to `scrollToIndex`.
+- Card/grid view second: virtualize rows of cards, not individual cards; responsive column count must be measured.
+- Folder view last: virtualize groups/sections first; only virtualize bookmarks inside a group when the group crosses a high threshold such as 100 items.
 
-**Recommendation**:
+Required safeguards:
 
-- Keep per-item computation minimal.
-- Avoid creating regex/formatters inside loops.
+- Keep `DragOverlay` mounted.
+- Use stable item IDs.
+- Buffer or freeze realtime list changes during active drag so drop indexes are not invalidated.
+- Preserve keyboard navigation, selection mode, search, group switching, and touch drag behavior.
 
-### 3.3 Sorting and derived data
+Outcome:
 
-**Risk**: MEDIUM.
+- Lower DOM count and smoother large-list scrolling.
+- More layout-specific implementation complexity.
+- Highest value after payload shaping.
 
-**Validation status**: Validated in code.
+### 7. Enrichment Background Work
 
-At 1000 bookmarks, `toSorted()` and repeated `Map` creation can be noticeable if triggered frequently.
+Decision: keep current concurrency-limited enrichment path for now, but add observability before considering Supabase Queues.
 
-**Current state**:
+Add first:
 
-- `BookmarkBoard` uses `useMemo` for ordered/rendered bookmarks.
-- `useDashboardState.sortBookmarks` sorts on many state update paths.
-- `useBookmarkBuckets` re-buckets and sorts per visible group in folder view.
-- `useDashboardRealtime` updates one record logically, but still scans arrays and often re-sorts the full bookmark array per event.
+- Track stuck pending/enriching bookmarks.
+- Track enrichment age, retry count, last attempt, and backlog size.
+- Alert or surface backlog/stuck states before they become invisible failures.
 
-**Recommendations (only if profiling shows re-sort churn)**:
+Queue trigger:
 
-- Move sorting to the state update path (when bookmarks change) instead of on render.
-- Maintain stable “order arrays” per group (ids) to avoid repeated sorting of full objects.
+- Move to Supabase Queues / pgmq only when metrics show repeated abandoned enrichments, rate-limit failures, or sustained backlog.
 
-### 3.4 Event listeners and selection mode
+Future queue shape:
 
-**Risk**: LOW-MEDIUM.
+- Enqueue `{ bookmark_id, user_id, url }`.
+- Worker or Edge Function processes small batches.
+- Worker updates bookmark metadata/status.
+- Existing realtime row updates refresh dashboard state.
 
-**Validation status**: Validated in code.
+Outcome:
 
-Global message listeners exist for extension integration and realtime.
+- Saves/imports stay fast today.
+- Queue complexity is deferred until data justifies it.
+- The system gains the telemetry needed to decide without guessing.
 
-**Recommendation**:
+## Roadmap
 
-- Ensure listeners are installed once per mount and cleaned up.
-- Prefer `useGlobalEvent` (already used) to centralize.
+### Do Now
 
----
+- Re-auth Supabase MCP and inspect live definitions for `increment_bookmark_visits`, `handle_new_user`, `notify_bookmarks_changes`, and `notify_groups_changes`.
+- Write the security migration from real function definitions.
+- Keep `bookmarks_user_visit_rank_idx`.
+- Remove or explicitly defer `idx_bookmarks_visit_count`; no global/admin visit analytics feature is planned.
 
-## 4) Realtime, multi-tab, and optimistic updates
+Security migration guardrails:
 
-### 4.1 Realtime broadcast fan-out
+- Do not write the migration from stale function names.
+- Do not add `auth.uid()` checks to trigger notify functions without verifying trigger execution context.
+- Prefer revoking direct client execution from privileged functions.
+- Keep server-only RPCs callable from trusted server code, not public clients.
 
-**Risk**: MEDIUM.
+### Do Soon
 
-**Validation status**: Partially validated.
+- Split bookmark initial-list fields from preview/detail fields.
+- Add enrichment stuck/backlog observability.
+- Audit component dependencies on heavy bookmark fields before changing query shape.
 
-For each client session, realtime channels receive broadcasts and update local state.
+Payload split guardrails:
 
-**Potential issue at scale**:
+- Do not remove `favicon_url` from the initial payload.
+- Do not remove `normalized_url` before checking duplicate UI and display-title logic.
+- Do not assume card view can lose `og_image_url` until `BookmarkBoard`, card components, preview, and edit sheet have been audited.
+- Realtime merge code must tolerate list rows that do not have detail-only fields.
 
-- Too-frequent updates can trigger frequent list re-renders.
+### Do Later
 
-**Recommendation (only if it becomes noisy)**:
+- Migrate bookmarks and groups to string fractional `rank`.
+- Implement TanStack Virtual with dnd-kit in phases.
 
-- Batch updates (queue and flush every 50–100ms) to reduce render frequency.
-- Prefer updating only the changed record. Current code updates individual records semantically, but full-array scans, copies, and sorts still happen in several realtime paths.
+Rank migration guardrails:
 
-### 4.2 Reorder write amplification
+- Add `rank text collate "C"` without immediately dropping `order_index`.
+- Backfill and dual-read/dual-write only if needed for rollout safety.
+- Verify JS sort order and Postgres `ORDER BY rank` produce the same order before switching reads.
+- Keep rollback path to `order_index` until reorder, realtime, imports, and extension paths are verified.
 
-**Risk**: MEDIUM-HIGH.
+Virtualization guardrails:
 
-**Validation status**: Validated in code.
+- Start with list view even though the long-term target includes all layouts.
+- Preserve `DragOverlay`.
+- Preserve keyboard navigation and selection state.
+- Buffer or freeze realtime reorder-affecting updates during active drag.
+- Use layout-specific designs: row virtualization for list, row-of-cards virtualization for grid, section-first virtualization for folder view.
 
-Drag reorder currently builds one `{ id, order_index }` update per item in the reordered list, then the server action sends one Supabase update per row with `Promise.all`. This is acceptable for small groups, but it can create avoidable write pressure for 500–1000 item groups or frequent drag operations.
+### Do Only If Metrics Show Pain
 
-**Recommendation (when reorder traffic becomes visible in DB metrics)**:
+- Move enrichment to Supabase Queues / pgmq.
+- Add deep folder-board bookmark virtualization.
 
-- Persist only the moved item where fractional ordering can represent the new position.
-- Or add a Postgres RPC/bulk update path so one server call performs the reorder transactionally.
-- Keep optimistic UI, but reduce per-drag database round trips.
+Queue migration guardrails:
 
-Live validation note:
+- Add observability first.
+- Move to pgmq only after backlog/stuck/rate-limit metrics justify the added worker surface.
+- Queue messages should carry `bookmark_id`, `user_id`, and `url`.
+- Worker completion should update the bookmark row and let realtime refresh the UI.
 
-- A representative single bookmark reorder update plans through `bookmarks_pkey` with a `user_id` filter, which is good for each individual row.
-- The scalability risk is not row lookup quality; it is the current app behavior of sending one update per reordered item with `Promise.all`.
+## Do Not Regress
 
----
-
-## 5) Import/Export
-
-### 5.1 Import parsing CPU & memory
-
-**Risk**: MEDIUM.
-
-**Validation status**: Validated in code.
-
-Parsing large HTML bookmark exports with DOMParser can be heavy.
-
-Current parser uses `DOMParser` and recursively traverses the parsed document in `components/dashboard/content/import/parse-bookmarks-html.ts`.
-
-**Recommendation (only if needed)**:
-
-- Use a Web Worker for parsing to keep the UI responsive.
-- Keep concurrency low enough to avoid saturating the device.
-
-### 5.2 Export string building
-
-**Risk**: LOW-MEDIUM.
-
-**Validation status**: Validated in code.
-
-Export builds a big HTML string in memory.
-
-Current export logic builds a single `html` string, then creates a `Blob` in `components/dashboard/content/useExportHandlers.ts`.
-
-**Recommendation (only if needed)**:
-
-- Consider streaming/Chunk building or using `WritableStream` if exports become massive.
-
----
-
-## Concrete checklist for 500+ concurrent users
-
-- **Database**
-  - Confirm indexes exist for `user_id` filters on all major tables.
-  - Confirm `bookmarks(user_id, normalized_url)` index exists.
-- **Server actions**
-  - No sequential awaits in hot paths.
-  - No “load everything then filter in JS”.
-- **Client**
-  - Avoid heavy per-item compute and repeated transforms.
-  - Use `content-visibility: auto` for long lists.
-  - Add virtualization only when needed.
-
----
-
-## Integrity findings recorded after review
-
-- The report is useful as a future-risk checklist for dashboard scalability, especially around database indexes, initial payload size, full-list rendering, realtime update churn, and import/enrichment bursts.
-- The report is not a measured benchmark. It should not be used to claim current performance limits without profiling, Supabase query plans, and production DB metrics.
-- The database section cannot be fully validated from repository files because Supabase migration/index definitions are not present.
-- A Supabase validation attempt was performed with the local CLI and was blocked by missing project linkage/direct DB URL. A later authenticated Supabase MCP session validated live indexes, RLS policies, row estimates, advisors, and representative query plans.
-- Live Supabase validation downgraded the original missing-index risk for current production state: the expected user-scope indexes exist and are used on key bookmark paths.
-- Live Supabase validation added a new integrity concern: duplicate `(user_id, normalized_url)` rows exist because the duplicate-check index is not unique.
-- Supabase performance advisors currently flag unused indexes: `idx_bookmarks_visit_count`, `bookmarks_user_visit_rank_idx`, `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx`.
-- Supabase security advisors currently warn that `SECURITY DEFINER` functions in `public` are executable by `anon` and/or `authenticated`: `bump_bookmark_open`, `handle_new_user`, `notify_bookmarks_changes`, and `notify_groups_changes`.
-- The removed `react-performance-best-practices` reference has been replaced with current skills.
-- A missing dashboard-specific concern was added: reorder write amplification from per-row order updates.
-
-## Sprint TODO
-
-Create a new dashboard performance and scalability report following the same methodology, but using only existing skills:
-
-- `system-design` for scale assumptions, capacity framing, and bottleneck prioritization.
-- `vercel-react-best-practices` for RSC payloads, waterfalls, bundle/client boundaries, and render churn.
-- `virtual-lists` for list/grid virtualization tradeoffs with `@dnd-kit`, selection, and keyboard navigation.
-- `supabase-postgres-best-practices` for query plans, RLS-aware indexes, connection pressure, and write amplification.
-
-Required validation for the new report:
-
-- Capture actual Supabase indexes and query plans for dashboard reads, duplicate checks, extension group/bookmark reads, and reorder writes.
-- Measure dashboard payload size and render behavior with seeded 100, 500, and 1000 bookmark accounts.
-- Profile search, group switching, drag reorder, import preview, import confirm, and realtime update bursts.
-- Separate verified current bottlenecks from future risks and include confidence/status for every finding.
+- Do not convert duplicate detection into duplicate rejection.
+- Do not remove user-scoped indexes that protect RLS-heavy paths.
+- Do not replace current concurrency limits with unbounded enrichment.
+- Do not virtualize by unmounting active drag overlays or DOM-focused keyboard state without a replacement focus model.
+- Do not drop `order_index` until rank rollout is verified across dashboard, extension, imports, and realtime.

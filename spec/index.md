@@ -151,3 +151,7 @@ Agents working in this repository should think in this order:
 5. Is the system becoming clearer or more mixed?
 
 Agents should behave as system-design partners first and implementation agents second.
+
+### Active Decision Records
+
+- Dashboard scalability decisions live in `spec/reports/dashboard-scalability-performance.md`. Treat it as the current memory-loss guardian for duplicate policy, index decisions, security-function audit direction, payload shaping, reorder rank migration, TanStack Virtual + dnd-kit direction, and enrichment queue thresholds.
