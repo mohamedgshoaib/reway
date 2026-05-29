@@ -192,7 +192,15 @@ Full context: `.agents/skills/tailwind-design-system/SKILL.md`
 
 Full context: `.agents/skills/tanstack-query/SKILL.md`
 
-### 25- typescript-advanced-types
+### 25- tanstack-virtual
+
+**Triggers**: tanstack-virtual, virtualization, windowing, large-lists, performance, scroll-jank
+**Pairs With**: vercel-react-best-practices, fixing-motion-performance
+**Top 2 Rules**: Do not virtualize prematurely; confirm scale pain first. When virtualization is justified, design around user interactions like selection, drag, and keyboard nav.
+
+Full context: `.agents/skills/tanstack-virtual/SKILL.md`
+
+### 26- typescript-advanced-types
 
 **Triggers**: generics, conditional-types, mapped-types, template-literals, utility-types
 **Pairs With**: vercel-composition-patterns
@@ -200,7 +208,7 @@ Full context: `.agents/skills/tanstack-query/SKILL.md`
 
 Full context: `.agents/skills/typescript-advanced-types/SKILL.md`
 
-### 26- vercel-composition-patterns
+### 27- vercel-composition-patterns
 
 **Triggers**: composition, compound-components, render-props, context, component-api
 **Pairs With**: vercel-react-best-practices, shadcn
@@ -208,7 +216,7 @@ Full context: `.agents/skills/typescript-advanced-types/SKILL.md`
 
 Full context: `.agents/skills/vercel-composition-patterns/SKILL.md`
 
-### 27- vercel-react-best-practices
+### 28- vercel-react-best-practices
 
 **Triggers**: react, performance, rendering, memoization, data-fetching, nextjs
 **Pairs With**: next-best-practices, react-useeffect, vercel-composition-patterns, hydration-guardian
@@ -216,7 +224,7 @@ Full context: `.agents/skills/vercel-composition-patterns/SKILL.md`
 
 Full context: `.agents/skills/vercel-react-best-practices/SKILL.md`
 
-### 28- virtual-lists
+### 29- virtual-lists
 
 **Triggers**: virtualization, windowing, large-lists, performance, scroll-jank
 **Pairs With**: vercel-react-best-practices, fixing-motion-performance
@@ -224,7 +232,7 @@ Full context: `.agents/skills/vercel-react-best-practices/SKILL.md`
 
 Full context: `.agents/skills/virtual-lists/SKILL.md`
 
-### 29- web-design-guidelines
+### 30- web-design-guidelines
 
 **Triggers**: ui-review, ux-audit, design-review, accessibility-review, quality-bar
 **Pairs With**: emil-design-eng, make-interfaces-feel-better
@@ -232,7 +240,7 @@ Full context: `.agents/skills/virtual-lists/SKILL.md`
 
 Full context: `.agents/skills/web-design-guidelines/SKILL.md`
 
-### 30- wrap-up
+### 31- wrap-up
 
 **Triggers**: wrap-up, session end, session log
 **Pairs With**: None
