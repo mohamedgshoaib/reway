@@ -28,7 +28,7 @@ Last material validation:
 
 - Dashboard data loads in parallel through `Promise.all` in `app/dashboard/page.tsx`.
 - Import flow limits writes to 3 concurrent creates and 2 concurrent enrichment jobs in `components/dashboard/content/useImportHandlers.ts`.
-- Bookmark and group reorder still writes one `order_index` update per item in the reordered list via `Promise.all` in `lib/dashboard/server/library-mutations.ts`.
+- Bookmark and group reorder now writes one `rank` update for the moved item; `order_index` remains frozen as rollback data.
 - `BookmarkBoard` and `FolderBoard` already use dnd-kit `DragOverlay`, which is required for virtualized drag surfaces.
 - `BookmarkBoard` still renders all visible bookmarks and currently passes `description`, `image_url`, and `og_image_url` into display data.
 - Duplicate bookmarks are allowed by product design.
@@ -38,6 +38,7 @@ Important file anchors:
 - Dashboard load: `app/dashboard/page.tsx`.
 - Bookmark reads: `lib/library/server/reads.ts`.
 - Server mutations/reorder: `lib/dashboard/server/library-mutations.ts`.
+- Fractional rank helpers: `lib/ranking.ts`.
 - Visit recording route: `app/api/bookmarks/visits/route.ts`.
 - Import/enrichment concurrency: `components/dashboard/content/useImportHandlers.ts`.
 - Realtime merge behavior: `components/dashboard/content/useDashboardRealtime.ts`.
@@ -57,10 +58,12 @@ Validated indexes before cleanup:
 
 - `bookmarks_user_id_idx`.
 - `bookmarks_user_id_group_id_order_index_idx`.
+- `bookmarks_user_id_group_id_rank_idx`.
 - `bookmarks_user_id_normalized_url_idx` (intentionally non-unique).
 - `bookmarks_user_visit_rank_idx`.
 - `idx_bookmarks_visit_count`.
 - `groups_user_id_idx`.
+- `groups_user_id_rank_idx`.
 - `groups_user_id_name_idx`.
 - `notes_user_id_idx`, `notes_created_at_idx`.
 - `todos_user_id_idx`, `todos_created_at_idx`, `todos_completed_idx`.
@@ -73,12 +76,15 @@ Validated production state after `20260529013215_harden_dashboard_functions_and_
 - `idx_bookmarks_visit_count`, `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx` were dropped.
 - `bookmarks_user_visit_rank_idx` was preserved.
 - Trigger bindings for auth user creation, bookmark changes, and group changes remain intact.
+- `20260529050306_add_fractional_ranks` added `rank text collate "C"` to bookmarks and groups, backfilled all live rows, added rank-length checks, and created `(user_id, group_id, rank)` / `(user_id, rank)` indexes.
 
 Representative live plans:
 
 - Dashboard bookmark read used `bookmarks_user_id_idx`, about `0.67ms` for 248 rows.
 - Extension all-bookmarks read used `bookmarks_user_id_idx`, about `0.54ms` for 248 rows.
 - Extension group-filtered read used `bookmarks_user_id_group_id_order_index_idx`, about `0.22ms` for 43 rows.
+- Post-rank bookmark group read used `bookmarks_user_id_group_id_rank_idx`, about `0.35ms` for 227 rows.
+- Post-rank group read used `groups_user_id_idx` plus an in-memory sort for the current largest 22-group user; keep `groups_user_id_rank_idx` for the locked 50-100 group target shape.
 - Duplicate check used `bookmarks_user_id_normalized_url_idx`, about `1.62ms`.
 - Notes/todos reads used user indexes and sorted small per-user result sets.
 
@@ -309,6 +315,20 @@ Outcome:
 - Optimistic UI remains possible.
 - Realtime reorder noise drops sharply.
 
+Implementation status on 29-May-26:
+
+- Production migration applied: `20260529050306_add_fractional_ranks`.
+- Local migration recorded at `supabase/migrations/20260529050306_add_fractional_ranks.sql`.
+- `rank text collate "C"` is present on `bookmarks` and `groups`.
+- Live backfill verified: 0 bookmarks and 0 groups missing rank; max live rank length is 32; no rows exceed the 64-character rebalance threshold.
+- Dashboard and extension reads order by `rank` first, with `order_index` retained as fallback.
+- Create/import paths assign ranks while preserving `order_index`.
+- Bookmark and group drag paths update only the moved row's `rank`; `order_index` is not rewritten during reorder.
+- Review pass fixed two edge cases: extension grabbed-link/session batch saves now create sequentially to avoid server-generated rank collisions, and group client sorting now has a dedicated fallback that matches the database order.
+- DnD performance review using the dnd-kit skill memoized card and folder-icon sortable bookmark components and stabilized board item action handlers to reduce drag-time rerenders.
+- Verification: `pnpm typecheck`, targeted `oxlint`, and React Doctor 100/100 passed.
+- Authenticated dashboard reload on `http://localhost:3001/dashboard` rendered without a build/runtime overlay after the rank cut.
+
 Rebalance policy:
 
 - Watch max rank length per user/group.
@@ -427,7 +447,9 @@ Completed Supabase migration work:
 
 ### Do Soon
 
-- Add enrichment stuck/backlog observability.
+- Browser-smoke rank reorder across bookmark list/card/folder views, sidebar group reorder, import-created ranks, extension-created saves, and realtime reorder propagation.
+- Secondary DnD audit: use the dnd-kit skill before virtualization to profile current drag performance, with special attention to large card/folder boards, active-drag rerenders, collision strategy cost, sensor activation constraints, and whether migrating from legacy `@dnd-kit/core` / `@dnd-kit/sortable` to the newer `@dnd-kit/react` API is worth doing before TanStack Virtual.
+- Monitor `groups_user_id_rank_idx`; its initial unused-index lint is expected immediately after creation and should be revisited only after reorder/read traffic has exercised the new path.
 - Add focused UI or diagnostics for enrichment failure details now that `error_reason` is detail-only.
 
 Payload split guardrails:
@@ -439,7 +461,6 @@ Payload split guardrails:
 
 ### Do Later
 
-- Migrate bookmarks and groups to string fractional `rank`.
 - Implement TanStack Virtual with dnd-kit in phases.
 
 Rank migration guardrails:

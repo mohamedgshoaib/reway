@@ -2,7 +2,7 @@
 
 import { DndContext, DragOverlay, defaultDropAnimationSideEffects } from "@dnd-kit/core"
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable"
-import React, { memo, useEffect, useId, useMemo, useRef, useState } from "react"
+import React, { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion"
 import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
@@ -25,7 +25,7 @@ interface FolderBoardProps {
   bookmarks: BookmarkRow[]
   groups: GroupRow[]
   activeGroupId: string
-  onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  onReorder: (groupId: string, newOrder: BookmarkRow[], movedBookmarkId: string) => void
   onDeleteBookmark: (id: string) => void
   onRefreshBookmark: (id: string) => Promise<void>
   onLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
@@ -103,7 +103,7 @@ export const FolderBoard = memo(function FolderBoard({
 
   const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId)
 
-  async function getBookmarkForPanel(id: string) {
+  const getBookmarkForPanel = useCallback(async (id: string) => {
     const fallback = bookmarks.find((bookmark) => bookmark.id === id) ?? null
     try {
       return (await onLoadBookmarkDetails(id)) ?? fallback
@@ -111,21 +111,42 @@ export const FolderBoard = memo(function FolderBoard({
       console.error("Failed to load bookmark details:", error)
       return fallback
     }
-  }
+  }, [bookmarks, onLoadBookmarkDetails])
 
-  async function openPreview(id: string) {
+  const openPreview = useCallback(async (id: string) => {
     const bookmark = await getBookmarkForPanel(id)
     if (!bookmark) return
     setPreviewBookmark(bookmark)
     setIsPreviewOpen(true)
-  }
+  }, [getBookmarkForPanel])
 
-  async function openEditSheet(id: string) {
+  const openEditSheet = useCallback(async (id: string) => {
     const bookmark = await getBookmarkForPanel(id)
     if (!bookmark) return
     setEditSheetBookmark(bookmark)
     setIsEditSheetOpen(true)
-  }
+  }, [getBookmarkForPanel])
+
+  const handleRefreshItem = useCallback(
+    (id: string) => {
+      void onRefreshBookmark(id)
+    },
+    [onRefreshBookmark],
+  )
+
+  const handleEditItem = useCallback(
+    (id: string) => {
+      void openEditSheet(id)
+    },
+    [openEditSheet],
+  )
+
+  const handlePreviewItem = useCallback(
+    (id: string) => {
+      void openPreview(id)
+    },
+    [openPreview],
+  )
 
   const bookmarkBuckets = useBookmarkBuckets({
     bookmarks,
@@ -162,9 +183,9 @@ export const FolderBoard = memo(function FolderBoard({
     return result
   }, [folderGridColumns, isExtendedFolderGrid, visibleGroups])
 
-  const toggleCollapse = (groupId: string) => {
+  const toggleCollapse = useCallback((groupId: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }))
-  }
+  }, [setCollapsedGroups])
 
   const handleAccordionChange = (values: string[]) => {
     setCollapsedGroups((prev) => {
@@ -222,7 +243,7 @@ export const FolderBoard = memo(function FolderBoard({
     setHasKeyboardFocus,
     onKeyboardContextChange,
     onPreview: (bookmark) => {
-      void openPreview(bookmark.id)
+      handlePreviewItem(bookmark.id)
     },
     onToggleCollapse: toggleCollapse,
   })
@@ -255,9 +276,9 @@ export const FolderBoard = memo(function FolderBoard({
               : undefined
           }
         >
-          {folderColumns.map((columnGroups, columnIndex) => (
+          {folderColumns.map((columnGroups) => (
             <div
-              key={`folder-col-${columnIndex}`}
+              key={`folder-col-${columnGroups.map((group) => group.id).join("-") || "empty"}`}
               className={isExtendedFolderGrid ? "flex flex-col gap-5" : "flex flex-col gap-5"}
             >
               {columnGroups.map((group) => {
@@ -324,13 +345,9 @@ export const FolderBoard = memo(function FolderBoard({
                                   onToggleSelection={onToggleSelection}
                                   onEnterSelectionMode={onEnterSelectionMode}
                                   onDelete={onDeleteBookmark}
-                                  onRefresh={(id: string) => void onRefreshBookmark(id)}
-                                  onEdit={(id: string) => {
-                                    void openEditSheet(id)
-                                  }}
-                                  onPreview={(id: string) => {
-                                    void openPreview(id)
-                                  }}
+                                  onRefresh={handleRefreshItem}
+                                  onEdit={handleEditItem}
+                                  onPreview={handlePreviewItem}
                                 />
                               ))}
                             </div>

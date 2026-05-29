@@ -16,7 +16,7 @@ const CROSS_GROUP_DROP_TOAST_DELAY_MS = 240
 export function useFolderDnd<T extends { id: string; group_id?: string | null }>(options: {
   bookmarks: T[]
   bookmarkBuckets: Record<string, T[]>
-  onReorder: (groupId: string, newOrder: T[]) => void
+  onReorder: (groupId: string, newOrder: T[], movedBookmarkId: string) => void
   disabled?: boolean
 }) {
   const { bookmarks, bookmarkBuckets, onReorder, disabled = false } = options
@@ -67,7 +67,7 @@ export function useFolderDnd<T extends { id: string; group_id?: string | null }>
       const oldIndex = groupBookmarks.findIndex((b) => b.id === active.id)
       const newIndex = groupBookmarks.findIndex((b) => b.id === over.id)
       const newOrder = arrayMove(groupBookmarks, oldIndex, newIndex)
-      onReorder(activeGroupId, newOrder)
+      onReorder(activeGroupId, newOrder, active.id as string)
     }
     setActiveId(null)
   }

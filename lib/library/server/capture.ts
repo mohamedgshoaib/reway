@@ -4,6 +4,7 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/supabase/database.types"
 import { normalizeUrl } from "@/lib/metadata"
+import { generateRankBetween } from "@/lib/ranking"
 import { toPersistedGroupId } from "@/lib/system-groups"
 import { getDomain } from "@/lib/utils"
 
@@ -13,6 +14,7 @@ interface CreateGroupInput {
   name: string
   icon: string
   color?: string | null
+  rank?: string | null
 }
 
 interface CreateBookmarkInput {
@@ -24,6 +26,7 @@ interface CreateBookmarkInput {
   description?: string | null
   group_id?: string | null
   order_index?: number | null
+  rank?: string | null
   status: "pending" | "ready" | "failed"
   image_url?: string | null
   last_fetched_at?: string | null
@@ -44,12 +47,29 @@ export async function findNextGroupOrderIndex(
   return maxOrderData ? (maxOrderData.order_index ?? 0) + 1 : 0
 }
 
+export async function findNextGroupRank(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+) {
+  const { data: lastRankData } = await supabase
+    .from("groups")
+    .select("rank")
+    .eq("user_id", userId)
+    .not("rank", "is", null)
+    .order("rank", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  return generateRankBetween(lastRankData?.rank ?? null, null)
+}
+
 export async function createGroupRecord(
   supabase: LibrarySupabaseClient,
   userId: string,
   input: CreateGroupInput,
 ) {
   const nextOrderIndex = await findNextGroupOrderIndex(supabase, userId)
+  const nextRank = input.rank ?? (await findNextGroupRank(supabase, userId))
 
   const { data, error } = await supabase
     .from("groups")
@@ -59,6 +79,7 @@ export async function createGroupRecord(
       color: input.color ?? null,
       user_id: userId,
       order_index: nextOrderIndex,
+      rank: nextRank,
     })
     .select("*")
     .single()
@@ -122,19 +143,46 @@ export async function findNextBookmarkOrderIndex(
   return minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0
 }
 
+export async function findNextBookmarkRank(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+  groupId: string | null,
+) {
+  const query = supabase
+    .from("bookmarks")
+    .select("rank")
+    .eq("user_id", userId)
+    .not("rank", "is", null)
+    .order("rank", { ascending: true })
+    .limit(1)
+
+  if (groupId) {
+    query.eq("group_id", groupId)
+  } else {
+    query.is("group_id", null)
+  }
+
+  const { data: firstRankData } = await query.maybeSingle()
+
+  return generateRankBetween(null, firstRankData?.rank ?? null)
+}
+
 export async function createBookmarkRecord(
   supabase: LibrarySupabaseClient,
   userId: string,
   input: CreateBookmarkInput,
 ) {
+  const normalizedUrl = normalizeUrl(input.url)
+  const domain = getDomain(input.url)
+  const persistedGroupId = toPersistedGroupId(input.group_id)
   const nextOrderIndex =
     input.order_index === undefined || input.order_index === null
       ? await findNextBookmarkOrderIndex(supabase, userId)
       : input.order_index
-
-  const normalizedUrl = normalizeUrl(input.url)
-  const domain = getDomain(input.url)
-  const persistedGroupId = toPersistedGroupId(input.group_id)
+  const nextRank =
+    input.rank === undefined || input.rank === null
+      ? await findNextBookmarkRank(supabase, userId, persistedGroupId)
+      : input.rank
   const title = input.title?.trim() || normalizedUrl
 
   const { data, error } = await supabase
@@ -157,6 +205,7 @@ export async function createBookmarkRecord(
       last_visited_at: null,
       last_fetched_at: input.last_fetched_at ?? null,
       order_index: nextOrderIndex,
+      rank: nextRank,
     })
     .select("*")
     .single()

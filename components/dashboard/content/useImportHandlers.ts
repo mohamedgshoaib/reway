@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import { toast } from "sonner"
+import { compareRankedItems, generateRankBetween, generateRanksBetween } from "@/lib/ranking"
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import {
   buildBookmarkEnrichmentFailure,
@@ -28,8 +29,14 @@ interface UseImportHandlersOptions {
     title?: string
     group_id?: string
     order_index?: number
+    rank?: string
   }) => Promise<BookmarkRow | null>
-  createGroup: (formData: { name: string; icon: string; color?: string | null }) => Promise<string>
+  createGroup: (formData: {
+    name: string
+    icon: string
+    color?: string | null
+    rank?: string | null
+  }) => Promise<string>
   enrichCreatedBookmark: (id: string, url: string) => Promise<unknown>
   checkDuplicateBookmarks: (urls: string[]) => Promise<{
     duplicates: Record<string, { id: string; title: string; url: string }>
@@ -147,13 +154,21 @@ export function useImportHandlers({
         ),
       )
 
+      const groupRanks = generateRanksBetween(
+        groups.at(-1)?.rank ?? null,
+        null,
+        groupNamesToCreate.length,
+      )
+
       const createdGroups = await Promise.all(
-        groupNamesToCreate.map(async (name) => {
+        groupNamesToCreate.map(async (name, index) => {
           const color = pickRandomGroupColor()
+          const rank = groupRanks[index] ?? generateRankBetween(groups.at(-1)?.rank ?? null, null)
           const newGroupId = await createGroup({
             name,
             icon: "folder",
             color,
+            rank,
           })
           return {
             id: newGroupId,
@@ -164,6 +179,7 @@ export function useImportHandlers({
             created_at: new Date().toISOString(),
             hide_from_all_bookmarks: false,
             order_index: null,
+            rank,
           } satisfies GroupRow
         }),
       )
@@ -181,13 +197,38 @@ export function useImportHandlers({
       }, Number.POSITIVE_INFINITY)
       const startingOrder = currentMinOrder === Number.POSITIVE_INFINITY ? 0 : currentMinOrder
 
+      const entriesByGroup = new Map<string, number>()
+      entries.forEach((entry) => {
+        const groupId =
+          entry.groupName === "Ungrouped"
+            ? null
+            : (groupMap.get(entry.groupName)?.id ?? null)
+        const key = groupId ?? "__ungrouped__"
+        entriesByGroup.set(key, (entriesByGroup.get(key) ?? 0) + 1)
+      })
+
+      const ranksByGroup = new Map<string, string[]>()
+      entriesByGroup.forEach((count, key) => {
+        const groupId = key === "__ungrouped__" ? null : key
+        const firstRank = bookmarks
+          .filter((bookmark) => (bookmark.group_id ?? null) === groupId)
+          .toSorted(compareRankedItems)[0]?.rank
+        ranksByGroup.set(key, generateRanksBetween(null, firstRank ?? null, count))
+      })
+
+      const rankOffsetsByGroup = new Map<string, number>()
+
       const pendingEntries = entries.map((entry, index) => {
         const groupId =
           entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
+        const key = groupId ?? "__ungrouped__"
+        const offset = rankOffsetsByGroup.get(key) ?? 0
+        rankOffsetsByGroup.set(key, offset + 1)
         return {
           entry,
           groupId,
           orderIndex: startingOrder - (entries.length - index),
+          rank: ranksByGroup.get(key)?.[offset] ?? generateRankBetween(null, null),
         }
       })
 
@@ -202,6 +243,7 @@ export function useImportHandlers({
         entry,
         groupId,
         orderIndex,
+        rank,
       }: (typeof pendingEntries)[number]) => {
         // Check stop BEFORE doing ANY work (including optimistic insert)
         if (stopRequestedRef.current) {
@@ -214,6 +256,7 @@ export function useImportHandlers({
             title: entry.title,
             group_id: groupId ?? undefined,
             order_index: orderIndex,
+            rank,
           })
 
           if (!createdBookmark) {

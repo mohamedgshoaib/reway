@@ -56,15 +56,16 @@ import {
   moveBookmarksToGroup,
   restoreBookmark as restoreAction,
   updateBookmark as updateBookmarkAction,
-  updateBookmarksOrder,
+  updateBookmarkRank,
 } from "@/app/dashboard/actions/bookmarks"
 import {
   createGroup,
   deleteGroup as deleteGroupAction,
   restoreGroup as restoreGroupAction,
-  updateGroupsOrder,
+  updateGroupRank,
   updateGroup as updateGroupAction,
 } from "@/app/dashboard/actions/groups"
+import { getRankForMovedItem } from "@/lib/ranking"
 
 export function DashboardContent({
   user,
@@ -143,7 +144,7 @@ export function DashboardContent({
     initialBookmarks,
     setBookmarks: dashboard.setBookmarks,
     sortBookmarks: dashboard.sortBookmarks,
-    updateBookmarksOrder,
+    updateBookmarkRank,
     deleteBookmark: deleteAction,
     restoreBookmark: restoreAction,
     updateBookmark: updateBookmarkAction,
@@ -188,23 +189,18 @@ export function DashboardContent({
   })
 
   const handleGroupsReorder = useCallback(
-    async (newOrder: GroupRow[]) => {
+    async (newOrder: GroupRow[], movedGroupId: string) => {
       const reorderableOrder = newOrder.filter((g) => g.id !== NO_GROUP_ID)
       const prev = dashboard.groups
+      const nextRank = getRankForMovedItem(reorderableOrder, movedGroupId)
       dashboard.setGroups(
-        reorderableOrder.map((group, index) => ({
-          ...group,
-          order_index: index,
-        })),
+        reorderableOrder.map((group) =>
+          group.id === movedGroupId ? { ...group, rank: nextRank } : group,
+        ),
       )
 
-      const updates = reorderableOrder.map((group, index) => ({
-        id: group.id,
-        order_index: index,
-      }))
-
       try {
-        await updateGroupsOrder(updates)
+        await updateGroupRank({ id: movedGroupId, rank: nextRank })
       } catch (error) {
         console.error("Reorder groups failed:", error)
         toast.error("Failed to reorder groups")

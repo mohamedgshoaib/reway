@@ -53,6 +53,17 @@
 - Adjusted the `Needs attention` header so the label does not wrap when action buttons sit beside it.
 - Verified the main dashboard strip is gone, the avatar menu exposes `Enrichment health`, and the sheet opens on `http://localhost:3001/dashboard` through the in-app browser DOM snapshot.
 - Verified the enrichment health change with `pnpm typecheck`, targeted `oxlint`, and React Doctor at 100/100.
+- Used Supabase MCP to verify live bookmark/group table shape, indexes, migration history, advisors, and representative rank-order query plans before the rank rollout.
+- Added and applied production migration `20260529050306_add_fractional_ranks`; local SQL is recorded at `supabase/migrations/20260529050306_add_fractional_ranks.sql`.
+- Added `rank text collate "C"` to `bookmarks` and `groups`, backfilled all live rows, validated rank-length checks, and created `(user_id, group_id, rank)` / `(user_id, rank)` indexes.
+- Verified live rank rollout: 0 missing bookmark ranks, 0 missing group ranks, max rank length 32, and no rows over the 64-character rebalance threshold.
+- Switched dashboard and extension bookmark/group reads to order by `rank` first while preserving `order_index` as fallback.
+- Updated create/import paths to assign ranks and updated bookmark/group drag paths to persist only the moved row's rank instead of rewriting every row's `order_index`.
+- Reviewed the rank rollout for collision and ordering risks; changed extension grabbed-link and session batch saves to create sequentially so concurrent extension POSTs cannot receive duplicate server-generated top ranks.
+- Split group rank sorting from bookmark rank sorting so client group fallback order matches the database order when ranks are missing or duplicated.
+- Used the dnd-kit skill to review the current DnD surface, memoized card/folder icon sortable bookmark components, and stabilized board item action handlers to reduce active-drag rerender pressure.
+- Verified the rank implementation with `pnpm typecheck`, targeted `oxlint`, and React Doctor at 100/100.
+- Reloaded the authenticated dashboard at `http://localhost:3001/dashboard`; the dashboard rendered without a build/runtime overlay after the rank changes.
 
 ---
 
@@ -73,6 +84,8 @@
 - Realtime-specific smoke testing is skipped for this phase as accepted residual risk because the payload-shaping cut did not intentionally change realtime subscription wiring.
 - Next scalability decision is whether enrichment observability needs persisted attempt tracking, or whether the current client-side signal is enough until metrics show pain.
 - First enrichment observability cut should remain client-side until retry count / last-attempt data proves a server-side attempt model is worth the added surface.
+- `order_index` should remain frozen as rollback data after the rank cutover; do not drop it until dashboard, extension, imports, realtime, and smoke tests are verified.
+- A secondary DnD performance audit should happen before virtualization: profile current large-board drag behavior, collision costs, sensor constraints, and whether a legacy dnd-kit to `@dnd-kit/react` migration is worthwhile before TanStack Virtual.
 
 ---
 
@@ -80,4 +93,5 @@
 
 1. ~~Supabase MCP live re-check requires re-authentication before function definitions/advisors can be freshly inspected.~~ Resolved 29-May-26.
 2. Local Supabase migration listing is blocked until the local database is started on `127.0.0.1:54322`; live transaction rollback and post-apply verification succeeded.
-3. Full `pnpm lint` is blocked by pre-existing unrelated lint findings; targeted lint for the payload-shaping files passes.
+3. Full `pnpm lint` is blocked by pre-existing unrelated lint findings; targeted lint for the changed rank/payload files passes.
+4. Post-rank performance advisor reports `groups_user_id_rank_idx` as unused immediately after creation. This is expected until traffic exercises the new group-rank read path; bookmark rank ordering already uses `bookmarks_user_id_group_id_rank_idx` in a representative plan.

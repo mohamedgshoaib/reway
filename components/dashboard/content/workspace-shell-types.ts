@@ -42,7 +42,7 @@ export interface DashboardNavigationAdapter {
   groupCounts: Record<string, number>
   selectGroup: (id: string) => void
   openGroup: (groupId: string) => void
-  reorderGroups: (newOrder: GroupRow[]) => Promise<void>
+  reorderGroups: (newOrder: GroupRow[], movedGroupId: string) => Promise<void>
   groupControls: DashboardGroupControlsAdapter
   preferences: {
     rowContent: "date" | "group"
@@ -146,8 +146,8 @@ export interface DashboardLibraryAdapter {
       applyFaviconToDomain?: boolean
     },
   ) => Promise<void>
-  handleFolderReorder: (groupId: string, newOrder: BookmarkRow[]) => void
-  handleReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  handleFolderReorder: (groupId: string, newOrder: BookmarkRow[], movedBookmarkId: string) => void
+  handleReorder: (groupId: string, newOrder: BookmarkRow[], movedBookmarkId: string) => void
 }
 
 export interface DashboardSelectionAdapter {

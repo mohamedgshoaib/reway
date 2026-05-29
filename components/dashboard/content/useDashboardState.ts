@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react"
+import { compareRankedGroups, compareRankedItems } from "@/lib/ranking"
 import type { BookmarkRow, GroupRow, NoteRow, TodoRow } from "@/lib/supabase/queries"
 import { ALL_BOOKMARKS_GROUP_ID, isAllBookmarksGroupId } from "@/lib/system-groups"
 import type { DashboardPaletteTheme } from "@/lib/themes"
@@ -92,23 +93,11 @@ export function useDashboardState({
   const lastBulkDeletedTodosRef = useRef<{ todo: TodoRow; index: number }[]>([])
 
   const sortBookmarks = useCallback((items: BookmarkRow[]) => {
-    return items.toSorted((a, b) => {
-      const aOrder = a.order_index ?? Number.POSITIVE_INFINITY
-      const bOrder = b.order_index ?? Number.POSITIVE_INFINITY
-      if (aOrder !== bOrder) return aOrder - bOrder
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
+    return items.toSorted(compareRankedItems)
   }, [])
 
   const sortGroups = useCallback((items: GroupRow[]) => {
-    return items.toSorted((a, b) => {
-      const aOrder = a.order_index ?? Number.POSITIVE_INFINITY
-      const bOrder = b.order_index ?? Number.POSITIVE_INFINITY
-      if (aOrder !== bOrder) return aOrder - bOrder
-      const nameA = a.name || ""
-      const nameB = b.name || ""
-      return nameA.localeCompare(nameB, undefined, { sensitivity: "base" })
-    })
+    return items.toSorted(compareRankedGroups)
   }, [])
 
   useEffect(() => {

@@ -11,7 +11,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { toast } from "sonner"
 
 import {
@@ -57,7 +57,7 @@ interface SortableBookmarkCardProps {
   dragDisabled?: boolean
 }
 
-export function SortableBookmarkCard({
+export const SortableBookmarkCard = memo(function SortableBookmarkCard({
   id,
   title,
   url,
@@ -409,4 +409,4 @@ export function SortableBookmarkCard({
       </AlertDialogContent>
     </AlertDialog>
   )
-}
+})

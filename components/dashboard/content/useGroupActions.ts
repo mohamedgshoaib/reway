@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
 import { checkDuplicateGroup, toggleHideFromAllBookmarks } from "@/app/dashboard/actions/groups"
+import { generateRankBetween } from "@/lib/ranking"
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import { ALL_BOOKMARKS_GROUP_ID } from "@/lib/system-groups"
 
@@ -17,7 +18,12 @@ interface UseGroupActionsOptions {
   sortGroups: (items: GroupRow[]) => GroupRow[]
   setActiveGroupId: (id: string) => void
   lastDeletedGroupRef: React.MutableRefObject<GroupRow | null>
-  createGroup: (formData: { name: string; icon: string; color?: string | null }) => Promise<string>
+  createGroup: (formData: {
+    name: string
+    icon: string
+    color?: string | null
+    rank?: string | null
+  }) => Promise<string>
   updateGroup: (
     id: string,
     formData: {
@@ -34,6 +40,8 @@ interface UseGroupActionsOptions {
     icon: string
     color?: string | null
     hide_from_all_bookmarks?: boolean | null
+    order_index?: number | null
+    rank?: string | null
   }) => Promise<void>
   restoreBookmark: (bookmark: BookmarkRow) => Promise<void>
   lastDeletedGroupBookmarksRef: React.MutableRefObject<BookmarkRow[]>
@@ -80,7 +88,7 @@ export function useGroupActions({
   }
 
   const handleGroupCreated = useCallback(
-    (id: string, name: string, icon: string, color?: string | null) => {
+    (id: string, name: string, icon: string, color?: string | null, rank?: string | null) => {
       const newGroup: GroupRow = {
         id,
         name,
@@ -90,11 +98,12 @@ export function useGroupActions({
         hide_from_all_bookmarks: false,
         color: color ?? null,
         order_index: null,
+        rank: rank ?? generateRankBetween(groups.at(-1)?.rank ?? null, null),
       }
       setGroups((prev) => sortGroups([...prev, newGroup]))
       setActiveGroupId(id)
     },
-    [setActiveGroupId, setGroups, sortGroups, userId],
+    [groups, setActiveGroupId, setGroups, sortGroups, userId],
   )
 
   const handleUpdateGroup = useCallback(
@@ -205,6 +214,8 @@ export function useGroupActions({
                   icon: lastDeleted.icon || "folder",
                   color: lastDeleted.color,
                   hide_from_all_bookmarks: lastDeleted.hide_from_all_bookmarks,
+                  order_index: lastDeleted.order_index,
+                  rank: lastDeleted.rank,
                 })
                 if (restoreBookmarks.length > 0) {
                   await Promise.allSettled(
@@ -268,12 +279,14 @@ export function useGroupActions({
           return
         }
 
+        const rank = generateRankBetween(groups.at(-1)?.rank ?? null, null)
         const groupId = await createGroup({
           name: newGroupName.trim(),
           icon: newGroupIcon,
           color: newGroupColor,
+          rank,
         })
-        handleGroupCreated(groupId, newGroupName.trim(), newGroupIcon, newGroupColor)
+        handleGroupCreated(groupId, newGroupName.trim(), newGroupIcon, newGroupColor, rank)
         setIsInlineCreating(false)
         setNewGroupName("")
         setNewGroupIcon("folder")
@@ -293,6 +306,7 @@ export function useGroupActions({
     },
     [
       createGroup,
+      groups,
       handleGroupCreated,
       isCreatingGroup,
       newGroupColor,

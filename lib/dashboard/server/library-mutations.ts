@@ -475,7 +475,7 @@ export const groupsMutations = {
     )
   },
 
-  async create(formData: { name: string; icon: string; color?: string | null }) {
+  async create(formData: { name: string; icon: string; color?: string | null; rank?: string | null }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
       const { data, error } = await createGroupRecord(supabase, userId, formData)
 
@@ -522,22 +522,17 @@ export const groupsMutations = {
     })
   },
 
-  async updateOrder(updates: { id: string; order_index: number }[]) {
+  async updateRank(update: { id: string; rank: string }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const updatePromises = updates.map((update) =>
-        supabase
-          .from("groups")
-          .update({ order_index: update.order_index })
-          .eq("id", update.id)
-          .eq("user_id", userId),
-      )
+      const { error } = await supabase
+        .from("groups")
+        .update({ rank: update.rank })
+        .eq("id", update.id)
+        .eq("user_id", userId)
 
-      const results = await Promise.all(updatePromises)
-
-      const firstError = results.find((result) => result.error)?.error
-      if (firstError) {
-        console.error("Error updating groups order:", firstError)
-        throw new Error(`Failed to update order: ${firstError.message}`)
+      if (error) {
+        console.error("Error updating group rank:", error)
+        throw new Error(`Failed to update order: ${error.message}`)
       }
     })
   },
@@ -563,6 +558,8 @@ export const groupsMutations = {
     icon: string
     color?: string | null
     hide_from_all_bookmarks?: boolean | null
+    order_index?: number | null
+    rank?: string | null
   }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
       const { error } = await supabase
@@ -573,6 +570,8 @@ export const groupsMutations = {
           icon: group.icon,
           color: group.color ?? null,
           hide_from_all_bookmarks: group.hide_from_all_bookmarks ?? false,
+          order_index: group.order_index ?? null,
+          rank: group.rank ?? null,
           user_id: userId,
         })
         .eq("user_id", userId)
@@ -690,6 +689,7 @@ export const bookmarkMutations = {
     description?: string
     group_id?: string
     order_index?: number
+    rank?: string
   }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
       const { data, error } = await createBookmarkRecord(supabase, userId, {
@@ -730,22 +730,17 @@ export const bookmarkMutations = {
     })
   },
 
-  async updateOrder(updates: { id: string; order_index: number }[]) {
+  async updateRank(update: { id: string; rank: string }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const updatePromises = updates.map((update) =>
-        supabase
-          .from("bookmarks")
-          .update({ order_index: update.order_index })
-          .eq("id", update.id)
-          .eq("user_id", userId),
-      )
+      const { error } = await supabase
+        .from("bookmarks")
+        .update({ rank: update.rank })
+        .eq("id", update.id)
+        .eq("user_id", userId)
 
-      const results = await Promise.all(updatePromises)
-
-      const firstError = results.find((result) => result.error)?.error
-      if (firstError) {
-        console.error("Error updating order:", firstError)
-        throw new Error(`Failed to update order: ${firstError.message}`)
+      if (error) {
+        console.error("Error updating bookmark rank:", error)
+        throw new Error(`Failed to update order: ${error.message}`)
       }
     })
   },
@@ -803,6 +798,7 @@ export const bookmarkMutations = {
     og_image_url?: string | null
     image_url?: string | null
     order_index?: number | null
+    rank?: string | null
     created_at?: string | null
     status?: string | null
     visit_count?: number | null
@@ -825,6 +821,7 @@ export const bookmarkMutations = {
           og_image_url: bookmark.og_image_url ?? null,
           image_url: bookmark.image_url ?? null,
           order_index: bookmark.order_index ?? null,
+          rank: bookmark.rank ?? null,
           created_at: bookmark.created_at ?? new Date().toISOString(),
           status: bookmark.status ?? "ready",
           visit_count: bookmark.visit_count ?? 0,

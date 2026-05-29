@@ -21,10 +21,11 @@ import {
   verticalListSortingStrategy,
   rectSortingStrategy,
 } from "@dnd-kit/sortable"
-import React, { memo, useState, useId, useMemo, useRef } from "react"
+import React, { memo, useCallback, useState, useId, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "sonner"
 import { useIsMac } from "@/hooks/useIsMac"
+import { compareRankedItems } from "@/lib/ranking"
 import { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import {
   ALL_BOOKMARKS_GROUP_ID,
@@ -54,7 +55,7 @@ interface BookmarkBoardProps {
   bookmarks: BookmarkRow[]
   initialGroups: GroupRow[]
   activeGroupId: string
-  onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
+  onReorder: (groupId: string, newOrder: BookmarkRow[], movedBookmarkId: string) => void
   onDeleteBookmark: (id: string) => void
   onRefreshBookmark: (id: string) => Promise<void>
   onLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
@@ -121,7 +122,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
 
     const groupOrder = new Map<string, number>()
     initialGroups.forEach((g, index) => {
-      groupOrder.set(g.id, g.order_index ?? index)
+      groupOrder.set(g.id, g.rank ? index : (g.order_index ?? index))
     })
 
     const getGroupKey = (groupId?: string | null) => {
@@ -135,11 +136,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       const groupB = getGroupKey(b.group_id)
       if (groupA !== groupB) return groupA - groupB
 
-      const aOrder = a.order_index ?? Number.POSITIVE_INFINITY
-      const bOrder = b.order_index ?? Number.POSITIVE_INFINITY
-      if (aOrder !== bOrder) return aOrder - bOrder
-
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      return compareRankedItems(a, b)
     })
   }, [activeGroupId, bookmarks, initialGroups])
 
@@ -189,7 +186,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
 
   const activeBookmark = activeId ? (bookmarks.find((b) => b.id === activeId) ?? null) : null
 
-  async function getBookmarkForPanel(id: string) {
+  const getBookmarkForPanel = useCallback(async (id: string) => {
     const fallback = bookmarks.find((bm) => bm.id === id) ?? null
     try {
       return (await onLoadBookmarkDetails(id)) ?? fallback
@@ -198,21 +195,42 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       toast.error("Failed to load bookmark details")
       return fallback
     }
-  }
+  }, [bookmarks, onLoadBookmarkDetails])
 
-  async function openPreview(id: string) {
+  const openPreview = useCallback(async (id: string) => {
     const bookmark = await getBookmarkForPanel(id)
     if (!bookmark) return
     setPreviewBookmark(bookmark)
     setIsPreviewOpen(true)
-  }
+  }, [getBookmarkForPanel])
 
-  async function openEditSheet(id: string) {
+  const openEditSheet = useCallback(async (id: string) => {
     const bookmark = await getBookmarkForPanel(id)
     if (!bookmark) return
     setEditSheetBookmark(bookmark)
     setIsEditSheetOpen(true)
-  }
+  }, [getBookmarkForPanel])
+
+  const handleRefreshItem = useCallback(
+    (id: string) => {
+      void onRefreshBookmark(id)
+    },
+    [onRefreshBookmark],
+  )
+
+  const handleEditItem = useCallback(
+    (id: string) => {
+      void openEditSheet(id)
+    },
+    [openEditSheet],
+  )
+
+  const handlePreviewItem = useCallback(
+    (id: string) => {
+      void openPreview(id)
+    },
+    [openPreview],
+  )
 
   const getDragBucket = (groupId?: string | null) => groupId ?? UNGROUPED_DRAG_BUCKET
 
@@ -264,7 +282,11 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         const oldIndex = groupBookmarks.findIndex((b) => b.id === active.id)
         const newIndex = groupBookmarks.findIndex((b) => b.id === over.id)
         if (oldIndex >= 0 && newIndex >= 0) {
-          onReorder(groupId ?? NO_GROUP_ID, arrayMove(groupBookmarks, oldIndex, newIndex))
+          onReorder(
+            groupId ?? NO_GROUP_ID,
+            arrayMove(groupBookmarks, oldIndex, newIndex),
+            active.id as string,
+          )
         }
       }
 
@@ -276,7 +298,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
       const oldIndex = bookmarks.findIndex((b) => b.id === active.id)
       const newIndex = bookmarks.findIndex((b) => b.id === over.id)
       const newOrder = arrayMove(bookmarks, oldIndex, newIndex)
-      onReorder(activeGroupId, newOrder)
+      onReorder(activeGroupId, newOrder, active.id as string)
     }
 
     setActiveId(null)
@@ -287,7 +309,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     isGridView,
     gridColumns,
     onPreview: (bookmark) => {
-      void openPreview(bookmark.id)
+      handlePreviewItem(bookmark.id)
     },
   })
   if (bookmarks.length === 0) {
@@ -345,13 +367,9 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                       bookmarkDragBucket !== activeDragBucket
                     }
                     onDelete={onDeleteBookmark}
-                    onRefresh={(id: string) => void onRefreshBookmark(id)}
-                    onEdit={(id: string) => {
-                      void openEditSheet(id)
-                    }}
-                    onPreview={(id: string) => {
-                      void openPreview(id)
-                    }}
+                    onRefresh={handleRefreshItem}
+                    onEdit={handleEditItem}
+                    onPreview={handlePreviewItem}
                     rowContent={rowContent}
                     {...bookmark}
                   />
@@ -362,16 +380,12 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                 <SortableBookmark
                   key={bookmark.id}
                   onDelete={onDeleteBookmark}
-                  onRefresh={(id: string) => void onRefreshBookmark(id)}
-                  onEdit={(id: string) => {
-                    void openEditSheet(id)
-                  }}
+                  onRefresh={handleRefreshItem}
+                  onEdit={handleEditItem}
                   isSelected={clampedSelectedIndex === index}
                   activeGroupId={activeGroupId}
                   dragDisabled={isMostVisitedGroup}
-                  onPreview={(id) => {
-                    void openPreview(id)
-                  }}
+                  onPreview={handlePreviewItem}
                   rowContent={rowContent}
                   groupsMap={groupsMap}
                   selectionMode={selectionMode}

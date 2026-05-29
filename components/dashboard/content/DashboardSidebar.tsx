@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { RepeatIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import dynamic from "next/dynamic"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
@@ -39,10 +39,23 @@ const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   },
 )
 
+function subscribeViewportWidth(onStoreChange: () => void) {
+  window.addEventListener("resize", onStoreChange, { passive: true })
+  return () => window.removeEventListener("resize", onStoreChange)
+}
+
+function getViewportWidthSnapshot() {
+  return window.innerWidth
+}
+
+function getServerViewportWidthSnapshot() {
+  return 0
+}
+
 interface DashboardSidebarProps {
   library: Pick<DashboardLibraryAdapter, "groups" | "bookmarks" | "activeGroupId" | "setActiveGroupId" | "layoutDensity"> & {
     handleOpenGroup: (groupId: string) => void
-    reorderGroups: (newOrder: GroupRow[]) => Promise<void>
+    reorderGroups: (newOrder: GroupRow[], movedGroupId: string) => Promise<void>
   }
   groupControls: DashboardGroupControlsAdapter
 }
@@ -53,19 +66,16 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const reorderableGroups = library.groups.filter((g) => g.id !== NO_GROUP_ID)
 
-  const [viewportWidth, setViewportWidth] = useState<number>(0)
+  const viewportWidth = useSyncExternalStore(
+    subscribeViewportWidth,
+    getViewportWidthSnapshot,
+    getServerViewportWidthSnapshot,
+  )
   const [isPinnedOpen, setIsPinnedOpen] = useState(false)
   const [isHoverOpen, setIsHoverOpen] = useState(false)
   const closeTimerRef = useRef<number | null>(null)
   const pointerInsideRef = useRef(false)
   const openActionMenuCountRef = useRef(0)
-
-  useEffect(() => {
-    const update = () => setViewportWidth(window.innerWidth)
-    update()
-    window.addEventListener("resize", update, { passive: true })
-    return () => window.removeEventListener("resize", update)
-  }, [])
 
   const canPin = useMemo(() => {
     const mainMaxWidth = library.layoutDensity === "extended" ? 1600 : 768
@@ -114,8 +124,9 @@ export function DashboardSidebar({
   }
 
   useEffect(() => {
+    const timerRef = closeTimerRef
     return () => {
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+      if (timerRef.current) window.clearTimeout(timerRef.current)
     }
   }, [])
 

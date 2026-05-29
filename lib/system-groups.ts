@@ -40,5 +40,6 @@ export function createNoGroupRow(): GroupRow {
     created_at: SYSTEM_GROUP_CREATED_AT,
     hide_from_all_bookmarks: false,
     order_index: null,
+    rank: null,
   }
 }

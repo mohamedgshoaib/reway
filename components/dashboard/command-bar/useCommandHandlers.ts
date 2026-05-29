@@ -86,6 +86,7 @@ export function useCommandHandlers({
           user_id: "",
           created_at: new Date().toISOString(),
           order_index: Number.MIN_SAFE_INTEGER,
+          rank: null,
           status: "pending",
           is_enriching: true,
           last_fetched_at: null,
@@ -152,6 +153,7 @@ export function useCommandHandlers({
           user_id: "",
           created_at: new Date().toISOString(),
           order_index: Number.MIN_SAFE_INTEGER,
+          rank: null,
           status: "pending",
           is_enriching: true,
           last_fetched_at: null,
@@ -198,7 +200,9 @@ export function useCommandHandlers({
       }
 
       const fullUrls = urls.map((u) => (u.startsWith("http") ? u : `https://${u}`))
-      await Promise.all(fullUrls.map(executeAdd))
+      for (const url of fullUrls) {
+        await executeAdd(url)
+      }
     },
     [
       getActiveTargetGroupId,

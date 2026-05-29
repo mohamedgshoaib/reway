@@ -144,18 +144,22 @@ export async function createGroupFromLinks(destination) {
       groupId = groupData.group.id
     }
 
-    const promises = links.map((link) =>
-      apiFetch("/api/extension/bookmarks", {
-        method: "POST",
-        body: JSON.stringify({
-          url: link.url,
-          title: link.title || link.url,
-          groupId,
-        }),
-      }),
-    )
-
-    const results = await Promise.allSettled(promises)
+    const results = []
+    for (const link of links) {
+      try {
+        const value = await apiFetch("/api/extension/bookmarks", {
+          method: "POST",
+          body: JSON.stringify({
+            url: link.url,
+            title: link.title || link.url,
+            groupId,
+          }),
+        })
+        results.push({ status: "fulfilled", value })
+      } catch (reason) {
+        results.push({ status: "rejected", reason })
+      }
+    }
     const rejected = results.filter((r) => r.status === "rejected")
     const duplicates = rejected.filter((r) => {
       const err = r.reason

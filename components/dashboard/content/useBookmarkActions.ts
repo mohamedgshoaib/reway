@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { toast } from "sonner"
+import { getRankForMovedItem, generateRankBetween } from "@/lib/ranking"
 import type { BookmarkDetailRow, BookmarkRow } from "@/lib/supabase/queries"
 import { isAllBookmarksGroupId, isMostVisitedGroupId, isNoGroupId } from "@/lib/system-groups"
 import { getDomain } from "@/lib/utils"
@@ -13,7 +14,7 @@ interface UseBookmarkActionsOptions {
   initialBookmarks: BookmarkRow[]
   setBookmarks: React.Dispatch<React.SetStateAction<BookmarkRow[]>>
   sortBookmarks: (items: BookmarkRow[]) => BookmarkRow[]
-  updateBookmarksOrder: (updates: { id: string; order_index: number }[]) => Promise<void>
+  updateBookmarkRank: (update: { id: string; rank: string }) => Promise<void>
   deleteBookmark: (id: string) => Promise<void>
   restoreBookmark: (bookmark: BookmarkRow) => Promise<void>
   updateBookmark: (
@@ -41,7 +42,7 @@ export function useBookmarkActions({
   initialBookmarks,
   setBookmarks,
   sortBookmarks,
-  updateBookmarksOrder,
+  updateBookmarkRank,
   deleteBookmark,
   restoreBookmark,
   updateBookmark,
@@ -69,11 +70,14 @@ export function useBookmarkActions({
           return order < min ? order : min
         }, Number.POSITIVE_INFINITY)
         const nextOrder = minOrder === Number.POSITIVE_INFINITY ? 0 : minOrder - 1
+        const targetGroupId = getActiveTargetGroupId() ?? bookmark.group_id ?? null
+        const firstGroupRank = prev.find((item) => (item.group_id ?? null) === targetGroupId)?.rank
         const newBookmark = {
           ...bookmark,
           created_at: bookmark.created_at ?? new Date().toISOString(),
           order_index: bookmark.order_index ?? nextOrder,
-          group_id: getActiveTargetGroupId() ?? bookmark.group_id ?? null,
+          rank: bookmark.rank ?? generateRankBetween(null, firstGroupRank ?? null),
+          group_id: targetGroupId,
         }
 
         const existingIndex = prev.findIndex((item) => item.id === newBookmark.id)
@@ -261,24 +265,19 @@ export function useBookmarkActions({
   )
 
   const handleFolderReorder = useCallback(
-    async (groupId: string, newOrder: BookmarkRow[]) => {
+    async (groupId: string, newOrder: BookmarkRow[], movedBookmarkId: string) => {
+      const nextRank = getRankForMovedItem(newOrder, movedBookmarkId)
       setBookmarks((prev) => {
         const groupIds = new Set(newOrder.map((b) => b.id))
         const other = prev.filter((b) => !groupIds.has(b.id))
-        const updatedGroup = newOrder.map((bookmark, index) => ({
-          ...bookmark,
-          order_index: index,
-        }))
+        const updatedGroup = newOrder.map((bookmark) =>
+          bookmark.id === movedBookmarkId ? { ...bookmark, rank: nextRank } : bookmark,
+        )
         return sortBookmarks([...updatedGroup, ...other])
       })
 
-      const updates = newOrder.map((bookmark, index) => ({
-        id: bookmark.id,
-        order_index: index,
-      }))
-
       try {
-        await updateBookmarksOrder(updates)
+        await updateBookmarkRank({ id: movedBookmarkId, rank: nextRank })
       } catch (error) {
         console.error("Reorder failed:", error)
         toast.error("Failed to reorder bookmarks")
@@ -287,7 +286,7 @@ export function useBookmarkActions({
 
       void groupId
     },
-    [initialBookmarks, setBookmarks, sortBookmarks, updateBookmarksOrder],
+    [initialBookmarks, setBookmarks, sortBookmarks, updateBookmarkRank],
   )
 
   const handleDeleteBookmark = useCallback(
@@ -348,24 +347,19 @@ export function useBookmarkActions({
   )
 
   const handleReorder = useCallback(
-    async (groupId: string, newOrder: BookmarkRow[]) => {
+    async (groupId: string, newOrder: BookmarkRow[], movedBookmarkId: string) => {
+      const nextRank = getRankForMovedItem(newOrder, movedBookmarkId)
       setBookmarks((prev) => {
         const groupIds = new Set(newOrder.map((b) => b.id))
         const other = prev.filter((b) => !groupIds.has(b.id))
-        const updatedGroup = newOrder.map((bookmark, index) => ({
-          ...bookmark,
-          order_index: index,
-        }))
+        const updatedGroup = newOrder.map((bookmark) =>
+          bookmark.id === movedBookmarkId ? { ...bookmark, rank: nextRank } : bookmark,
+        )
         return sortBookmarks([...updatedGroup, ...other])
       })
 
-      const updates = newOrder.map((bookmark, index) => ({
-        id: bookmark.id,
-        order_index: index,
-      }))
-
       try {
-        await updateBookmarksOrder(updates)
+        await updateBookmarkRank({ id: movedBookmarkId, rank: nextRank })
       } catch (error) {
         console.error("Reorder failed:", error)
         toast.error("Failed to reorder bookmarks")
@@ -374,7 +368,7 @@ export function useBookmarkActions({
 
       void groupId
     },
-    [initialBookmarks, setBookmarks, sortBookmarks, updateBookmarksOrder],
+    [initialBookmarks, setBookmarks, sortBookmarks, updateBookmarkRank],
   )
 
   const handleEditBookmark = useCallback(

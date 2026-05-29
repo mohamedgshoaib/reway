@@ -150,18 +150,22 @@ export async function saveTabSession(destination) {
       groupId = groupData.group.id
     }
 
-    const results = await Promise.allSettled(
-      selectedHttpTabs.map((tab) =>
-        apiFetch("/api/extension/bookmarks", {
+    const results = []
+    for (const tab of selectedHttpTabs) {
+      try {
+        const value = await apiFetch("/api/extension/bookmarks", {
           method: "POST",
           body: JSON.stringify({
             url: tab.url,
             title: tab.title || tab.url,
             groupId,
           }),
-        }),
-      ),
-    )
+        })
+        results.push({ status: "fulfilled", value })
+      } catch (reason) {
+        results.push({ status: "rejected", reason })
+      }
+    }
 
     const isDuplicate = (err) => {
       const code = err?.data?.code

@@ -21,6 +21,7 @@ export async function addBookmark(formData: {
   description?: string
   group_id?: string
   order_index?: number
+  rank?: string
 }) {
   return bookmarkMutations.add(formData)
 }
@@ -33,8 +34,8 @@ export async function refreshBookmarkMetadata(id: string) {
   return bookmarkMutations.refresh(id)
 }
 
-export async function updateBookmarksOrder(updates: { id: string; order_index: number }[]) {
-  return bookmarkMutations.updateOrder(updates)
+export async function updateBookmarkRank(update: { id: string; rank: string }) {
+  return bookmarkMutations.updateRank(update)
 }
 
 export async function moveBookmarksToGroup(ids: string[], targetGroupId: string | null) {
@@ -55,6 +56,7 @@ export async function restoreBookmark(bookmark: {
   og_image_url?: string | null
   image_url?: string | null
   order_index?: number | null
+  rank?: string | null
   created_at?: string | null
   status?: string | null
   visit_count?: number | null

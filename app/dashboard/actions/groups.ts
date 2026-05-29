@@ -12,7 +12,12 @@ export async function checkDuplicateGroup(
   return groupsMutations.checkDuplicate(name, excludeId)
 }
 
-export async function createGroup(formData: { name: string; icon: string; color?: string | null }) {
+export async function createGroup(formData: {
+  name: string
+  icon: string
+  color?: string | null
+  rank?: string | null
+}) {
   return groupsMutations.create(formData)
 }
 
@@ -28,8 +33,8 @@ export async function updateGroup(
   return groupsMutations.update(id, formData)
 }
 
-export async function updateGroupsOrder(updates: { id: string; order_index: number }[]) {
-  return groupsMutations.updateOrder(updates)
+export async function updateGroupRank(update: { id: string; rank: string }) {
+  return groupsMutations.updateRank(update)
 }
 
 export async function deleteGroup(id: string) {
@@ -42,6 +47,8 @@ export async function restoreGroup(group: {
   icon: string
   color?: string | null
   hide_from_all_bookmarks?: boolean | null
+  order_index?: number | null
+  rank?: string | null
 }) {
   return groupsMutations.restore(group)
 }

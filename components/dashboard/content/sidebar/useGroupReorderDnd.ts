@@ -18,7 +18,7 @@ export function useGroupReorderDnd({
   onReorderGroups,
 }: {
   groups: GroupRow[]
-  onReorderGroups: (newOrder: GroupRow[]) => void
+  onReorderGroups: (newOrder: GroupRow[], movedGroupId: string) => void
 }) {
   const [activeDragGroupId, setActiveDragGroupId] = useState<string | null>(null)
 
@@ -44,7 +44,7 @@ export function useGroupReorderDnd({
     const newIndex = groups.findIndex((g) => g.id === over.id)
     if (oldIndex < 0 || newIndex < 0) return
 
-    onReorderGroups(arrayMove(groups, oldIndex, newIndex))
+    onReorderGroups(arrayMove(groups, oldIndex, newIndex), active.id as string)
   }
 
   const collisionDetection: CollisionDetection = (args) => {

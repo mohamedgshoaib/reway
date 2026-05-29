@@ -24,6 +24,7 @@ export type Database = {
           normalized_url: string | null
           og_image_url: string | null
           order_index: number | null
+          rank: string | null
           screenshot_url: string | null
           status: string | null
           title: string
@@ -46,6 +47,7 @@ export type Database = {
           normalized_url?: string | null
           og_image_url?: string | null
           order_index?: number | null
+          rank?: string | null
           screenshot_url?: string | null
           status?: string | null
           title: string
@@ -68,6 +70,7 @@ export type Database = {
           normalized_url?: string | null
           og_image_url?: string | null
           order_index?: number | null
+          rank?: string | null
           screenshot_url?: string | null
           status?: string | null
           title?: string
@@ -94,6 +97,7 @@ export type Database = {
           id: string
           name: string
           order_index: number | null
+          rank: string | null
           user_id: string
         }
         Insert: {
@@ -104,6 +108,7 @@ export type Database = {
           id?: string
           name: string
           order_index?: number | null
+          rank?: string | null
           user_id: string
         }
         Update: {
@@ -114,6 +119,7 @@ export type Database = {
           id?: string
           name?: string
           order_index?: number | null
+          rank?: string | null
           user_id?: string
         }
         Relationships: []

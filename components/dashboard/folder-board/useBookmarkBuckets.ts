@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import { sortBookmarksByVisitRanking } from "@/lib/bookmark-sorting"
+import { compareRankedItems } from "@/lib/ranking"
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import { isMostVisitedGroupId, NO_GROUP_ID } from "@/lib/system-groups"
 
@@ -33,12 +34,7 @@ export function useBookmarkBuckets({
     Object.keys(buckets).forEach((groupId) => {
       buckets[groupId] = isMostVisitedGroupId(activeGroupId)
         ? sortBookmarksByVisitRanking(buckets[groupId])
-        : buckets[groupId].toSorted((a, b) => {
-            const aOrder = a.order_index ?? Number.POSITIVE_INFINITY
-            const bOrder = b.order_index ?? Number.POSITIVE_INFINITY
-            if (aOrder !== bOrder) return aOrder - bOrder
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          })
+        : buckets[groupId].toSorted(compareRankedItems)
     })
 
     return buckets

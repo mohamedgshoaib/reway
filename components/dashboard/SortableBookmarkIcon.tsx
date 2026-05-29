@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { toast } from "sonner"
 
 import {
@@ -41,7 +41,7 @@ interface SortableBookmarkIconProps {
   dragDisabled?: boolean
 }
 
-export function SortableBookmarkIcon({
+export const SortableBookmarkIcon = memo(function SortableBookmarkIcon({
   id,
   title,
   url,
@@ -269,4 +269,4 @@ export function SortableBookmarkIcon({
       </AlertDialogContent>
     </AlertDialog>
   )
-}
+})
