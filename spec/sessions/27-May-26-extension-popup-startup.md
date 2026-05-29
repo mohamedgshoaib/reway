@@ -1,6 +1,6 @@
 # Session 4 — Extension Popup Startup
 
-**Time:** 5:26 AM (Cairo Time, UTC+02:00)
+**Time:** 5:26 AM–11:59 PM (Cairo Time, UTC+02:00)
 
 ---
 
@@ -23,6 +23,8 @@
 - Updated `extension/js/api.js`, `extension/js/grabber.js`, and `extension/js/sessions.js` so popup and bulk-save flows share the same auth and invalid-group recovery contract.
 - Added a compact `Extension Internals` orientation section to `spec/index.md` so future agents pick up the popup, worker, content-script, and `/api/extension/*` seams during session start.
 - Verified the popup-path changes with `pnpm lint extension/popup.js extension/popup.css extension/js/api.js extension/js/grabber.js extension/js/sessions.js extension/js/ui.js` and `node --check extension/popup.js`.
+- Validated live Supabase indexes, RLS policies, row estimates, advisors, and representative query plans through authenticated Supabase MCP for `bookmarks`, `groups`, `notes`, and `todos`.
+- Updated `spec/reports/dashboard-scalability-performance.md` with live database validation, current index coverage, representative query-plan timings, duplicate normalized URL findings, advisor findings, and reorder-write validation.
 
 ---
 
@@ -32,6 +34,8 @@
 - Group lists in the popup should hydrate from local cache first and revalidate in the background on every open so warm opens stay instant while dashboard-side group changes still converge quickly.
 - Auth-required and invalid-group failures must be reflected back into popup state rather than left as isolated save errors inside individual flows.
 - `spec/index.md` now carries a compact extension-internals map as part of session-start orientation so agents do not need to re-discover the popup, worker, bridge, and server seams from scratch.
+- The dashboard scalability report should now treat missing user-scope indexes as a validated future-risk pattern, not a current live-production finding; the current live database has the key user-scope indexes.
+- Duplicate bookmark prevention is not database-enforced today because `bookmarks_user_id_normalized_url_idx` is non-unique and live duplicate `(user_id, normalized_url)` rows exist.
 
 ---
 
