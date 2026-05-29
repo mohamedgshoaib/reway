@@ -1,6 +1,6 @@
 # Session 5 — Dashboard Scalability Decisions
 
-**Time:** 3:53 AM-6:08 AM (Cairo Time, UTC+02:00)
+**Time:** 3:53 AM-6:22 AM (Cairo Time, UTC+02:00)
 
 ---
 
