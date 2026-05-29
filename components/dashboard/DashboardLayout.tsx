@@ -120,6 +120,7 @@ export function DashboardLayout({
                     onReorder={library.handleFolderReorder}
                     onDeleteBookmark={library.handleDeleteBookmark}
                     onRefreshBookmark={library.handleRefreshBookmark}
+                    onLoadBookmarkDetails={library.handleLoadBookmarkDetails}
                     onEditBookmark={library.handleEditBookmark}
                     isFiltered={library.isFilteredSearch}
                     selectionMode={selection.selectionMode}
@@ -138,6 +139,7 @@ export function DashboardLayout({
                     onReorder={library.handleReorder}
                     onDeleteBookmark={library.handleDeleteBookmark}
                     onRefreshBookmark={library.handleRefreshBookmark}
+                    onLoadBookmarkDetails={library.handleLoadBookmarkDetails}
                     onEditBookmark={library.handleEditBookmark}
                     rowContent={library.rowContent}
                     viewMode={library.nonFolderViewMode}

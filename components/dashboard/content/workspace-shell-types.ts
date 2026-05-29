@@ -131,6 +131,7 @@ export interface DashboardLibraryAdapter {
   isFilteredSearch: boolean
   handleDeleteBookmark: (id: string) => void
   handleRefreshBookmark: (id: string) => Promise<void>
+  handleLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
   handleEditBookmark: (
     id: string,
     data: {

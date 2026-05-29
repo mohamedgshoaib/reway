@@ -30,7 +30,6 @@ interface SortableBookmarkProps {
   status: string
   favicon?: string
   isEnriching?: boolean
-  description?: string
   createdAt: string
   groupId: string
   onDelete?: (id: string) => void
@@ -57,7 +56,6 @@ export const SortableBookmark = memo(function SortableBookmark({
   status,
   favicon,
   isEnriching = false,
-  description,
   createdAt,
   groupId,
   onDelete,
@@ -75,7 +73,6 @@ export const SortableBookmark = memo(function SortableBookmark({
   dragDimmed = false,
   dragDisabled = false,
 }: SortableBookmarkProps) {
-  void description
   const [isCopied, setIsCopied] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 

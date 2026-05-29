@@ -27,10 +27,7 @@ export function useDashboardDerived({
     const normalizedQuery = deferredSearchQuery.trim().toLowerCase()
     const matchesSearch = (bookmark: BookmarkRow) => {
       if (!normalizedQuery) return true
-      const haystack = [bookmark.title, bookmark.url, bookmark.description]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
+      const haystack = [bookmark.title, bookmark.url].filter(Boolean).join(" ").toLowerCase()
       return haystack.includes(normalizedQuery)
     }
 

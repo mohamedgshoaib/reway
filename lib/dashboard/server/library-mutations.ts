@@ -8,6 +8,7 @@ import {
   createGroupRecord,
   validateGroupAccess,
 } from "@/lib/library/server/capture"
+import { getBookmarkDetailsForDashboard } from "@/lib/library/server/reads"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { getDomain } from "@/lib/utils"
@@ -632,6 +633,22 @@ export const accountMutations = {
 }
 
 export const bookmarkMutations = {
+  async getDetails(id: string) {
+    return runAuthenticatedDashboardOperation(
+      async ({ supabase, userId }) => {
+        const { data, error } = await getBookmarkDetailsForDashboard(supabase, id, userId)
+
+        if (error) {
+          console.error("Error loading bookmark details:", error)
+          throw new Error("Failed to load bookmark details")
+        }
+
+        return data
+      },
+      { revalidateDashboard: false },
+    )
+  },
+
   async checkDuplicates(urls: string[]): Promise<{
     duplicates: Record<string, { id: string; title: string; url: string }>
   }> {

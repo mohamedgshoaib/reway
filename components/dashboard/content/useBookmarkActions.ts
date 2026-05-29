@@ -2,7 +2,7 @@
 
 import { useCallback } from "react"
 import { toast } from "sonner"
-import type { BookmarkRow } from "@/lib/supabase/queries"
+import type { BookmarkDetailRow, BookmarkRow } from "@/lib/supabase/queries"
 import { isAllBookmarksGroupId, isMostVisitedGroupId, isNoGroupId } from "@/lib/system-groups"
 import { getDomain } from "@/lib/utils"
 import type { EnrichmentResult } from "./dashboard-types"
@@ -27,6 +27,7 @@ interface UseBookmarkActionsOptions {
       apply_favicon_to_domain?: boolean
     },
   ) => Promise<void>
+  getBookmarkDetails: (id: string) => Promise<BookmarkDetailRow>
   refreshBookmarkMetadata: (id: string) => Promise<EnrichmentResult>
   lastDeletedRef: React.MutableRefObject<{
     bookmark: BookmarkRow
@@ -44,6 +45,7 @@ export function useBookmarkActions({
   deleteBookmark,
   restoreBookmark,
   updateBookmark,
+  getBookmarkDetails,
   refreshBookmarkMetadata,
   lastDeletedRef,
 }: UseBookmarkActionsOptions) {
@@ -170,6 +172,21 @@ export function useBookmarkActions({
       )
     },
     [setBookmarks],
+  )
+
+  const handleLoadBookmarkDetails = useCallback(
+    async (id: string) => {
+      const current = bookmarks.find((item) => item.id === id)
+      if (!current) return null
+
+      const details = await getBookmarkDetails(id)
+      const merged = { ...current, ...details }
+
+      setBookmarks((prev) => prev.map((item) => (item.id === id ? { ...item, ...details } : item)))
+
+      return merged
+    },
+    [bookmarks, getBookmarkDetails, setBookmarks],
   )
 
   const handleRefreshBookmarks = useCallback(
@@ -443,6 +460,7 @@ export function useBookmarkActions({
     replaceBookmarkId,
     handleRefreshBookmark,
     handleRefreshBookmarks,
+    handleLoadBookmarkDetails,
     handleFolderReorder,
     handleDeleteBookmark,
     handleReorder,

@@ -2,6 +2,10 @@
 
 import { bookmarkMutations } from "@/lib/dashboard/server/library-mutations"
 
+export async function getBookmarkDetails(id: string) {
+  return bookmarkMutations.getDetails(id)
+}
+
 export async function checkDuplicateBookmarks(urls: string[]): Promise<{
   duplicates: Record<string, { id: string; title: string; url: string }>
 }> {

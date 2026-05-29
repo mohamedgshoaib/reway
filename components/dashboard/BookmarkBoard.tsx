@@ -57,6 +57,7 @@ interface BookmarkBoardProps {
   onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
   onDeleteBookmark: (id: string) => void
   onRefreshBookmark: (id: string) => Promise<void>
+  onLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
   onEditBookmark: (
     id: string,
     data: {
@@ -84,6 +85,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   onReorder,
   onDeleteBookmark,
   onRefreshBookmark,
+  onLoadBookmarkDetails,
   onEditBookmark,
   rowContent,
   viewMode,
@@ -155,10 +157,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         domain: getDomain(b.url),
       }),
       url: b.url,
-      image_url: b.image_url || undefined,
-      og_image_url: b.og_image_url || undefined,
       domain: getDomain(b.url),
-      description: b.description || undefined,
       favicon: b.favicon_url || undefined,
       isEnriching: Boolean(b.is_enriching),
       createdAt: createdAtFormatter.format(new Date(b.created_at)),
@@ -189,6 +188,31 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   )
 
   const activeBookmark = activeId ? (bookmarks.find((b) => b.id === activeId) ?? null) : null
+
+  async function getBookmarkForPanel(id: string) {
+    const fallback = bookmarks.find((bm) => bm.id === id) ?? null
+    try {
+      return (await onLoadBookmarkDetails(id)) ?? fallback
+    } catch (error) {
+      console.error("Failed to load bookmark details:", error)
+      toast.error("Failed to load bookmark details")
+      return fallback
+    }
+  }
+
+  async function openPreview(id: string) {
+    const bookmark = await getBookmarkForPanel(id)
+    if (!bookmark) return
+    setPreviewBookmark(bookmark)
+    setIsPreviewOpen(true)
+  }
+
+  async function openEditSheet(id: string) {
+    const bookmark = await getBookmarkForPanel(id)
+    if (!bookmark) return
+    setEditSheetBookmark(bookmark)
+    setIsEditSheetOpen(true)
+  }
 
   const getDragBucket = (groupId?: string | null) => groupId ?? UNGROUPED_DRAG_BUCKET
 
@@ -263,8 +287,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
     isGridView,
     gridColumns,
     onPreview: (bookmark) => {
-      setPreviewBookmark(bookmark)
-      setIsPreviewOpen(true)
+      void openPreview(bookmark.id)
     },
   })
   if (bookmarks.length === 0) {
@@ -324,18 +347,10 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                     onDelete={onDeleteBookmark}
                     onRefresh={(id: string) => void onRefreshBookmark(id)}
                     onEdit={(id: string) => {
-                      const target = bookmarks.find((bm) => bm.id === id)
-                      if (target) {
-                        setEditSheetBookmark(target)
-                        setIsEditSheetOpen(true)
-                      }
+                      void openEditSheet(id)
                     }}
                     onPreview={(id: string) => {
-                      const b = bookmarks.find((bm) => bm.id === id)
-                      if (b) {
-                        setPreviewBookmark(b)
-                        setIsPreviewOpen(true)
-                      }
+                      void openPreview(id)
                     }}
                     rowContent={rowContent}
                     {...bookmark}
@@ -349,21 +364,13 @@ export const BookmarkBoard = memo(function BookmarkBoard({
                   onDelete={onDeleteBookmark}
                   onRefresh={(id: string) => void onRefreshBookmark(id)}
                   onEdit={(id: string) => {
-                    const target = bookmarks.find((bm) => bm.id === id)
-                    if (target) {
-                      setEditSheetBookmark(target)
-                      setIsEditSheetOpen(true)
-                    }
+                    void openEditSheet(id)
                   }}
                   isSelected={clampedSelectedIndex === index}
                   activeGroupId={activeGroupId}
                   dragDisabled={isMostVisitedGroup}
                   onPreview={(id) => {
-                    const b = bookmarks.find((bm) => bm.id === id)
-                    if (b) {
-                      setPreviewBookmark(b)
-                      setIsPreviewOpen(true)
-                    }
+                    void openPreview(id)
                   }}
                   rowContent={rowContent}
                   groupsMap={groupsMap}

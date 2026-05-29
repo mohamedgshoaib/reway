@@ -28,6 +28,7 @@ interface FolderBoardProps {
   onReorder: (groupId: string, newOrder: BookmarkRow[]) => void
   onDeleteBookmark: (id: string) => void
   onRefreshBookmark: (id: string) => Promise<void>
+  onLoadBookmarkDetails: (id: string) => Promise<BookmarkRow | null>
   onEditBookmark: (
     id: string,
     data: {
@@ -56,6 +57,7 @@ export const FolderBoard = memo(function FolderBoard({
   onReorder,
   onDeleteBookmark,
   onRefreshBookmark,
+  onLoadBookmarkDetails,
   onEditBookmark,
   selectionMode = false,
   selectedIds,
@@ -100,6 +102,30 @@ export const FolderBoard = memo(function FolderBoard({
   }, [activeGroupId, bookmarks, groups, isFiltered])
 
   const isMostVisitedGroup = isMostVisitedGroupId(activeGroupId)
+
+  async function getBookmarkForPanel(id: string) {
+    const fallback = bookmarks.find((bookmark) => bookmark.id === id) ?? null
+    try {
+      return (await onLoadBookmarkDetails(id)) ?? fallback
+    } catch (error) {
+      console.error("Failed to load bookmark details:", error)
+      return fallback
+    }
+  }
+
+  async function openPreview(id: string) {
+    const bookmark = await getBookmarkForPanel(id)
+    if (!bookmark) return
+    setPreviewBookmark(bookmark)
+    setIsPreviewOpen(true)
+  }
+
+  async function openEditSheet(id: string) {
+    const bookmark = await getBookmarkForPanel(id)
+    if (!bookmark) return
+    setEditSheetBookmark(bookmark)
+    setIsEditSheetOpen(true)
+  }
 
   const bookmarkBuckets = useBookmarkBuckets({
     bookmarks,
@@ -196,8 +222,7 @@ export const FolderBoard = memo(function FolderBoard({
     setHasKeyboardFocus,
     onKeyboardContextChange,
     onPreview: (bookmark) => {
-      setPreviewBookmark(bookmark)
-      setIsPreviewOpen(true)
+      void openPreview(bookmark.id)
     },
     onToggleCollapse: toggleCollapse,
   })
@@ -301,18 +326,10 @@ export const FolderBoard = memo(function FolderBoard({
                                   onDelete={onDeleteBookmark}
                                   onRefresh={(id: string) => void onRefreshBookmark(id)}
                                   onEdit={(id: string) => {
-                                    const target = bookmarks.find((b) => b.id === id)
-                                    if (target) {
-                                      setEditSheetBookmark(target)
-                                      setIsEditSheetOpen(true)
-                                    }
+                                    void openEditSheet(id)
                                   }}
                                   onPreview={(id: string) => {
-                                    const target = bookmarks.find((b) => b.id === id)
-                                    if (target) {
-                                      setPreviewBookmark(target)
-                                      setIsPreviewOpen(true)
-                                    }
+                                    void openPreview(id)
                                   }}
                                 />
                               ))}

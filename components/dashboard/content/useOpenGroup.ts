@@ -40,10 +40,7 @@ export function useOpenGroup({ bookmarks, deferredSearchQuery }: UseOpenGroupOpt
             : bookmark.group_id === groupId
         if (!matchesGroup) return false
         if (!normalizedQuery) return true
-        const haystack = [bookmark.title, bookmark.url, bookmark.description]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
+        const haystack = [bookmark.title, bookmark.url].filter(Boolean).join(" ").toLowerCase()
         return haystack.includes(normalizedQuery)
       })
 

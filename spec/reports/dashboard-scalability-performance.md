@@ -20,8 +20,9 @@ Non-negotiables:
 Last material validation:
 
 - Repository read: current dashboard, extension, import, realtime, and mutation code.
-- Live Supabase MCP validation: previously reached production DB and captured indexes, RLS policy shape, row estimates, advisors, and representative query plans.
-- Current blocker: Supabase MCP now requires re-authentication before live function definitions/advisors can be rechecked.
+- Live Supabase MCP validation on 29-May-26: inspected production table definitions, RLS policies, functions, grants, triggers, advisors, indexes, row estimates, and representative query plans.
+- Production migration applied: `20260529013215_harden_dashboard_functions_and_indexes`.
+- Current advisor state: performance lints are clear; security lints only show Auth leaked-password protection disabled, accepted as a Supabase free-plan limitation.
 
 ## Current Baseline
 
@@ -52,7 +53,7 @@ Validated live row estimates at the time of MCP access:
 - `notes`: about 135 rows.
 - `todos`: about 161 rows.
 
-Validated indexes:
+Validated indexes before cleanup:
 
 - `bookmarks_user_id_idx`.
 - `bookmarks_user_id_group_id_order_index_idx`.
@@ -63,6 +64,15 @@ Validated indexes:
 - `groups_user_id_name_idx`.
 - `notes_user_id_idx`, `notes_created_at_idx`.
 - `todos_user_id_idx`, `todos_created_at_idx`, `todos_completed_idx`.
+
+Validated production state after `20260529013215_harden_dashboard_functions_and_indexes`:
+
+- `increment_bookmark_visits` is `SECURITY INVOKER`, has pinned `search_path`, is not executable by `anon` or `authenticated`, and remains executable by `service_role`.
+- `handle_new_user`, `notify_bookmarks_changes`, and `notify_groups_changes` keep required trigger behavior, have pinned `search_path`, are not executable by `anon` or `authenticated`, and remain executable by `service_role`.
+- `bump_bookmark_open(uuid, uuid)` was dropped because it was dead legacy surface and referenced removed columns.
+- `idx_bookmarks_visit_count`, `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx` were dropped.
+- `bookmarks_user_visit_rank_idx` was preserved.
+- Trigger bindings for auth user creation, bookmark changes, and group changes remain intact.
 
 Representative live plans:
 
@@ -93,42 +103,97 @@ Outcome:
 Decision:
 
 - Keep `bookmarks_user_visit_rank_idx`.
-- Remove or explicitly defer `idx_bookmarks_visit_count`.
-- Defer cleanup of `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx` to a migration sprint.
+- Remove `idx_bookmarks_visit_count`; no global/admin visit analytics feature is planned.
+- Drop `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx` in the same migration sprint unless live plans reveal an unrecorded query.
 
 Why:
 
 - `bookmarks_user_visit_rank_idx` supports Reway's Most Visited / visit-aware ranking mechanic.
 - `idx_bookmarks_visit_count` supports a global/admin visit leaderboard; no such feature is planned.
-- The notes/todos single-column indexes are weak shapes for user-scoped dashboard reads, but current row counts are small and user indexes cover the important filter.
+- The notes/todos single-column indexes are weak shapes for user-scoped dashboard reads. If notes/todos ever need indexed recency or pending filters, use user-scoped composites/partials instead, not the current global shapes.
 
 Outcome:
 
 - Keep the index that supports product retrieval.
 - Avoid write overhead from a global visit-count index that has no planned query.
-- Do not churn notes/todos indexes until that cleanup can be measured or bundled with related schema work.
+- Reduce write/planning overhead from indexes that do not match Reway's user-scoped query model.
+
+Verification requirement:
+
+- Confirm the actual Most Visited query includes `user_id` and can use `bookmarks_user_visit_rank_idx`. If the query omits `visit_count > 0`, verify with `EXPLAIN`; adjust the query or index shape only from evidence.
 
 ### 3. Security Definer Functions
 
-Decision: inspect live function definitions before writing migrations. Then revoke direct client execution from privileged/internal `SECURITY DEFINER` functions and keep them out of exposed schemas where possible.
+Decision: inspect live function definitions before writing migrations. Then revoke direct client execution from privileged/internal functions and remove unnecessary `SECURITY DEFINER` exposure.
 
 Known local correction:
 
 - Older report data named `bump_bookmark_open`.
 - Current generated types and route code show the visit RPC as `increment_bookmark_visits`.
 - `app/api/bookmarks/visits/route.ts` authenticates the user server-side and calls `increment_bookmark_visits` through `supabaseAdmin`.
+- Supabase docs separate two controls: service keys bypass RLS, while function access is controlled by normal `EXECUTE` privileges. Do not treat service-role RLS bypass as permission to skip function grants.
 
 Target direction:
 
-- `increment_bookmark_visits`: keep server-only if it uses elevated privileges, or make it invoker-safe if it ever becomes a direct client RPC.
-- `handle_new_user`: trigger helper; keep privileged behavior if needed, but revoke direct client execution and consider a private schema.
-- `notify_bookmarks_changes` / `notify_groups_changes`: revoke direct client execution, set safe search paths, and audit channel/payload scoping. Do not add `auth.uid()` guards blindly because trigger execution context may not have a client JWT.
+- `increment_bookmark_visits`: keep server-only. Target `SECURITY INVOKER`, keep `p_user_id`, revoke `EXECUTE` from `PUBLIC`, `anon`, and `authenticated`, and preserve or grant `EXECUTE` for `service_role` / `postgres` as needed. The server route injects a verified user id; clients must not call this function directly.
+- `handle_new_user`: trigger helper. Keep `SECURITY DEFINER` only if required by the trigger write path. Revoke direct client execution. Do not move it to a private schema until trigger recreation has been tested.
+- `notify_bookmarks_changes` / `notify_groups_changes`: trigger helpers. Keep trigger behavior, revoke direct client execution, set safe search paths, and audit channel/payload scoping. Do not add `auth.uid()` guards because server/admin writes and background jobs may have no client JWT.
 
 Outcome:
 
 - Advisor warnings should clear.
 - Privileged functions remain usable internally.
 - Clients cannot call privileged RPCs directly.
+
+Final target for `increment_bookmark_visits`:
+
+- Use `SECURITY INVOKER` because the trusted server route calls through the service-role client, and service-role bypasses RLS while still needing normal function `EXECUTE` privilege.
+- Keep `p_user_id` because the service-role call is not the end-user identity source; the route has already authenticated the real user and supplies `user.id`.
+- Do not replace `p_user_id` with `auth.uid()` inside this function unless the call path changes away from `supabaseAdmin.rpc`; service-role/background contexts can lack the end-user JWT context and risk zero-row updates.
+- The function body must still scope the update with `where user_id = p_user_id and id = any(p_bookmark_ids)`.
+- Revoke `EXECUTE` from `PUBLIC`, `anon`, and `authenticated`; ensure `service_role` and `postgres` can still execute.
+- Keep the function in `public` unless live schema policy requires otherwise; the risk is client execution, not the schema itself once the function is invoker and client roles are revoked.
+- Do not write the migration from stale assumptions; inspect `pg_get_functiondef` and current privileges first.
+
+Safe migration shape for `increment_bookmark_visits` after live inspection:
+
+```sql
+create or replace function public.increment_bookmark_visits(
+  p_user_id uuid,
+  p_bookmark_ids uuid[]
+)
+returns void
+language plpgsql
+security invoker
+set search_path = public, pg_catalog, pg_temp
+as $$
+begin
+  if p_user_id is null then
+    raise exception 'increment_bookmark_visits: p_user_id must not be null';
+  end if;
+
+  update public.bookmarks
+  set
+    visit_count = visit_count + 1,
+    last_visited_at = now()
+  where user_id = p_user_id
+    and id = any(p_bookmark_ids);
+end;
+$$;
+
+revoke execute on function public.increment_bookmark_visits(uuid, uuid[]) from public;
+revoke execute on function public.increment_bookmark_visits(uuid, uuid[]) from anon;
+revoke execute on function public.increment_bookmark_visits(uuid, uuid[]) from authenticated;
+grant execute on function public.increment_bookmark_visits(uuid, uuid[]) to service_role;
+```
+
+Verification after migration:
+
+- Browser/client direct RPC with anon or authenticated role must fail with permission denied.
+- `POST /api/bookmarks/visits` with a valid user session must still increment only that user's bookmark IDs.
+- A valid user session passing another user's bookmark IDs must update zero rows because of `where user_id = p_user_id`.
+- Empty ID arrays should be a no-op.
+- Function metadata should show `prosecdef = false`, pinned `search_path`, no `EXECUTE` grant for client roles, and `EXECUTE` available to `service_role`.
 
 ### 4. Payload Shaping
 
@@ -147,13 +212,76 @@ Preview/detail fields should load on demand:
 Constraints:
 
 - Keep `favicon_url` in the initial payload because it is a core visual scanning aid.
-- Audit `BookmarkBoard`, card view, preview, edit sheet, and realtime merge behavior before changing the select list.
+- Keep `normalized_url` until duplicate UI, import duplicate checks, and display-title logic are audited.
+- Keep `status` and `is_enriching` in the initial payload.
+- Keep `og_image_url` in card-view payload if cards render thumbnails; otherwise fetch it with preview/detail.
+- Keep `last_fetched_at` only if stale-refresh UI needs it without opening detail.
+- Audit `BookmarkBoard`, card view, preview, edit sheet, search, and realtime merge behavior before changing the select list.
 
 Outcome:
 
 - Smaller initial dashboard payload.
 - Preview/detail opens with a targeted extra fetch.
 - Less RSC/client prop serialization at high bookmark counts.
+
+Audit status on 29-May-26:
+
+- Initial render surfaces do not need `description`, `image_url`, `og_image_url`, `screenshot_url`, `last_fetched_at`, or `error_reason` for normal list/card/folder paint.
+- `SortableBookmark` no longer receives `description`; list rows do not render descriptions.
+- `SortableBookmarkCard` does not currently render thumbnails; card view only uses title, URL, domain, favicon, status/enriching state, group/date metadata, and actions.
+- `SortableBookmarkIcon`, `BookmarkDragOverlay`, and `FolderDragOverlay` only need title, URL, normalized URL for display-title fallback, favicon, created date, and status/enriching state.
+- `QuickGlanceDialog` is the main detail consumer of `description`, `og_image_url`, and `image_url`; it should fetch full bookmark detail before or when opening if these fields leave the initial payload.
+- `BookmarkEditSheet` needs `description` and `favicon_url` when editing; edit open should receive full detail or fetch it before rendering editable fields.
+- Dashboard search and group-open filtering currently include `bookmark.description` in the haystack in `useDashboardDerived` and `useOpenGroup`, but product direction is to make search title+URL only. Description is too broad/noisy for the dashboard search contract.
+- Realtime merge in `useDashboardRealtime` overlays incoming rows onto existing rows; it can preserve detail fields already present, but must tolerate initial rows that do not have detail-only keys.
+- Enrichment paths in `useBookmarkActions`, `useImportHandlers`, and command-bar add flow update detail fields after create/refresh; list rows can carry these fields opportunistically after enrichment even if the initial server payload is slim.
+- Undo/restore paths currently keep full `BookmarkRow` snapshots for deleted bookmarks and group deletes. If initial state is slim, restoring a never-opened bookmark will only restore the slim fields unless restore paths fetch or preserve detail fields separately.
+- Export uses only URL, title, and group. Duplicate cleanup uses `normalized_url` and URL. Most Visited uses `visit_count`, `last_visited_at`, and `created_at`.
+
+Field matrix:
+
+| Field | Current consumers | Initial-payload classification | Notes |
+| --- | --- | --- | --- |
+| `id` | All dashboard state, selection, DnD, mutations, realtime | Keep | Stable identity for all UI and mutation paths. |
+| `url` | Render, open, export, search, duplicate fallback, edit, restore | Keep | Required for open/copy/export and URL display. |
+| `normalized_url` | Display-title fallback, duplicate sheet, duplicate import checks | Keep | Keep until duplicate UI and display fallback are refactored. |
+| `domain` | Stored value, same-domain favicon updates | Keep for now | Current render recomputes domain from URL, but mutation paths use stored domain for batch favicon update. |
+| `title` | Render, search, export, edit, preview | Keep | Core scan field. |
+| `favicon_url` | Render, drag overlay, preview fallback, edit, enrichment | Keep | Core visual scanning aid. |
+| `group_id` | Filtering, counts, DnD buckets, export, edit, move/undo | Keep | Core organization field. |
+| `user_id` | Realtime/user-scoped state and row shape | Keep | Keep until client row type is split from DB row type. |
+| `created_at` | Sort fallback, display date, Most Visited tiebreak, restore | Keep | Core order/display field. |
+| `order_index` | Sort, DnD reorder, import insert ordering, undo | Keep | Replaced later by `rank`, not by payload shaping. |
+| `status` | Pending/failed UI, refresh affordance, enrichment | Keep | Needed for visible loading/failed states. |
+| `is_enriching` | Loading UI, refresh disabling, enrichment workers | Keep | Needed for visible feedback and action guards. |
+| `last_visited_at` | Most Visited ranking | Keep | Needed for client-side Most Visited until server-side query split exists. |
+| `visit_count` | Most Visited membership/ranking | Keep | Product retrieval mechanic. |
+| `description` | Current search/open-group filtering, preview, edit, enrichment/restore | Detail-only candidate | Remove from initial payload and intentionally change dashboard search/Open Group filtering to title+URL only. |
+| `og_image_url` | QuickGlance preview image, enrichment/restore | Detail-only candidate | Card view does not render thumbnails today. |
+| `image_url` | QuickGlance preview fallback, enrichment/restore | Detail-only candidate | Same as `og_image_url`. |
+| `screenshot_url` | No active dashboard consumer found | Detail-only / remove from initial | Keep DB column; do not ship in initial payload until a surface uses it. |
+| `last_fetched_at` | Enrichment bookkeeping and failure timestamp fallback | Detail-only / opportunistic state | Needed in enrichment result handling, not initial paint. |
+| `error_reason` | Enrichment failure state, no visible list/detail consumer found | Detail-only / opportunistic state | Keep available for future failure detail UI, not initial paint. |
+
+Recommended first implementation cut:
+
+- Remove `description`, `og_image_url`, `image_url`, `screenshot_url`, `last_fetched_at`, and `error_reason` from the initial dashboard select.
+- Update `useDashboardDerived` and `useOpenGroup` search haystacks to title+URL only, making the behavior intentional rather than an accidental payload side effect.
+- Add a focused bookmark detail fetch for `QuickGlanceDialog` and `BookmarkEditSheet` before removing `description` from the initial payload.
+- Let enrichment/realtime merge opportunistically add detail fields to in-memory rows after create/refresh, but do not rely on those fields existing on initial rows.
+- If richer search is desired later, add a dedicated server/search endpoint instead of restoring description to the initial dashboard payload.
+
+Implementation status on 29-May-26:
+
+- First payload-shaping cut was implemented.
+- `DASHBOARD_BOOKMARK_SELECT` now excludes `description`, `og_image_url`, `image_url`, `screenshot_url`, `last_fetched_at`, and `error_reason`.
+- `DASHBOARD_BOOKMARK_DETAIL_SELECT` was added for targeted detail loads.
+- `BookmarkRow` now models detail fields as optional so list rows are not falsely treated as full DB rows.
+- `getBookmarkDetails` server action loads detail-only fields for authenticated users.
+- `BookmarkBoard` and `FolderBoard` fetch and merge bookmark details before opening `QuickGlanceDialog` or `BookmarkEditSheet`.
+- Dashboard search and Open Group filtered behavior now use title+URL only.
+- Follow-up review removed stale detail-field props from board display shaping and removed the unused `description` prop from list rows.
+- Verification: `pnpm typecheck` passed; targeted `oxlint` on changed files passed; full `pnpm lint` remains blocked by pre-existing unrelated lint findings.
 
 ### 5. Reorder Scaling
 
@@ -166,7 +294,7 @@ Target shape:
 - Index bookmarks by `(user_id, group_id, rank)`.
 - Index groups by `(user_id, rank)`.
 - On drag end, update only the moved item rank.
-- Keep a rare rebalance RPC for rank strings that become too long.
+- Rebalance ranks through maintenance/cron or operator action, not in the drag user flow.
 
 Why:
 
@@ -180,6 +308,12 @@ Outcome:
 - One drag becomes one row update instead of N row updates.
 - Optimistic UI remains possible.
 - Realtime reorder noise drops sharply.
+
+Rebalance policy:
+
+- Watch max rank length per user/group.
+- Rebalance when any rank in a group exceeds about 64 characters; treat 128 as a hard safety cap.
+- Do not run an O(n) rebalance during a drag interaction.
 
 ### 6. Virtualization
 
@@ -199,8 +333,11 @@ Required safeguards:
 
 - Keep `DragOverlay` mounted.
 - Use stable item IDs.
+- Avoid pointer-only collision algorithms as the primary sortable strategy because keyboard sensors must keep working.
+- Key virtual rows by bookmark id, not virtual index.
 - Buffer or freeze realtime list changes during active drag so drop indexes are not invalidated.
 - Preserve keyboard navigation, selection mode, search, group switching, and touch drag behavior.
+- Use an explicit remount strategy for major group/filter/layout switches if dnd-kit keeps stale droppable nodes.
 
 Outcome:
 
@@ -239,29 +376,29 @@ Outcome:
 
 ### Do Now
 
-- Re-auth Supabase MCP and inspect live definitions for `increment_bookmark_visits`, `handle_new_user`, `notify_bookmarks_changes`, and `notify_groups_changes`.
-- Write the security migration from real function definitions.
-- Keep `bookmarks_user_visit_rank_idx`.
-- Remove or explicitly defer `idx_bookmarks_visit_count`; no global/admin visit analytics feature is planned.
+- Manually smoke-test the first payload-shaping cut in the browser with an authenticated session: dashboard load, list/card/folder view, search, Open Group under a search query, preview, edit sheet, refresh metadata, import, duplicate sheet, and realtime updates.
+- Confirm detail fetch behavior feels instant enough for preview/edit. If not, add a small loading state or prefetch on action open.
+- Measure the dashboard bookmark payload size before moving to the next scaling cut.
 
-Security migration guardrails:
+Completed Supabase migration work:
 
-- Do not write the migration from stale function names.
-- Do not add `auth.uid()` checks to trigger notify functions without verifying trigger execution context.
-- Prefer revoking direct client execution from privileged functions.
-- Keep server-only RPCs callable from trusted server code, not public clients.
+- Re-authenticated Supabase MCP and inspected live definitions for `increment_bookmark_visits`, `handle_new_user`, `notify_bookmarks_changes`, and `notify_groups_changes`.
+- Wrote and applied `20260529013215_harden_dashboard_functions_and_indexes` from live definitions.
+- Preserved `bookmarks_user_visit_rank_idx`.
+- Removed `idx_bookmarks_visit_count`; no global/admin visit analytics feature is planned.
+- Dropped `notes_created_at_idx`, `todos_created_at_idx`, and `todos_completed_idx` after live advisors and plans confirmed they were cleanup targets.
+- Cleared the targeted security-definer function advisor warnings and all performance advisor lints.
 
 ### Do Soon
 
-- Split bookmark initial-list fields from preview/detail fields.
 - Add enrichment stuck/backlog observability.
-- Audit component dependencies on heavy bookmark fields before changing query shape.
+- Add focused UI or diagnostics for enrichment failure details now that `error_reason` is detail-only.
 
 Payload split guardrails:
 
 - Do not remove `favicon_url` from the initial payload.
 - Do not remove `normalized_url` before checking duplicate UI and display-title logic.
-- Do not assume card view can lose `og_image_url` until `BookmarkBoard`, card components, preview, and edit sheet have been audited.
+- Card view currently does not need `og_image_url`; keep thumbnails detail-only unless card UI intentionally adds thumbnail rendering.
 - Realtime merge code must tolerate list rows that do not have detail-only fields.
 
 ### Do Later
@@ -272,9 +409,11 @@ Payload split guardrails:
 Rank migration guardrails:
 
 - Add `rank text collate "C"` without immediately dropping `order_index`.
-- Backfill and dual-read/dual-write only if needed for rollout safety.
+- Backfill all existing rows before switching reads to `rank`.
+- Treat `rank` as canonical after cutover; keep `order_index` frozen only for rollback until verified.
 - Verify JS sort order and Postgres `ORDER BY rank` produce the same order before switching reads.
 - Keep rollback path to `order_index` until reorder, realtime, imports, and extension paths are verified.
+- Rebalance through maintenance/cron or operator action, not the drag request path.
 
 Virtualization guardrails:
 
@@ -283,6 +422,8 @@ Virtualization guardrails:
 - Preserve keyboard navigation and selection state.
 - Buffer or freeze realtime reorder-affecting updates during active drag.
 - Use layout-specific designs: row virtualization for list, row-of-cards virtualization for grid, section-first virtualization for folder view.
+- Use keyboard-compatible collision detection such as `closestCenter` / `closestCorners`; do not make pointer-only collision the core sortable strategy.
+- Increase overscan only during drag if needed, and test scroll boundaries explicitly.
 
 ### Do Only If Metrics Show Pain
 
@@ -303,3 +444,5 @@ Queue migration guardrails:
 - Do not replace current concurrency limits with unbounded enrichment.
 - Do not virtualize by unmounting active drag overlays or DOM-focused keyboard state without a replacement focus model.
 - Do not drop `order_index` until rank rollout is verified across dashboard, extension, imports, and realtime.
+- Do not run rank rebalance inside normal drag/drop user interactions.
+- Do not add global indexes for unplanned admin analytics.

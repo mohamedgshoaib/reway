@@ -7,7 +7,10 @@ import type { Database } from "@/lib/supabase/database.types"
 type LibrarySupabaseClient = SupabaseClient<Database>
 
 const DASHBOARD_BOOKMARK_SELECT =
-  "id,url,normalized_url,domain,title,description,favicon_url,og_image_url,image_url,screenshot_url,group_id,user_id,created_at,order_index,status,is_enriching,last_fetched_at,last_visited_at,visit_count,error_reason"
+  "id,url,normalized_url,domain,title,favicon_url,group_id,user_id,created_at,order_index,status,is_enriching,last_visited_at,visit_count"
+
+export const DASHBOARD_BOOKMARK_DETAIL_SELECT =
+  "id,description,og_image_url,image_url,screenshot_url,last_fetched_at,error_reason"
 
 const EXTENSION_BOOKMARK_SELECT =
   "id, url, title, description, group_id, created_at, order_index"
@@ -28,6 +31,19 @@ export async function listBookmarksForDashboard(supabase: LibrarySupabaseClient)
     .select(DASHBOARD_BOOKMARK_SELECT)
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: false })
+}
+
+export async function getBookmarkDetailsForDashboard(
+  supabase: LibrarySupabaseClient,
+  bookmarkId: string,
+  userId: string,
+) {
+  return supabase
+    .from("bookmarks")
+    .select(DASHBOARD_BOOKMARK_DETAIL_SELECT)
+    .eq("id", bookmarkId)
+    .eq("user_id", userId)
+    .single()
 }
 
 export async function listBookmarksForExtension(

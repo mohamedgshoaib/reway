@@ -5,7 +5,18 @@ import {
 } from "@/lib/library/server/reads"
 import { createClient } from "./server"
 
-export type BookmarkRow = Database["public"]["Tables"]["bookmarks"]["Row"]
+type BookmarkTableRow = Database["public"]["Tables"]["bookmarks"]["Row"]
+type BookmarkDetailFields =
+  | "description"
+  | "og_image_url"
+  | "image_url"
+  | "screenshot_url"
+  | "last_fetched_at"
+  | "error_reason"
+
+export type BookmarkRow = Omit<BookmarkTableRow, BookmarkDetailFields> &
+  Partial<Pick<BookmarkTableRow, BookmarkDetailFields>>
+export type BookmarkDetailRow = Pick<BookmarkTableRow, "id" | BookmarkDetailFields>
 export type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 export type NoteRow = Database["public"]["Tables"]["notes"]["Row"]
 export type TodoRow = Database["public"]["Tables"]["todos"]["Row"]
