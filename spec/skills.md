@@ -248,10 +248,82 @@ Full context: `.agents/skills/web-design-guidelines/SKILL.md`
 
 Full context: `.agents/skills/wrap-up/SKILL.md`
 
-### 31- zod
+### 32- zod
 
 **Triggers**: zod, schema, validation, safeparse, zod-infer
 **Pairs With**: react-hook-form
 **Top 2 Rules**: Use Zod schemas for parsing and validation instead of ad hoc checks. Prefer `safeParse` with structured error handling for user feedback.
 
 Full context: `.agents/skills/zod/SKILL.md`
+
+### 33- nextjs-performance
+
+**Triggers**: nextjs-performance, core-web-vitals, lcp, inp, cls, next/image, next/font, unstable_cache, revalidateTag, streaming, bundle-optimization
+**Pairs With**: next-best-practices, vercel-react-best-practices, hydration-guardian
+**Top 2 Rules**: Prefer Server Components and keep Client Components at leaf nodes to reduce bundle size. Measure before and after with real performance metrics.
+
+Full context: `.agents/skills/nextjs-performance/SKILL.md`
+
+### 34- react-performance-optimization
+
+**Triggers**: react-performance, memoization, code-splitting, virtualization, rerender, profiler
+**Pairs With**: vercel-react-best-practices, react-useeffect, virtual-lists
+**Top 2 Rules**: Profile before optimizing and verify the impact. Avoid premature optimization; target memoization, code splitting, and virtualization only when bottlenecks are proven.
+
+Full context: `.agents/skills/react-performance-optimization/SKILL.md`
+
+### 35- refactor-method-complexity-reduce
+
+**Triggers**: cognitive-complexity, refactor-method, complexity-threshold
+**Pairs With**: improve-codebase-architecture
+**Top 2 Rules**: Extract focused helper methods to reduce nesting and branching. Preserve behavior and validate with tests, ensuring failed=0.
+
+Full context: `.agents/skills/refactor-method-complexity-reduce/SKILL.md`
+
+### 36- supabase-advanced-troubleshooting
+
+**Triggers**: supabase-deep-debug, slow-query, lock-contention, connection-leak, rls-conflict, edge-function-cold-start, realtime-drop
+**Pairs With**: supabase, supabase-performance-tuning, supabase-postgres-best-practices
+**Top 2 Rules**: Use pg_stat_statements, pg_locks, and pg_stat_activity to isolate root causes. Capture evidence with EXPLAIN ANALYZE and logs before changes.
+
+Full context: `.agents/skills/supabase-advanced-troubleshooting/SKILL.md`
+
+### 37- supabase-common-errors
+
+**Triggers**: supabase-error, pgrst, rls, auth-error, storage-error, 4xx, 5xx
+**Pairs With**: supabase, supabase-known-pitfalls
+**Top 2 Rules**: Always check `{ data, error }` and classify errors by code and layer. Apply the targeted fix and re-run the failing operation to verify.
+
+Full context: `.agents/skills/supabase-common-errors/SKILL.md`
+
+### 38- supabase-known-pitfalls
+
+**Triggers**: supabase-mistakes, supabase-pitfalls, anti-patterns, code-review
+**Pairs With**: supabase, supabase-common-errors
+**Top 2 Rules**: Never expose `service_role` keys or ship without RLS enabled. Treat error handling, `.select()` after mutations, and generated types as mandatory.
+
+Full context: `.agents/skills/supabase-known-pitfalls/SKILL.md`
+
+### 39- supabase-load-scale
+
+**Triggers**: supabase-scale, read-replica, supavisor, connection-pooling, compute-upgrade, storage-cdn, partitioning
+**Pairs With**: supabase, supabase-performance-tuning, supabase-advanced-troubleshooting
+**Top 2 Rules**: Route read-heavy workloads to replicas and use Supavisor pooling in serverless. Scale compute, CDN, and partitioning based on measured load.
+
+Full context: `.agents/skills/supabase-load-scale/SKILL.md`
+
+### 40- supabase-performance-tuning
+
+**Triggers**: supabase-performance, slow-queries, explain-analyze, index, pagination, connection-pool
+**Pairs With**: supabase, supabase-postgres-best-practices, supabase-load-scale
+**Top 2 Rules**: Measure first with `pg_stat_statements` and EXPLAIN ANALYZE, then verify the improvement. Optimize indexes, column selection, pagination, and pooling before adding complexity.
+
+Full context: `.agents/skills/supabase-performance-tuning/SKILL.md`
+
+### 41- supabase-reliability-patterns
+
+**Triggers**: supabase-reliability, circuit-breaker, retry, offline, fallback, outage
+**Pairs With**: supabase, supabase-common-errors
+**Top 2 Rules**: Use circuit breakers and exponential backoff to avoid cascading failures. Provide offline queues and fallbacks for critical writes.
+
+Full context: `.agents/skills/supabase-reliability-patterns/SKILL.md`

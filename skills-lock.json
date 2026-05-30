@@ -85,17 +85,35 @@
       "skillPath": "nextjs-client-cookie-pattern/SKILL.md",
       "computedHash": "8bdf307ab16bec1fba54ea37775ea692005781566dacd0edfe236f8174a4a077"
     },
+    "nextjs-performance": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-typescript/skills/nextjs-performance/SKILL.md",
+      "computedHash": "e7aacb7a0f57077fd7494a5c3b633cbc6a351463142acb1101a7f85570e20ace"
+    },
     "postgresql-table-design": {
       "source": "wshobson/agents",
       "sourceType": "github",
       "skillPath": "plugins/database-design/skills/postgresql/SKILL.md",
       "computedHash": "d7d040ee506a300c08a64b9ef6de9aa677b6d7251e33c3c87e0608f821a9506d"
     },
+    "react-performance-optimization": {
+      "source": "nickcrew/claude-ctx-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/react-performance-optimization/SKILL.md",
+      "computedHash": "724c150fb303279768abde163de33c4b3c9629ffaaca98b6414ae11c9e8c1ec0"
+    },
     "react-useeffect": {
       "source": "softaworks/agent-toolkit",
       "sourceType": "github",
       "skillPath": "skills/react-useeffect/SKILL.md",
       "computedHash": "1fdf524f8335afac6f44d3460d6d20e71db9c1d14643e4a31ea17d6463504447"
+    },
+    "refactor-method-complexity-reduce": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/refactor-method-complexity-reduce/SKILL.md",
+      "computedHash": "a09a18f7b370e105c20480f9c772169948262fa07fdf5fbd4c5d45b2def958e0"
     },
     "security-review": {
       "source": "getsentry/skills",
