@@ -365,22 +365,12 @@ Outcome:
 - More layout-specific implementation complexity.
 - Highest value after payload shaping.
 
-Implementation status on 29-May-26:
+Current state on 30-May-26:
 
-- First reusable virtualization foundation was added with `@tanstack/react-virtual`.
-- `components/dashboard/virtualization/VirtualizedList.tsx` owns the shared one-dimensional virtualizer contract: stable keys, measured rows, overscan, real scroll-container wiring, and selected-index `scrollToIndex`.
-- `components/dashboard/bookmark-board/VirtualizedBookmarkList.tsx` wires compact bookmark list rows to that foundation.
-- Compact list view now virtualizes at 50 or more visible bookmarks; search results are included because the same filtered bookmark array feeds the board.
-- `components/dashboard/bookmark-board/VirtualizedBookmarkCardRows.tsx` virtualizes card view as rows of cards at 50 or more visible bookmarks, preserving responsive column measurement through `useBookmarkGrid`.
-- `components/dashboard/folder-board/VirtualizedFolderSections.tsx` virtualizes compact folder view at 20 or more visible folder sections.
-- Extended grid-like list view and extended folder grid intentionally remain on their previous renderers for this phase because their column-distributed layouts need separate design.
-- Active compact-list drag increases overscan so nearby drop targets stay mounted; `DragOverlay` remains outside the virtualized rows.
-- Active card-view drag increases row overscan so nearby card rows stay mounted; card items still use stable bookmark IDs inside the shared `SortableContext`.
-- Active compact-folder drag increases section overscan so nearby folder droppables stay mounted; bookmark grids inside each mounted folder section keep their existing dnd-kit sortable behavior.
-- Refresh-specific blank-list bug was fixed by passing the resolved dashboard scroll element through state instead of a ref object that could be `null` during virtualizer initialization.
-- Follow-up compact/TanStack Virtual audit fixed copy timer cleanup, safe external opens, compact action hit areas, visible focus rings, dashboard loading affordances, count-aware folder section estimates, memoized virtualizer callbacks, virtual-row transform hints, and virtualized child `content-visibility` leftovers.
-- Dashboard loading states now reuse the extension popup's three-bar loading affordance through `components/dashboard/LoadingState.tsx`.
-- Verification: `pnpm typecheck`, targeted `oxlint`, React Doctor 100/100, `git diff --check`, and focused source scans passed.
+- Dashboard virtualization was removed to preserve the simpler fully mounted render paths across bookmark list, card, and folder views.
+- `BookmarkBoard` and `FolderBoard` now always use their non-virtualized sortable renderers, which keeps drag, keyboard selection, search filtering, selection mode, preview, edit, and group switching on the long-standing code path.
+- The future guidance above still applies if virtualization returns, but the current codebase no longer ships `@tanstack/react-virtual` or virtualization-specific dashboard components.
+- Dashboard loading states still reuse the extension popup's three-bar loading affordance through `components/dashboard/LoadingState.tsx`.
 
 ### 7. Enrichment Background Work
 

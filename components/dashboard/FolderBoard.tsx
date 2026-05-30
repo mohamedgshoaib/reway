@@ -18,10 +18,6 @@ import { useFolderCollapseState } from "./folder-board/useFolderCollapseState"
 import { useFolderDnd } from "./folder-board/useFolderDnd"
 import { useFolderGridColumns } from "./folder-board/useFolderGridColumns"
 import { useFolderKeyboardNav } from "./folder-board/useFolderKeyboardNav"
-import {
-  FOLDER_SECTION_VIRTUALIZATION_THRESHOLD,
-  VirtualizedFolderSections,
-} from "./folder-board/VirtualizedFolderSections"
 import { QuickGlanceDialog } from "./QuickGlanceDialog"
 import { SortableBookmarkIcon } from "./SortableBookmarkIcon"
 
@@ -52,7 +48,6 @@ interface FolderBoardProps {
   isFiltered?: boolean
   layoutDensity?: "compact" | "extended"
   folderHeaderTint?: "off" | "low" | "medium" | "high"
-  scrollElement?: HTMLElement | null
 }
 
 export const FolderBoard = memo(function FolderBoard({
@@ -72,7 +67,6 @@ export const FolderBoard = memo(function FolderBoard({
   isFiltered = false,
   layoutDensity = "compact",
   folderHeaderTint = "medium",
-  scrollElement = null,
 }: FolderBoardProps) {
   const stableSelectedIds = useMemo(() => selectedIds ?? new Set<string>(), [selectedIds])
 
@@ -165,7 +159,7 @@ export const FolderBoard = memo(function FolderBoard({
     selectedFolderId,
   })
 
-  const { sensors, collisionDetection, activeBookmark, activeId, handleDragStart, handleDragEnd } =
+  const { sensors, collisionDetection, activeBookmark, handleDragStart, handleDragEnd } =
     useFolderDnd({
       bookmarks,
       bookmarkBuckets,
@@ -188,16 +182,6 @@ export const FolderBoard = memo(function FolderBoard({
     })
     return result
   }, [folderGridColumns, isExtendedFolderGrid, visibleGroups])
-
-  const shouldVirtualizeFolderSections =
-    !isExtendedFolderGrid && visibleGroups.length >= FOLDER_SECTION_VIRTUALIZATION_THRESHOLD
-  const visibleFolderBookmarkCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    visibleGroups.forEach((group) => {
-      counts[group.id] = bookmarkBuckets[group.id]?.length ?? 0
-    })
-    return counts
-  }, [bookmarkBuckets, visibleGroups])
 
   const toggleCollapse = useCallback((groupId: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }))
@@ -388,26 +372,14 @@ export const FolderBoard = memo(function FolderBoard({
               : undefined
           }
         >
-          {shouldVirtualizeFolderSections ? (
-            <VirtualizedFolderSections
-              groups={visibleGroups}
-              bookmarkCounts={visibleFolderBookmarkCounts}
-              collapsedGroups={collapsedGroups}
-              scrollElement={scrollElement}
-              selectedFolderId={selectedFolderId}
-              isDragActive={Boolean(activeId)}
-              renderSection={renderFolderSection}
-            />
-          ) : (
-            folderColumns.map((columnGroups) => (
-              <div
-                key={`folder-col-${columnGroups.map((group) => group.id).join("-") || "empty"}`}
-                className={isExtendedFolderGrid ? "flex flex-col gap-5" : "flex flex-col gap-5"}
-              >
-                {columnGroups.map((group) => renderFolderSection(group))}
-              </div>
-            ))
-          )}
+          {folderColumns.map((columnGroups) => (
+            <div
+              key={`folder-col-${columnGroups.map((group) => group.id).join("-") || "empty"}`}
+              className={isExtendedFolderGrid ? "flex flex-col gap-5" : "flex flex-col gap-5"}
+            >
+              {columnGroups.map((group) => renderFolderSection(group))}
+            </div>
+          ))}
         </Accordion>
 
         {mounted
