@@ -12,6 +12,7 @@ import {
   Alert02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { useFormStatus } from "react-dom"
@@ -29,9 +30,16 @@ import {
 import type { BookmarkRow } from "@/lib/supabase/queries"
 import type { DashboardPaletteTheme } from "@/lib/themes"
 import { DashboardLoadingState } from "../LoadingState"
-import { SettingsDialog } from "../SettingsDialog"
 import { getEnrichmentHealthSummary } from "./enrichment-health"
 import type { User } from "./types"
+
+const SettingsDialog = dynamic(
+  () => import("../SettingsDialog").then((mod) => mod.SettingsDialog),
+  {
+    loading: () => null,
+    ssr: false,
+  },
+)
 
 function LogoutItem() {
   const { pending } = useFormStatus()
@@ -96,6 +104,9 @@ export function UserMenu({
   onOpenEnrichmentHealthSheet,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
+  const [themeSelectOpen, setThemeSelectOpen] = useState(false)
   const router = useRouter()
   const enrichmentSummary = useMemo(() => getEnrichmentHealthSummary(bookmarks), [bookmarks])
   const enrichmentAttentionCount =
@@ -109,29 +120,62 @@ export function UserMenu({
   useEffect(() => {
     const handleOpenRequest = () => setOpen(true)
     const handleCloseRequest = () => setOpen(false)
+    const handleOpenSettings = () => {
+      setSettingsLoaded(true)
+      setSettingsOpen(true)
+    }
+    const handleCloseSettings = () => {
+      setThemeSelectOpen(false)
+      setSettingsOpen(false)
+    }
+    const handleOpenThemeSelect = () => {
+      setSettingsLoaded(true)
+      setSettingsOpen(true)
+      setThemeSelectOpen(true)
+    }
+    const handleCloseThemeSelect = () => setThemeSelectOpen(false)
     window.addEventListener("reway:open-user-menu", handleOpenRequest)
     window.addEventListener("reway:close-user-menu", handleCloseRequest)
+    window.addEventListener("reway:open-settings", handleOpenSettings)
+    window.addEventListener("reway:close-settings", handleCloseSettings)
+    window.addEventListener("reway:open-theme-select", handleOpenThemeSelect)
+    window.addEventListener("reway:close-theme-select", handleCloseThemeSelect)
     return () => {
       window.removeEventListener("reway:open-user-menu", handleOpenRequest)
       window.removeEventListener("reway:close-user-menu", handleCloseRequest)
+      window.removeEventListener("reway:open-settings", handleOpenSettings)
+      window.removeEventListener("reway:close-settings", handleCloseSettings)
+      window.removeEventListener("reway:open-theme-select", handleOpenThemeSelect)
+      window.removeEventListener("reway:close-theme-select", handleCloseThemeSelect)
     }
   }, [])
 
   return (
     <>
-      <SettingsDialog
-        showNotesTodos={showNotesTodos}
-        onShowNotesTodosChange={onShowNotesTodosChange}
-        rowContent={rowContent}
-        onRowContentChange={onRowContentChange}
-        layoutDensity={layoutDensity}
-        onLayoutDensityChange={onLayoutDensityChange}
-        userName={user.name}
-        paletteTheme={paletteTheme}
-        onPaletteThemeChange={onPaletteThemeChange}
-        folderHeaderTint={folderHeaderTint}
-        onFolderHeaderTintChange={onFolderHeaderTintChange}
-      />
+      {settingsLoaded || settingsOpen ? (
+        <SettingsDialog
+          open={settingsOpen}
+          onOpenChange={(nextOpen) => {
+            setSettingsOpen(nextOpen)
+            if (!nextOpen) {
+              setThemeSelectOpen(false)
+            }
+          }}
+          themeSelectOpen={themeSelectOpen}
+          onThemeSelectOpenChange={setThemeSelectOpen}
+          showNotesTodos={showNotesTodos}
+          onShowNotesTodosChange={onShowNotesTodosChange}
+          rowContent={rowContent}
+          onRowContentChange={onRowContentChange}
+          layoutDensity={layoutDensity}
+          onLayoutDensityChange={onLayoutDensityChange}
+          userName={user.name}
+          paletteTheme={paletteTheme}
+          onPaletteThemeChange={onPaletteThemeChange}
+          folderHeaderTint={folderHeaderTint}
+          onFolderHeaderTintChange={onFolderHeaderTintChange}
+        />
+      ) : null}
 
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>

@@ -5,6 +5,10 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
 import type { GroupRow } from "@/lib/supabase/queries"
 
+export interface GroupDragOverlayRowProps {
+  group: GroupRow
+}
+
 export function SortableGroupRow({ group }: { group: GroupRow }) {
   const {
     attributes,
@@ -64,7 +68,7 @@ export function SortableGroupRow({ group }: { group: GroupRow }) {
   )
 }
 
-export function GroupDragOverlayRow({ group }: { group: GroupRow }) {
+export function GroupDragOverlayRow({ group }: GroupDragOverlayRowProps) {
   const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon
   return (
     <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl ring-1 ring-primary/20 bg-background shadow-sm">

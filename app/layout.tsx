@@ -46,9 +46,7 @@ export const metadata: Metadata = {
   },
 }
 
-import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
-import { TooltipProvider } from "@/components/ui/tooltip"
 
 export default function RootLayout({
   children,
@@ -93,10 +91,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider delayDuration={300} skipDelayDuration={1000}>
-            {children}
-          </TooltipProvider>
-          <Toaster position="bottom-center" />
+          {children}
         </ThemeProvider>
       </body>
     </html>

@@ -22,14 +22,14 @@ import type { IconPickerPopoverProps } from "../IconPickerPopover"
 import type { DashboardGroupControlsAdapter, DashboardLibraryAdapter } from "./workspace-shell-types"
 import { AllBookmarksRow } from "./sidebar/AllBookmarksRow"
 import { BulkDeleteGroupsDialog, DeleteGroupDialog } from "./sidebar/DeleteGroupDialogs"
-import { GroupCreateCard } from "./sidebar/GroupCreateCard"
-import { GroupEditCard } from "./sidebar/GroupEditCard"
-import { GroupDragOverlayRow } from "./sidebar/GroupReorderRows"
 import { GroupRowItem } from "./sidebar/GroupRowItem"
 import { SelectionModeBar } from "./sidebar/SelectionModeBar"
 import { SortableGroupRowItem } from "./sidebar/SortableGroupRowItem"
 import { useGroupReorderDnd } from "./sidebar/useGroupReorderDnd"
 import { useGroupSelection } from "./sidebar/useGroupSelection"
+import type { GroupCreateCardProps } from "./sidebar/GroupCreateCard"
+import type { GroupEditCardProps } from "./sidebar/GroupEditCard"
+import type { GroupDragOverlayRowProps } from "./sidebar/GroupReorderRows"
 
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
@@ -37,6 +37,21 @@ const IconPickerPopover = dynamic<IconPickerPopoverProps>(
     loading: () => <div className="size-8 animate-pulse rounded-lg bg-primary/10" />,
     ssr: false,
   },
+)
+
+const GroupCreateCard = dynamic<GroupCreateCardProps>(
+  () => import("./sidebar/GroupCreateCard").then((mod) => mod.GroupCreateCard),
+  { loading: () => null, ssr: false },
+)
+
+const GroupEditCard = dynamic<GroupEditCardProps>(
+  () => import("./sidebar/GroupEditCard").then((mod) => mod.GroupEditCard),
+  { loading: () => null, ssr: false },
+)
+
+const GroupDragOverlayRow = dynamic<GroupDragOverlayRowProps>(
+  () => import("./sidebar/GroupReorderRows").then((mod) => mod.GroupDragOverlayRow),
+  { loading: () => null, ssr: false },
 )
 
 function subscribeViewportWidth(onStoreChange: () => void) {

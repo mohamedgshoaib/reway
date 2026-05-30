@@ -1,6 +1,7 @@
 import { DashboardContent } from "@/components/dashboard/DashboardContent"
 
 import { cookies } from "next/headers"
+import { Toaster } from "sonner"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { getUser } from "@/lib/dashboard/server/user"
 import { getBookmarks, getGroups, getNotes, getTodos } from "@/lib/supabase/queries"
@@ -114,6 +115,7 @@ export default async function DashboardPage() {
         data-dashboard-root
         className={`h-dvh overflow-hidden bg-background text-foreground ${getPaletteThemeClassName(paletteTheme)}`}
       >
+        <Toaster position="bottom-center" />
         <main className="mx-auto w-full px-4 py-6">
           <DashboardContent
             user={user}

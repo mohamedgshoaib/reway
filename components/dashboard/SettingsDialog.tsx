@@ -53,6 +53,10 @@ import { DASHBOARD_THEMES, type DashboardPaletteTheme } from "@/lib/themes"
 
 interface SettingsDialogProps {
   children?: React.ReactNode
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  themeSelectOpen: boolean
+  onThemeSelectOpenChange: (open: boolean) => void
   rowContent: "date" | "group"
   onRowContentChange: (value: "date" | "group") => void
   showNotesTodos: boolean
@@ -68,6 +72,10 @@ interface SettingsDialogProps {
 
 export function SettingsDialog({
   children,
+  open,
+  onOpenChange,
+  themeSelectOpen,
+  onThemeSelectOpenChange,
   rowContent,
   onRowContentChange,
   showNotesTodos,
@@ -80,8 +88,6 @@ export function SettingsDialog({
   folderHeaderTint,
   onFolderHeaderTintChange,
 }: SettingsDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [themeSelectOpen, setThemeSelectOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmValue, setConfirmValue] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
@@ -91,28 +97,6 @@ export function SettingsDialog({
   const confirmPhrase = normalizedName || "your name"
   const isConfirmMatch = confirmValue.trim() === normalizedName
 
-  useEffect(() => {
-    const handleOpenSettings = () => setOpen(true)
-    const handleCloseSettings = () => {
-      setThemeSelectOpen(false)
-      setOpen(false)
-    }
-    const handleOpenThemeSelect = () => setThemeSelectOpen(true)
-    const handleCloseThemeSelect = () => setThemeSelectOpen(false)
-
-    window.addEventListener("reway:open-settings", handleOpenSettings)
-    window.addEventListener("reway:close-settings", handleCloseSettings)
-    window.addEventListener("reway:open-theme-select", handleOpenThemeSelect)
-    window.addEventListener("reway:close-theme-select", handleCloseThemeSelect)
-
-    return () => {
-      window.removeEventListener("reway:open-settings", handleOpenSettings)
-      window.removeEventListener("reway:close-settings", handleCloseSettings)
-      window.removeEventListener("reway:open-theme-select", handleOpenThemeSelect)
-      window.removeEventListener("reway:close-theme-select", handleCloseThemeSelect)
-    }
-  }, [])
-
   const handleDeleteAccount = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     if (!isConfirmMatch || isDeleting) return
@@ -121,7 +105,7 @@ export function SettingsDialog({
       await deleteAccount()
       toast.success("Account deleted successfully")
       setConfirmOpen(false)
-      setOpen(false)
+      onOpenChange(false)
       push("/login")
     } catch (error) {
       console.error("Delete account failed:", error)
@@ -132,7 +116,7 @@ export function SettingsDialog({
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       {children ? <SheetTrigger asChild>{children}</SheetTrigger> : null}
       <SheetContent
         side="right"
@@ -287,7 +271,7 @@ export function SettingsDialog({
                   <Select
                     value={paletteTheme}
                     open={themeSelectOpen}
-                    onOpenChange={setThemeSelectOpen}
+                    onOpenChange={onThemeSelectOpenChange}
                     onValueChange={(value) => onPaletteThemeChange(value as DashboardPaletteTheme)}
                   >
                     <SelectTrigger data-onboarding="palette-theme-trigger" className="w-full rounded-lg">

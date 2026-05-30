@@ -8,6 +8,20 @@ import type { IconPickerPopoverProps } from "../../IconPickerPopover"
 import { CharacterCount } from "./CharacterCount"
 import { MAX_GROUP_NAME_LENGTH } from "./constants"
 
+export interface GroupCreateCardProps {
+  isInlineCreating: boolean
+  setIsInlineCreating: (value: boolean) => void
+  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
+  newGroupName: string
+  setNewGroupName: (value: string) => void
+  newGroupIcon: string
+  setNewGroupIcon: (value: string) => void
+  newGroupColor: string | null
+  setNewGroupColor: (value: string | null) => void
+  isCreatingGroup: boolean
+  onCreate: () => void
+}
+
 export function GroupCreateCard({
   isInlineCreating,
   setIsInlineCreating,
@@ -20,19 +34,7 @@ export function GroupCreateCard({
   setNewGroupColor,
   isCreatingGroup,
   onCreate,
-}: {
-  isInlineCreating: boolean
-  setIsInlineCreating: (value: boolean) => void
-  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
-  newGroupName: string
-  setNewGroupName: (value: string) => void
-  newGroupIcon: string
-  setNewGroupIcon: (value: string) => void
-  newGroupColor: string | null
-  setNewGroupColor: (value: string | null) => void
-  isCreatingGroup: boolean
-  onCreate: () => void
-}) {
+}: GroupCreateCardProps) {
   return (
     <div className="pt-3 mt-2 border-t border-border/40">
       {isInlineCreating ? (

@@ -49,12 +49,19 @@ export function isPrivateIp(url: string): boolean {
 
 export async function fetchMetadata(url: string): Promise<MetadataResult> {
   const targetUrl = normalizeUrl(url)
+  let parsedUrl: URL
 
-  if (isPrivateIp(targetUrl)) {
+  try {
+    parsedUrl = new URL(targetUrl)
+  } catch {
+    throw new Error("Invalid URL")
+  }
+
+  if (isPrivateIp(parsedUrl.toString())) {
     throw new Error("Access to private IP addresses is prohibited")
   }
 
-  const response = await fetch(targetUrl, {
+  const response = await fetch(parsedUrl.toString(), {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -102,7 +109,7 @@ export async function fetchMetadata(url: string): Promise<MetadataResult> {
     }
   }
 
-  const baseUrl = new URL(targetUrl)
+  const baseUrl = parsedUrl
   if (favicon && !favicon.startsWith("http")) {
     favicon = new URL(favicon, baseUrl.origin).toString()
   } else if (!favicon) {

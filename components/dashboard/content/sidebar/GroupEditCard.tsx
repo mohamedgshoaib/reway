@@ -8,6 +8,20 @@ import type { IconPickerPopoverProps } from "../../IconPickerPopover"
 import { CharacterCount } from "./CharacterCount"
 import { MAX_GROUP_NAME_LENGTH } from "./constants"
 
+export interface GroupEditCardProps {
+  group: GroupRow
+  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
+  editGroupName: string
+  setEditGroupName: (value: string) => void
+  editGroupIcon: string
+  setEditGroupIcon: (value: string) => void
+  editGroupColor: string | null
+  setEditGroupColor: (value: string | null) => void
+  isUpdatingGroup: boolean
+  onCancel: () => void
+  onSave: () => void
+}
+
 export function GroupEditCard({
   group,
   IconPickerPopover,
@@ -20,19 +34,7 @@ export function GroupEditCard({
   isUpdatingGroup,
   onCancel,
   onSave,
-}: {
-  group: GroupRow
-  IconPickerPopover: React.ComponentType<IconPickerPopoverProps>
-  editGroupName: string
-  setEditGroupName: (value: string) => void
-  editGroupIcon: string
-  setEditGroupIcon: (value: string) => void
-  editGroupColor: string | null
-  setEditGroupColor: (value: string | null) => void
-  isUpdatingGroup: boolean
-  onCancel: () => void
-  onSave: () => void
-}) {
+}: GroupEditCardProps) {
   void group
   return (
     <div className="relative my-2 p-2 space-y-3 rounded-2xl bg-muted/20 ring-1 ring-inset ring-foreground/5">

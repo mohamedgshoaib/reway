@@ -2,7 +2,9 @@
 
 import { Note01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import RewayLogo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import type { BookmarkRow } from "@/lib/supabase/queries"
@@ -11,16 +13,42 @@ import type {
   DashboardNavigationControlsAdapter,
   DashboardNotesTodosAdapter,
 } from "./content/workspace-shell-types"
-import { DuplicatesSheet } from "./nav/DuplicatesSheet"
-import { EnrichmentHealthSheet } from "./nav/EnrichmentHealthSheet"
-import { ExportSheet } from "./nav/ExportSheet"
 import { GroupMenu } from "./nav/GroupMenu"
-import { ImportSheet } from "./nav/ImportSheet"
 import { LayoutControls } from "./nav/LayoutControls"
-import { NotesTodosSheet } from "./nav/NotesTodosSheet"
 import { ThemeControls } from "./nav/ThemeControls"
 import { UserMenu } from "./nav/UserMenu"
 import { ViewModeControls } from "./nav/ViewModeControls"
+
+const NotesTodosSheet = dynamic(() => import("./nav/NotesTodosSheet").then((mod) => mod.NotesTodosSheet), {
+  loading: () => null,
+  ssr: false,
+})
+
+const ImportSheet = dynamic(() => import("./nav/ImportSheet").then((mod) => mod.ImportSheet), {
+  loading: () => null,
+  ssr: false,
+})
+
+const ExportSheet = dynamic(() => import("./nav/ExportSheet").then((mod) => mod.ExportSheet), {
+  loading: () => null,
+  ssr: false,
+})
+
+const DuplicatesSheet = dynamic(
+  () => import("./nav/DuplicatesSheet").then((mod) => mod.DuplicatesSheet),
+  {
+    loading: () => null,
+    ssr: false,
+  },
+)
+
+const EnrichmentHealthSheet = dynamic(
+  () => import("./nav/EnrichmentHealthSheet").then((mod) => mod.EnrichmentHealthSheet),
+  {
+    loading: () => null,
+    ssr: false,
+  },
+)
 
 interface DashboardNavProps {
   navigation: DashboardNavigationAdapter
@@ -41,6 +69,13 @@ export function DashboardNav({
   enrichmentHealth,
 }: DashboardNavProps) {
   const router = useRouter()
+  const [loadedSheets, setLoadedSheets] = useState({
+    notesTodos: false,
+    import: false,
+    export: false,
+    duplicates: false,
+    enrichmentHealth: false,
+  })
 
   const initials = navigation.user.name
     .split(" ")
@@ -49,64 +84,105 @@ export function DashboardNav({
     .toUpperCase()
     .slice(0, 2)
 
+  useEffect(() => {
+    setLoadedSheets((current) => {
+      const next = {
+        notesTodos: current.notesTodos || navigationControls.notesTodosSheetOpen,
+        import: current.import || navigationControls.importSheetOpen,
+        export: current.export || navigationControls.exportSheetOpen,
+        duplicates: current.duplicates || navigationControls.duplicatesSheetOpen,
+        enrichmentHealth:
+          current.enrichmentHealth || navigationControls.enrichmentHealthSheetOpen,
+      }
+
+      if (
+        next.notesTodos === current.notesTodos &&
+        next.import === current.import &&
+        next.export === current.export &&
+        next.duplicates === current.duplicates &&
+        next.enrichmentHealth === current.enrichmentHealth
+      ) {
+        return current
+      }
+
+      return next
+    })
+  }, [
+    navigationControls.duplicatesSheetOpen,
+    navigationControls.enrichmentHealthSheetOpen,
+    navigationControls.exportSheetOpen,
+    navigationControls.importSheetOpen,
+    navigationControls.notesTodosSheetOpen,
+  ])
+
   return (
     <>
-      <NotesTodosSheet
-        open={navigationControls.notesTodosSheetOpen}
-        onOpenChange={navigationControls.setNotesTodosSheetOpen}
-        notes={notesTodos.notes}
-        todos={notesTodos.todos}
-        onCreateNote={notesTodos.handleCreateNote}
-        onUpdateNote={notesTodos.handleUpdateNote}
-        onDeleteNote={notesTodos.handleDeleteNote}
-        onDeleteNotes={notesTodos.handleDeleteNotes}
-        onCreateTodo={notesTodos.handleCreateTodo}
-        onUpdateTodo={notesTodos.handleUpdateTodo}
-        onDeleteTodo={notesTodos.handleDeleteTodo}
-        onDeleteTodos={notesTodos.handleDeleteTodos}
-        onSetTodoCompleted={notesTodos.handleSetTodoCompleted}
-        onSetTodosCompleted={notesTodos.handleSetTodosCompleted}
-      />
+      {loadedSheets.notesTodos || navigationControls.notesTodosSheetOpen ? (
+        <NotesTodosSheet
+          open={navigationControls.notesTodosSheetOpen}
+          onOpenChange={navigationControls.setNotesTodosSheetOpen}
+          notes={notesTodos.notes}
+          todos={notesTodos.todos}
+          onCreateNote={notesTodos.handleCreateNote}
+          onUpdateNote={notesTodos.handleUpdateNote}
+          onDeleteNote={notesTodos.handleDeleteNote}
+          onDeleteNotes={notesTodos.handleDeleteNotes}
+          onCreateTodo={notesTodos.handleCreateTodo}
+          onUpdateTodo={notesTodos.handleUpdateTodo}
+          onDeleteTodo={notesTodos.handleDeleteTodo}
+          onDeleteTodos={notesTodos.handleDeleteTodos}
+          onSetTodoCompleted={notesTodos.handleSetTodoCompleted}
+          onSetTodosCompleted={notesTodos.handleSetTodosCompleted}
+        />
+      ) : null}
 
-      <ImportSheet
-        open={navigationControls.importSheetOpen}
-        onOpenChange={navigationControls.handleImportOpenChange}
-        importPreview={navigation.importExport.importPreview}
-        importProgress={navigation.importExport.importProgress}
-        importResult={navigation.importExport.importResult}
-        selectedImportGroups={navigationControls.selectedImportGroups}
-        onToggleImportGroup={navigationControls.handleToggleImportGroup}
-        onImportFileSelected={navigation.importExport.handleImportFileSelected}
-        onUpdateImportAction={navigation.importExport.handleResolveConflicts}
-        onConfirmImport={navigation.importExport.handleConfirmImport}
-        onClearImport={navigation.importExport.handleClearImport}
-      />
+      {loadedSheets.import || navigationControls.importSheetOpen ? (
+        <ImportSheet
+          open={navigationControls.importSheetOpen}
+          onOpenChange={navigationControls.handleImportOpenChange}
+          importPreview={navigation.importExport.importPreview}
+          importProgress={navigation.importExport.importProgress}
+          importResult={navigation.importExport.importResult}
+          selectedImportGroups={navigationControls.selectedImportGroups}
+          onToggleImportGroup={navigationControls.handleToggleImportGroup}
+          onImportFileSelected={navigation.importExport.handleImportFileSelected}
+          onUpdateImportAction={navigation.importExport.handleResolveConflicts}
+          onConfirmImport={navigation.importExport.handleConfirmImport}
+          onClearImport={navigation.importExport.handleClearImport}
+        />
+      ) : null}
 
-      <ExportSheet
-        open={navigationControls.exportSheetOpen}
-        onOpenChange={navigationControls.handleExportOpenChange}
-        exportGroupOptions={navigation.importExport.exportGroupOptions}
-        exportProgress={navigation.importExport.exportProgress}
-        selectedExportGroups={navigationControls.selectedExportGroups}
-        onToggleExportGroup={navigationControls.handleToggleExportGroup}
-        onExportBookmarks={navigation.importExport.handleExportBookmarks}
-      />
+      {loadedSheets.export || navigationControls.exportSheetOpen ? (
+        <ExportSheet
+          open={navigationControls.exportSheetOpen}
+          onOpenChange={navigationControls.handleExportOpenChange}
+          exportGroupOptions={navigation.importExport.exportGroupOptions}
+          exportProgress={navigation.importExport.exportProgress}
+          selectedExportGroups={navigationControls.selectedExportGroups}
+          onToggleExportGroup={navigationControls.handleToggleExportGroup}
+          onExportBookmarks={navigation.importExport.handleExportBookmarks}
+        />
+      ) : null}
 
-      <DuplicatesSheet
-        open={navigationControls.duplicatesSheetOpen}
-        onOpenChange={navigationControls.setDuplicatesSheetOpen}
-        bookmarks={navigation.bookmarks}
-        onRemoveBookmarks={navigation.importExport.handleOptimisticRemoveBookmarks}
-      />
+      {loadedSheets.duplicates || navigationControls.duplicatesSheetOpen ? (
+        <DuplicatesSheet
+          open={navigationControls.duplicatesSheetOpen}
+          onOpenChange={navigationControls.setDuplicatesSheetOpen}
+          bookmarks={navigation.bookmarks}
+          onRemoveBookmarks={navigation.importExport.handleOptimisticRemoveBookmarks}
+        />
+      ) : null}
 
-      <EnrichmentHealthSheet
-        open={navigationControls.enrichmentHealthSheetOpen}
-        onOpenChange={navigationControls.setEnrichmentHealthSheetOpen}
-        bookmarks={enrichmentHealth.bookmarks}
-        onRefreshBookmark={enrichmentHealth.onRefreshBookmark}
-        onLoadBookmarkDetails={enrichmentHealth.onLoadBookmarkDetails}
-        onSelectBookmarks={enrichmentHealth.onSelectBookmarks}
-      />
+      {loadedSheets.enrichmentHealth || navigationControls.enrichmentHealthSheetOpen ? (
+        <EnrichmentHealthSheet
+          open={navigationControls.enrichmentHealthSheetOpen}
+          onOpenChange={navigationControls.setEnrichmentHealthSheetOpen}
+          bookmarks={enrichmentHealth.bookmarks}
+          onRefreshBookmark={enrichmentHealth.onRefreshBookmark}
+          onLoadBookmarkDetails={enrichmentHealth.onLoadBookmarkDetails}
+          onSelectBookmarks={enrichmentHealth.onSelectBookmarks}
+        />
+      ) : null}
 
       <nav
         className={`z-40 mx-auto ${
