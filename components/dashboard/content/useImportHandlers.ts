@@ -15,6 +15,10 @@ import { pickRandomGroupColor } from "./import/colors"
 import { runWithConcurrency } from "./import/concurrency"
 import { parseBookmarksHtml } from "./import/parse-bookmarks-html"
 
+const CREATE_GROUP_CONCURRENCY = 3
+const CREATE_BOOKMARK_CONCURRENCY = 3
+const ENRICH_BOOKMARK_CONCURRENCY = 2
+
 interface UseImportHandlersOptions {
   bookmarks: BookmarkRow[]
   groups: GroupRow[]
@@ -99,9 +103,12 @@ async function createMissingImportGroups({
   )
 
   const groupRanks = generateRanksBetween(groups.at(-1)?.rank ?? null, null, groupNamesToCreate.length)
+  const createdGroups: GroupRow[] = new Array(groupNamesToCreate.length)
 
-  return Promise.all(
-    groupNamesToCreate.map(async (name, index) => {
+  await runWithConcurrency(
+    groupNamesToCreate.map((name, index) => ({ name, index })),
+    CREATE_GROUP_CONCURRENCY,
+    async ({ name, index }) => {
       const color = pickRandomGroupColor()
       const rank = groupRanks[index] ?? generateRankBetween(groups.at(-1)?.rank ?? null, null)
       const newGroupId = await createGroup({
@@ -111,7 +118,7 @@ async function createMissingImportGroups({
         rank,
       })
 
-      return {
+      createdGroups[index] = {
         id: newGroupId,
         name,
         icon: "folder",
@@ -122,8 +129,10 @@ async function createMissingImportGroups({
         order_index: null,
         rank,
       } satisfies GroupRow
-    }),
+    },
   )
+
+  return createdGroups
 }
 
 function getImportStartingOrder(bookmarks: BookmarkRow[]) {
@@ -388,9 +397,6 @@ export function useImportHandlers({
       let failedCount = 0
       const enrichmentQueue: Array<{ id: string; url: string }> = []
 
-      const CREATE_CONCURRENCY = 3
-      const ENRICH_CONCURRENCY = 2
-
       const handleCreate = async ({
         entry,
         groupId,
@@ -450,13 +456,13 @@ export function useImportHandlers({
       const startBackgroundEnrichment = () => {
         if (enrichmentQueue.length === 0) return
         // Skip stop check for enrichment - always complete enrichment for created bookmarks
-        void runWithConcurrency([...enrichmentQueue], ENRICH_CONCURRENCY, enrichmentWorker, {
+        void runWithConcurrency([...enrichmentQueue], ENRICH_BOOKMARK_CONCURRENCY, enrichmentWorker, {
           shouldStop: () => stopRequestedRef.current,
           skipStopCheck: true,
         })
       }
 
-      await runWithConcurrency(pendingEntries, CREATE_CONCURRENCY, handleCreate, {
+      await runWithConcurrency(pendingEntries, CREATE_BOOKMARK_CONCURRENCY, handleCreate, {
         shouldStop: () => stopRequestedRef.current,
       })
 

@@ -7,7 +7,7 @@
 
 ## Phase
 
-`pending`
+`closed`
 
 ## Scope
 
@@ -19,9 +19,9 @@
 
 ## Artifacts
 
-- `loading.md`
+- `loading-load-scale.md`
 - `analysis-pass-1.md`
 - `report-pass-1.md`
 - `analysis-pass-2.md`
-- `report-final.md`
-- `execution-plan.md`
+- `report-final-load-scale.md`
+- `execution-load-scale.md`

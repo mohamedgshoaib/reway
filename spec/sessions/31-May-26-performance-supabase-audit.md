@@ -111,6 +111,17 @@
 - Ran `git diff --check` after the Realtime auth patch; no whitespace errors were reported. Realtime logs were sampled, but there was no fresh post-patch dashboard join evidence, so operational log validation remains inconclusive until the dashboard is opened.
 - Rechecked Realtime logs after fresh post-patch activity; a new Broadcast replication initialization appeared without new private-channel unauthorized bookmark/group messages above it in the returned window.
 - Closed the `supabase-advanced-troubleshooting` phase from a code and Supabase diagnostics standpoint.
+- Started the `supabase-load-scale` audit phase and created `spec/performance-supabase-audit/supabase-scale-reliability/loading-load-scale.md`.
+- Loaded current Supabase load-scale context for read replicas, Supavisor connection pooling, compute/disk sizing, database size, and Storage CDN/egress.
+- Completed first-pass Supabase load-scale analysis at `spec/performance-supabase-audit/supabase-scale-reliability/analysis-pass-1.md`.
+- Read-only load-scale evidence found Postgres 17.6, `18 MB` database size, `60` max connections, about `1.1k` bookmarks, no Storage objects, no Edge Functions, clean performance advisors, and no direct app-side Postgres pooler usage.
+- Completed first-pass Supabase load-scale report at `spec/performance-supabase-audit/supabase-scale-reliability/report-pass-1.md`.
+- Completed Supabase load-scale re-analysis at `spec/performance-supabase-audit/supabase-scale-reliability/analysis-pass-2.md`.
+- Fresh largest-account payload check found the largest current account at `264` bookmarks and about `168522` bytes of uncompressed dashboard bookmark JSON.
+- Completed final Supabase load-scale report at `spec/performance-supabase-audit/supabase-scale-reliability/report-final-load-scale.md`.
+- Executed approved Supabase load-scale code candidate in `components/dashboard/content/useImportHandlers.ts`, throttling missing import group creation with the existing concurrency helper while keeping bookmark creation at `3` and enrichment at `2`.
+- Verified Supabase load-scale execution with `pnpm typecheck` and `pnpm build`.
+- Created Supabase load-scale execution log at `spec/performance-supabase-audit/supabase-scale-reliability/execution-load-scale.md`.
 
 ---
 
@@ -172,6 +183,12 @@
 - Supabase advanced-troubleshooting final report recommends one code-only execution candidate: await Realtime auth before private Broadcast subscription in `useDashboardRealtime`; no database, policy, publication, or trigger change is recommended.
 - Supabase advanced-troubleshooting execution step 1 is code-only; it changes private channel subscription timing only and leaves RLS, triggers, publication state, and extension behavior unchanged.
 - Supabase advanced-troubleshooting phase is closed; browser/manual realtime interaction checks remain useful optional validation, not an open execution candidate.
+- Supabase load-scale phase has started in `loading`; no code, schema, data, migration, compute, pooler, replica, disk, Storage, or Supabase state change has been made.
+- Supabase load-scale first-pass analysis ranks future full-list dashboard reads and import write bursts as the main re-analysis topics; current database footprint and infrastructure posture do not justify read replica, compute, pooler, Storage, or Edge Function execution.
+- Supabase load-scale first-pass report recommends re-analyzing import missing-group throttling as the most plausible low-risk code candidate, while treating dashboard full-list reads as a future threshold/architecture guardrail rather than a current execution item.
+- Supabase load-scale re-analysis carries forward one execution candidate: throttle import missing-group creation with the existing concurrency helper. Dashboard full-list reads remain a future threshold guardrail, not current execution.
+- Supabase load-scale final report recommends one approval-gated code execution candidate: throttle missing-group creation during bookmark imports. No live Supabase mutation, schema, migration, compute, replica, pooler, Storage, Edge Function, partitioning, Realtime, or dashboard virtualization change is recommended.
+- Supabase load-scale phase is closed; the only execution candidate was implemented and verified. Remaining scale items are future evidence guardrails, not open execution.
 
 ---
 

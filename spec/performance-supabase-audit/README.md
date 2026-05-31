@@ -38,7 +38,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-known-pitfalls.md` |
 | 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-plan.md` |
 | 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-advanced-troubleshooting.md` |
-| 8 | `supabase-load-scale` | `supabase-scale-reliability/` | `pending` | None |
+| 8 | `supabase-load-scale` | `supabase-scale-reliability/` | `closed` | `supabase-scale-reliability/execution-load-scale.md` |
 | 9 | `supabase-reliability-patterns` | `supabase-scale-reliability/` | `pending` | None |
 
 ## Progress Log
@@ -119,6 +119,13 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Final report seventh skill | `done` | Final advanced troubleshooting report created at `supabase-performance-diagnostics/report-advanced-troubleshooting-final.md`; execution awaits approval. |
 | Execute seventh skill step 1 | `done` | `useDashboardRealtime` now awaits Realtime auth before private Broadcast subscription and was verified with `pnpm typecheck` and `pnpm build`. |
 | Close seventh skill execution | `done` | Supabase advanced-troubleshooting phase is closed; post-patch Realtime logs showed fresh Broadcast initialization without new private-channel unauthorized bookmark/group messages in the sampled window. |
+| Begin eighth skill | `done` | `supabase-load-scale` loading artifact created at `supabase-scale-reliability/loading-load-scale.md`; no code, schema, data, migration, compute, pooler, or replica change has been made. |
+| Analyze eighth skill | `done` | First-pass Supabase load-scale analysis created at `supabase-scale-reliability/analysis-pass-1.md`; current footprint is small, with full-list dashboard reads and import write bursts as the main re-analysis candidates. |
+| Report eighth skill | `done` | First-pass Supabase load-scale report created at `supabase-scale-reliability/report-pass-1.md`; recommended re-analysis focuses on import group throttling and future dashboard full-list thresholds. |
+| Re-analyze eighth skill | `done` | Supabase load-scale re-analysis created at `supabase-scale-reliability/analysis-pass-2.md`; import missing-group throttling is the only execution candidate carried forward. |
+| Final report eighth skill | `done` | Final Supabase load-scale report created at `supabase-scale-reliability/report-final-load-scale.md`; execution awaits approval for import missing-group throttling. |
+| Execute eighth skill | `done` | Import missing-group creation is now throttled with the existing import concurrency helper and verified with `pnpm typecheck` and `pnpm build`. |
+| Close eighth skill execution | `done` | Supabase load-scale phase is closed; no infrastructure, schema, Realtime, dashboard virtualization, or extension parallelization change was needed. |
 
 ## Execution Rules
 
