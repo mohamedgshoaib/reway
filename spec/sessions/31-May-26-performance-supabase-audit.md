@@ -76,6 +76,17 @@
 - Verified Supabase common-errors step 3 with `pnpm typecheck` and `pnpm build`.
 - Executed approved Supabase common-errors step 4 in `app/api/extension/bookmarks/route.ts`, `extension/js/save-bookmarks.js`, `extension/js/grabber.js`, `extension/js/sessions.js`, and `extension/popup.js`, rewording bookmark conflict handling so the extension no longer implies duplicate-bookmark rejection.
 - Verified Supabase common-errors step 4 with `pnpm typecheck` and `pnpm build`.
+- Started the `supabase-known-pitfalls` audit phase and created `spec/performance-supabase-audit/supabase-errors-pitfalls/loading-known-pitfalls.md`.
+- Completed first-pass Supabase known-pitfalls analysis at `spec/performance-supabase-audit/supabase-errors-pitfalls/analysis-known-pitfalls-pass-1.md`.
+- Completed first-pass Supabase known-pitfalls report at `spec/performance-supabase-audit/supabase-errors-pitfalls/report-known-pitfalls-pass-1.md`.
+- Completed Supabase known-pitfalls re-analysis at `spec/performance-supabase-audit/supabase-errors-pitfalls/analysis-known-pitfalls-pass-2.md`.
+- Completed final Supabase known-pitfalls report at `spec/performance-supabase-audit/supabase-errors-pitfalls/report-known-pitfalls-final.md`; execution awaits approval.
+- Executed Supabase known-pitfalls step 1 as a proposal artifact at `spec/performance-supabase-audit/supabase-errors-pitfalls/execution-known-pitfalls.md`, drafting the exact `public` default-privileges SQL, verification plan, and rollback notes without applying any live Supabase change.
+- Executed approved Supabase known-pitfalls step 2 in `lib/library/server/capture.ts`, replacing create-return `.select("*")` with explicit select constants for group and bookmark inserts.
+- Verified Supabase known-pitfalls step 2 with `pnpm typecheck` and `pnpm build`.
+- Executed approved Supabase known-pitfalls step 3 in `package.json`, adding a `types:supabase` script without regenerating `lib/supabase/database.types.ts`.
+- Verified Supabase known-pitfalls step 3 with `pnpm typecheck` and `pnpm build`.
+- Closed the `supabase-known-pitfalls` phase without applying the drafted default-privileges SQL because the remaining item is future-facing governance hardening and not worth forcing now for a solo-dev workflow.
 
 ---
 
@@ -109,6 +120,15 @@
 - Second approved Supabase common-errors execution is complete; next candidate is optional first-row `.single()` cleanup to `.maybeSingle()`.
 - Third approved Supabase common-errors execution is complete; the remaining item is lower-priority bookmark conflict wording against the locked duplicate-bookmarks policy.
 - Fourth approved Supabase common-errors execution is complete; the documented candidate queue is now exhausted and the phase is closed.
+- Supabase known-pitfalls phase has started in `loading`; no app code, schema, data, migration, or Supabase state changes have been made.
+- First-pass Supabase known-pitfalls analysis ranks leaked-password protection, broad public grants, public security-definer functions, admin-client breadth, create-return `select("*")`, type-generation workflow, and seed metadata for reporting.
+- Supabase known-pitfalls first-pass report accepts leaked-password protection as residual risk because it is Free-plan limited; current re-analysis focus is grants/function posture, signup admin lookup, create-return `select("*")`, type-generation workflow, and seed metadata.
+- Supabase known-pitfalls re-analysis narrowed execution candidates to future default-privilege SQL discipline, create-return explicit selects, and a type-generation script; current table grant tightening, public trigger-helper moves, signup admin scan replacement, seed metadata, and leaked-password protection are deferred or accepted for this phase.
+- Supabase known-pitfalls final report recommends an approval-gated future-default-privileges migration proposal first, then code-only create-return explicit selects, then a Supabase type-generation script.
+- Supabase known-pitfalls execution step 1 is complete as documentation-only preparation; the next gate is whether to apply the drafted default-privileges SQL or move to the code-only `.select("*")` cleanup first.
+- Supabase known-pitfalls execution step 2 is complete; the code-only create-return select cleanup passed verification, and the next remaining candidate is the `types:supabase` script unless the user wants to apply the drafted default-privileges SQL first.
+- Supabase known-pitfalls execution step 3 is complete; the low-risk code/process work is finished, and the only remaining candidate in this skill is the approval-gated default-privileges SQL proposal.
+- Supabase known-pitfalls phase is now closed; future `public` table work should explicitly decide grants alongside RLS/policies instead of relying on old defaults, but no live default-privileges change was applied.
 
 ---
 

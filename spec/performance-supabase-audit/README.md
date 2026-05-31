@@ -35,7 +35,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | 2 | `react-performance-optimization` | `react-performance/` | `closed` | `react-performance/execution-plan.md` |
 | 3 | `refactor-method-complexity-reduce` | `method-complexity/` | `closed` | `method-complexity/execution-plan.md` |
 | 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-plan.md` |
-| 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `pending` | None |
+| 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-known-pitfalls.md` |
 | 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `pending` | None |
 | 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `pending` | None |
 | 8 | `supabase-load-scale` | `supabase-scale-reliability/` | `pending` | None |
@@ -93,6 +93,15 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Execute fourth skill step 3 | `done` | Optional first-row `.maybeSingle()` cleanup verified with `pnpm typecheck` and `pnpm build`. |
 | Execute fourth skill step 4 | `done` | Bookmark conflict wording now matches the duplicate-bookmarks-allowed policy and was verified with `pnpm typecheck` and `pnpm build`. |
 | Close fourth skill execution | `done` | Supabase common-errors phase is closed; the documented candidate queue has been executed. |
+| Begin fifth skill | `done` | `supabase-known-pitfalls` loading artifact created at `supabase-errors-pitfalls/loading-known-pitfalls.md`. |
+| Analyze fifth skill | `done` | First Supabase known-pitfalls analysis created at `supabase-errors-pitfalls/analysis-known-pitfalls-pass-1.md`. |
+| Report fifth skill | `done` | First Supabase known-pitfalls report created at `supabase-errors-pitfalls/report-known-pitfalls-pass-1.md`. |
+| Re-analyze fifth skill | `done` | Supabase known-pitfalls re-analysis created at `supabase-errors-pitfalls/analysis-known-pitfalls-pass-2.md`. |
+| Final report fifth skill | `done` | Final Supabase known-pitfalls report created at `supabase-errors-pitfalls/report-known-pitfalls-final.md`; execution awaits approval. |
+| Execute fifth skill step 1 | `done` | Drafted the approval-gated `public` default-privileges SQL proposal, verification plan, and rollback notes in `supabase-errors-pitfalls/execution-known-pitfalls.md`; no live Supabase state changed. |
+| Execute fifth skill step 2 | `done` | Replaced create-return `.select(\"*\")` with explicit select constants in `lib/library/server/capture.ts` and verified with `pnpm typecheck` and `pnpm build`. |
+| Execute fifth skill step 3 | `done` | Added `types:supabase` to `package.json` without regenerating the types file, and verified with `pnpm typecheck` and `pnpm build`. |
+| Close fifth skill execution | `done` | Supabase known-pitfalls phase is closed; the remaining default-privileges SQL is documented as optional future hardening rather than applied. |
 
 ## Execution Rules
 

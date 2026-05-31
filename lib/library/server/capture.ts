@@ -10,6 +10,12 @@ import { getDomain } from "@/lib/utils"
 
 type LibrarySupabaseClient = SupabaseClient<Database>
 
+const CREATE_GROUP_RETURN_SELECT =
+  "id,user_id,name,color,icon,order_index,created_at,hide_from_all_bookmarks,rank"
+
+const CREATE_BOOKMARK_RETURN_SELECT =
+  "id,user_id,group_id,url,title,description,favicon_url,og_image_url,image_url,screenshot_url,order_index,created_at,is_enriching,status,error_reason,last_fetched_at,normalized_url,domain,visit_count,last_visited_at,rank"
+
 interface CreateGroupInput {
   name: string
   icon: string
@@ -85,7 +91,7 @@ export async function createGroupRecord(
       order_index: nextOrderIndex,
       rank: nextRank,
     })
-    .select("*")
+    .select(CREATE_GROUP_RETURN_SELECT)
     .single()
 
   if (error) {
@@ -215,7 +221,7 @@ export async function createBookmarkRecord(
       order_index: nextOrderIndex,
       rank: nextRank,
     })
-    .select("*")
+    .select(CREATE_BOOKMARK_RETURN_SELECT)
     .single()
 
   if (error) {
