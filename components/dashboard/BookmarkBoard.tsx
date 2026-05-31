@@ -63,6 +63,10 @@ interface DisplayBookmark {
 const CROSS_GROUP_DROP_TOAST_DELAY_MS = 240
 const UNGROUPED_DRAG_BUCKET = "__ungrouped__"
 
+function getBookmarkDisplayDomain(bookmark: BookmarkRow) {
+  return bookmark.domain || getDomain(bookmark.url)
+}
+
 interface BookmarkBoardProps {
   bookmarks: BookmarkRow[]
   initialGroups: GroupRow[]
@@ -157,23 +161,32 @@ export const BookmarkBoard = memo(function BookmarkBoard({
   }, [activeGroupId, bookmarks, orderedBookmarks])
 
   const renderedDisplayBookmarks = useMemo<DisplayBookmark[]>(() => {
-    return renderedBookmarks.map((b) => ({
-      id: b.id,
-      title: getDisplayTitle({
-        title: b.title,
-        url: b.url,
-        normalizedUrl: b.normalized_url,
-        domain: getDomain(b.url),
-      }),
-      url: b.url,
-      domain: getDomain(b.url),
-      favicon: b.favicon_url || undefined,
-      isEnriching: Boolean(b.is_enriching),
-      createdAt: createdAtFormatter.format(new Date(b.created_at)),
-      groupId: b.group_id || ALL_BOOKMARKS_GROUP_ID,
-      status: b.status || "ready",
-    }))
+    return renderedBookmarks.map((bookmark) => {
+      const domain = getBookmarkDisplayDomain(bookmark)
+
+      return {
+        id: bookmark.id,
+        title: getDisplayTitle({
+          title: bookmark.title,
+          url: bookmark.url,
+          normalizedUrl: bookmark.normalized_url,
+          domain,
+        }),
+        url: bookmark.url,
+        domain,
+        favicon: bookmark.favicon_url || undefined,
+        isEnriching: Boolean(bookmark.is_enriching),
+        createdAt: createdAtFormatter.format(new Date(bookmark.created_at)),
+        groupId: bookmark.group_id || ALL_BOOKMARKS_GROUP_ID,
+        status: bookmark.status || "ready",
+      }
+    })
   }, [renderedBookmarks])
+
+  const sortableBookmarkIds = useMemo(
+    () => renderedDisplayBookmarks.map((bookmark) => bookmark.id),
+    [renderedDisplayBookmarks],
+  )
 
   const boardClassName = useMemo(() => {
     if (viewMode === "list") {
@@ -359,7 +372,7 @@ export const BookmarkBoard = memo(function BookmarkBoard({
         modifiers={isGridView ? [] : [restrictToVerticalAxis]}
       >
         <SortableContext
-          items={renderedDisplayBookmarks.map((b) => b.id)}
+          items={sortableBookmarkIds}
           strategy={isGridView ? rectSortingStrategy : verticalListSortingStrategy}
         >
           <div ref={boardRef} className={boardClassName} data-slot="bookmark-board">

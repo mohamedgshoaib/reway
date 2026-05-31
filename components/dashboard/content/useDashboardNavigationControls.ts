@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 export function useDashboardNavigationControls({
   importProgressStatus,
@@ -60,24 +60,43 @@ export function useDashboardNavigationControls({
   const openDuplicatesSheet = useCallback(() => setDuplicatesSheetOpen(true), [])
   const openEnrichmentHealthSheet = useCallback(() => setEnrichmentHealthSheetOpen(true), [])
 
-  return {
-    importSheetOpen,
-    exportSheetOpen,
-    duplicatesSheetOpen,
-    enrichmentHealthSheetOpen,
-    notesTodosSheetOpen,
-    selectedImportGroups,
-    selectedExportGroups,
-    setNotesTodosSheetOpen,
-    setDuplicatesSheetOpen,
-    setEnrichmentHealthSheetOpen,
-    handleImportOpenChange,
-    handleExportOpenChange,
-    handleToggleImportGroup,
-    handleToggleExportGroup,
-    openImportSheet,
-    openExportSheet,
-    openDuplicatesSheet,
-    openEnrichmentHealthSheet,
-  }
+  return useMemo(
+    () => ({
+      importSheetOpen,
+      exportSheetOpen,
+      duplicatesSheetOpen,
+      enrichmentHealthSheetOpen,
+      notesTodosSheetOpen,
+      selectedImportGroups,
+      selectedExportGroups,
+      setNotesTodosSheetOpen,
+      setDuplicatesSheetOpen,
+      setEnrichmentHealthSheetOpen,
+      handleImportOpenChange,
+      handleExportOpenChange,
+      handleToggleImportGroup,
+      handleToggleExportGroup,
+      openImportSheet,
+      openExportSheet,
+      openDuplicatesSheet,
+      openEnrichmentHealthSheet,
+    }),
+    [
+      duplicatesSheetOpen,
+      enrichmentHealthSheetOpen,
+      exportSheetOpen,
+      handleExportOpenChange,
+      handleImportOpenChange,
+      handleToggleExportGroup,
+      handleToggleImportGroup,
+      importSheetOpen,
+      notesTodosSheetOpen,
+      openDuplicatesSheet,
+      openEnrichmentHealthSheet,
+      openExportSheet,
+      openImportSheet,
+      selectedExportGroups,
+      selectedImportGroups,
+    ],
+  )
 }

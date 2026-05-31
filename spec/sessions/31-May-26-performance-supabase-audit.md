@@ -38,6 +38,19 @@
 - Verified follow-up patch with `pnpm typecheck` and `pnpm build`.
 - Added lightweight route-level loading boundaries for `login` and `reset-password`.
 - Verified final Next.js follow-up with `pnpm typecheck` and `pnpm build`.
+- Started the `react-performance-optimization` audit phase and created `spec/performance-supabase-audit/react-performance/loading.md`.
+- Completed first-pass React performance analysis at `spec/performance-supabase-audit/react-performance/analysis-pass-1.md`.
+- Completed first-pass React performance report at `spec/performance-supabase-audit/react-performance/report-pass-1.md`.
+- Completed React performance re-analysis at `spec/performance-supabase-audit/react-performance/analysis-pass-2.md`.
+- Completed final React performance report at `spec/performance-supabase-audit/react-performance/report-final.md`.
+- Started React execution step 1 for command search state ownership and created `spec/performance-supabase-audit/react-performance/execution-plan.md`.
+- Verified React execution step 1 with `pnpm typecheck` and `pnpm build`.
+- Verified React execution step 2 with `pnpm typecheck` and `pnpm build`.
+- Fixed a list-view hit-area regression in `components/dashboard/SortableBookmark.tsx` so title and URL anchors no longer stay clickable across the reserved text lane outside the visible truncated text.
+- Verified the list-view hit-area fix with `pnpm typecheck` and `pnpm build`.
+- Verified React execution step 3 with `pnpm typecheck` and `pnpm build`.
+- Closed the React performance execution phase after the approved low-risk patches.
+- Explicitly deferred virtualization for this phase because the previous implementation had already been removed after introducing laggy scroll behavior and visible gaps between bookmarks.
 
 ---
 

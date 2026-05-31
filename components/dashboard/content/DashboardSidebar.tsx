@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { RepeatIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import dynamic from "next/dynamic"
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { ALL_ICONS_MAP } from "@/lib/hugeicons-list"
@@ -75,7 +75,7 @@ interface DashboardSidebarProps {
   groupControls: DashboardGroupControlsAdapter
 }
 
-export function DashboardSidebar({
+export const DashboardSidebar = memo(function DashboardSidebar({
   library,
   groupControls,
 }: DashboardSidebarProps) {
@@ -536,4 +536,4 @@ export function DashboardSidebar({
       {sidebarDialogs}
     </>
   )
-}
+})

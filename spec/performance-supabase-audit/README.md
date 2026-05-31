@@ -32,7 +32,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Order | Skill | Concern Folder | Status | Current Artifact |
 | --- | --- | --- | --- | --- |
 | 1 | `nextjs-performance` | `nextjs-performance/` | `closed` | `nextjs-performance/execution-plan.md` |
-| 2 | `react-performance-optimization` | `react-performance/` | `pending` | None |
+| 2 | `react-performance-optimization` | `react-performance/` | `closed` | `react-performance/execution-plan.md` |
 | 3 | `refactor-method-complexity-reduce` | `method-complexity/` | `pending` | None |
 | 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `pending` | None |
 | 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `pending` | None |
@@ -61,6 +61,15 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Follow-up first skill patch | `done` | Deferred idle icon-catalog consumers in dashboard sidebar edit/create and drag overlay paths. |
 | Follow-up second skill patch | `done` | Added auth route loading boundaries for `login` and `reset-password`. |
 | Close first skill execution | `done` | `nextjs-performance` is closed; remaining work is browser validation and cross-skill follow-up. |
+| Begin second skill | `done` | `react-performance-optimization` loading artifact created at `react-performance/loading.md`. |
+| Analyze second skill | `done` | First React performance analysis artifact created at `react-performance/analysis-pass-1.md`. |
+| Report second skill | `done` | First React performance report created at `react-performance/report-pass-1.md`. |
+| Re-analyze second skill | `done` | Refined React performance findings in `react-performance/analysis-pass-2.md`. |
+| Final report second skill | `done` | Final React performance report created at `react-performance/report-final.md`; execution awaits approval. |
+| Execute second skill step 1 | `done` | Command search state ownership patch verified with `pnpm typecheck` and `pnpm build`. |
+| Execute second skill step 2 | `done` | Board display transform cleanup verified with `pnpm typecheck` and `pnpm build`. |
+| Execute second skill step 3 | `done` | Shell and adapter stability patch verified with `pnpm typecheck` and `pnpm build`. |
+| Close second skill execution | `done` | React execution is closed after the approved low-risk patches; virtualization stays deferred because the previous implementation regressed scroll quality and introduced row gaps. |
 
 ## Execution Rules
 

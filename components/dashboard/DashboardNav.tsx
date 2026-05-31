@@ -4,7 +4,7 @@ import { Note01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import RewayLogo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import type { BookmarkRow } from "@/lib/supabase/queries"
@@ -62,7 +62,7 @@ interface DashboardNavProps {
   }
 }
 
-export function DashboardNav({
+export const DashboardNav = memo(function DashboardNav({
   navigation,
   navigationControls,
   notesTodos,
@@ -286,4 +286,4 @@ export function DashboardNav({
       </nav>
     </>
   )
-}
+})

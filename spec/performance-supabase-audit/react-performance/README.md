@@ -6,7 +6,7 @@
 
 ## Phase
 
-`pending`
+`closed`
 
 ## Scope
 
@@ -19,8 +19,9 @@
 ## Artifacts
 
 - `loading.md`
-- `analysis-pass-1.md`
-- `report-pass-1.md`
-- `analysis-pass-2.md`
-- `report-final.md`
+- `analysis-pass-1.md` - created
+- `report-pass-1.md` - created
+- `analysis-pass-2.md` - created
+- `report-final.md` - created
+- `execution-plan.md` - created
 - `execution-plan.md`

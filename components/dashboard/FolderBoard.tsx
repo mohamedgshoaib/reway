@@ -21,6 +21,10 @@ import { useFolderKeyboardNav } from "./folder-board/useFolderKeyboardNav"
 import { QuickGlanceDialog } from "./QuickGlanceDialog"
 import { SortableBookmarkIcon } from "./SortableBookmarkIcon"
 
+function getBookmarkDisplayDomain(bookmark: BookmarkRow) {
+  return bookmark.domain || getDomain(bookmark.url)
+}
+
 interface FolderBoardProps {
   bookmarks: BookmarkRow[]
   groups: GroupRow[]
@@ -252,6 +256,7 @@ export const FolderBoard = memo(function FolderBoard({
     (group: GroupRow) => {
       const groupBookmarks = bookmarkBuckets[group.id] ?? []
       const isSelectedFolder = group.id === selectedFolderId
+      const groupBookmarkIds = groupBookmarks.map((bookmark) => bookmark.id)
 
       return (
         <AccordionItem
@@ -282,40 +287,44 @@ export const FolderBoard = memo(function FolderBoard({
               ) : (
                 <SortableContext
                   id={group.id}
-                  items={groupBookmarks.map((bookmark) => bookmark.id)}
+                  items={groupBookmarkIds}
                   strategy={rectSortingStrategy}
                 >
                   <div
                     className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(120px,1fr))]"
                     ref={isSelectedFolder ? activeGridRef : undefined}
                   >
-                    {groupBookmarks.map((bookmark, index) => (
-                      <SortableBookmarkIcon
-                        key={bookmark.id}
-                        id={bookmark.id}
-                        title={getDisplayTitle({
-                          title: bookmark.title,
-                          url: bookmark.url,
-                          normalizedUrl: bookmark.normalized_url,
-                          domain: getDomain(bookmark.url),
-                        })}
-                        url={bookmark.url}
-                        domain={getDomain(bookmark.url)}
-                        status={bookmark.status ?? "ready"}
-                        favicon={bookmark.favicon_url || ""}
-                        isEnriching={Boolean(bookmark.is_enriching)}
-                        isSelected={isSelectedFolder && selectedBookmarkIndex === index}
-                        selectionMode={selectionMode}
-                        isSelectionChecked={stableSelectedIds.has(bookmark.id)}
-                        dragDisabled={isMostVisitedGroup}
-                        onToggleSelection={onToggleSelection}
-                        onEnterSelectionMode={onEnterSelectionMode}
-                        onDelete={onDeleteBookmark}
-                        onRefresh={handleRefreshItem}
-                        onEdit={handleEditItem}
-                        onPreview={handlePreviewItem}
-                      />
-                    ))}
+                    {groupBookmarks.map((bookmark, index) => {
+                      const domain = getBookmarkDisplayDomain(bookmark)
+
+                      return (
+                        <SortableBookmarkIcon
+                          key={bookmark.id}
+                          id={bookmark.id}
+                          title={getDisplayTitle({
+                            title: bookmark.title,
+                            url: bookmark.url,
+                            normalizedUrl: bookmark.normalized_url,
+                            domain,
+                          })}
+                          url={bookmark.url}
+                          domain={domain}
+                          status={bookmark.status ?? "ready"}
+                          favicon={bookmark.favicon_url || ""}
+                          isEnriching={Boolean(bookmark.is_enriching)}
+                          isSelected={isSelectedFolder && selectedBookmarkIndex === index}
+                          selectionMode={selectionMode}
+                          isSelectionChecked={stableSelectedIds.has(bookmark.id)}
+                          dragDisabled={isMostVisitedGroup}
+                          onToggleSelection={onToggleSelection}
+                          onEnterSelectionMode={onEnterSelectionMode}
+                          onDelete={onDeleteBookmark}
+                          onRefresh={handleRefreshItem}
+                          onEdit={handleEditItem}
+                          onPreview={handlePreviewItem}
+                        />
+                      )
+                    })}
                   </div>
                 </SortableContext>
               )}

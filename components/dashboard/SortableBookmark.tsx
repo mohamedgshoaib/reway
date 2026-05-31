@@ -165,6 +165,7 @@ export const SortableBookmark = memo(function SortableBookmark({
     : "min-w-0 flex-1 max-w-[20rem]"
   const titleRowClass = "h-5 w-full"
   const metaRowClass = "h-4 w-full"
+  const truncatedTextClass = "inline-block max-w-full truncate align-top"
 
   useEffect(() => {
     const timerRef = copyResetTimerRef
@@ -269,12 +270,12 @@ export const SortableBookmark = memo(function SortableBookmark({
               <div className={textBlockClass}>
                 <div className={titleRowClass}>
                   {status === "pending" ? (
-                    <span className="block w-full truncate text-sm font-semibold">
+                    <span className={`${truncatedTextClass} text-sm font-semibold`}>
                       {title || "Loading"}
                     </span>
                   ) : (
                     <a
-                      className="block w-full truncate text-sm font-semibold cursor-pointer text-foreground group-hover:text-primary! hover:text-primary! transition-colors duration-200"
+                      className={`${truncatedTextClass} text-sm font-semibold cursor-pointer text-foreground group-hover:text-primary! hover:text-primary! transition-colors duration-200`}
                       href={url}
                       target="_blank"
                       rel="noreferrer"
@@ -295,16 +296,16 @@ export const SortableBookmark = memo(function SortableBookmark({
                 </div>
                 <div className={metaRowClass}>
                   {status === "pending" ? (
-                    <span className="block w-full truncate text-xs font-medium text-muted-foreground">
+                    <span className={`${truncatedTextClass} text-xs font-medium text-muted-foreground`}>
                       {isEnriching ? "Fetching details" : "Pending"}
                     </span>
                   ) : isEnriching ? (
-                    <span className="block w-full truncate text-xs font-medium text-muted-foreground">
+                    <span className={`${truncatedTextClass} text-xs font-medium text-muted-foreground`}>
                       Refreshing details
                     </span>
                   ) : (
                     <a
-                      className="block w-full truncate text-xs font-medium cursor-pointer text-muted-foreground group-hover:text-muted-foreground"
+                      className={`${truncatedTextClass} text-xs font-medium cursor-pointer text-muted-foreground group-hover:text-muted-foreground`}
                       href={url}
                       target="_blank"
                       rel="noreferrer"

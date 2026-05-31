@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { checkDuplicateGroup, toggleHideFromAllBookmarks } from "@/app/dashboard/actions/groups"
 import { generateRankBetween } from "@/lib/ranking"
@@ -358,8 +358,8 @@ export function useGroupActions({
     [groups, setGroups],
   )
 
-  return {
-    groupControls: {
+  const groupControls = useMemo(
+    () => ({
       editingGroupId,
       editGroupName,
       setEditGroupName,
@@ -384,7 +384,30 @@ export function useGroupActions({
       startEditingGroup,
       cancelEditingGroup,
       cancelInlineCreateGroup,
-    },
+    }),
+    [
+      cancelEditingGroup,
+      cancelInlineCreateGroup,
+      editGroupColor,
+      editGroupIcon,
+      editGroupName,
+      editingGroupId,
+      handleDeleteGroup,
+      handleInlineCreateGroup,
+      handleSidebarGroupUpdate,
+      handleToggleHideFromAllBookmarks,
+      isCreatingGroup,
+      isInlineCreating,
+      isUpdatingGroup,
+      newGroupColor,
+      newGroupIcon,
+      newGroupName,
+      startEditingGroup,
+    ],
+  )
+
+  return {
+    groupControls,
     handleGroupCreated,
     handleUpdateGroup,
     handleSidebarGroupUpdate,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { memo, useCallback, useMemo } from "react"
 import { createNoGroupRow, NO_GROUP_ID } from "@/lib/system-groups"
 import { BookmarkBoard } from "./BookmarkBoard"
 import { CommandBar } from "./CommandBar"
@@ -28,7 +28,7 @@ interface DashboardLayoutProps {
   isMac: boolean
 }
 
-export function DashboardLayout({
+export const DashboardLayout = memo(function DashboardLayout({
   navigation,
   navigationControls,
   library,
@@ -43,6 +43,46 @@ export function DashboardLayout({
     return [...navigation.groups, createNoGroupRow()]
   }, [library.bookmarks, navigation.groups])
 
+  const sidebarLibrary = useMemo(
+    () => ({
+      groups: groupsWithNoGroup,
+      bookmarks: library.bookmarks,
+      activeGroupId: library.activeGroupId,
+      setActiveGroupId: library.setActiveGroupId,
+      layoutDensity: library.layoutDensity,
+      handleOpenGroup: navigation.openGroup,
+      reorderGroups: navigation.reorderGroups,
+    }),
+    [
+      groupsWithNoGroup,
+      library.activeGroupId,
+      library.bookmarks,
+      library.layoutDensity,
+      library.setActiveGroupId,
+      navigation.openGroup,
+      navigation.reorderGroups,
+    ],
+  )
+
+  const enrichmentHealth = useMemo(
+    () => ({
+      bookmarks: library.bookmarks,
+      onRefreshBookmark: library.handleRefreshBookmark,
+      onLoadBookmarkDetails: library.handleLoadBookmarkDetails,
+      onSelectBookmarks: selection.handleSelectBookmarks,
+    }),
+    [
+      library.bookmarks,
+      library.handleLoadBookmarkDetails,
+      library.handleRefreshBookmark,
+      selection.handleSelectBookmarks,
+    ],
+  )
+
+  const handleEnterSelectionMode = useCallback(() => {
+    selection.setSelectionMode(true)
+  }, [selection.setSelectionMode])
+
   return (
     <>
       <DashboardOnboarding />
@@ -52,18 +92,7 @@ export function DashboardLayout({
         }`}
       >
         <div className="relative flex h-[calc(100dvh-3rem)] flex-col overflow-hidden">
-          <DashboardSidebar
-            library={{
-              groups: groupsWithNoGroup,
-              bookmarks: library.bookmarks,
-              activeGroupId: library.activeGroupId,
-              setActiveGroupId: library.setActiveGroupId,
-              layoutDensity: library.layoutDensity,
-              handleOpenGroup: navigation.openGroup,
-              reorderGroups: navigation.reorderGroups,
-            }}
-            groupControls={navigation.groupControls}
-          />
+          <DashboardSidebar library={sidebarLibrary} groupControls={navigation.groupControls} />
 
           {notesTodos.showNotesTodos && (
             <DashboardNotesTodosSidebar
@@ -88,12 +117,7 @@ export function DashboardLayout({
               navigation={navigation}
               navigationControls={navigationControls}
               notesTodos={notesTodos}
-              enrichmentHealth={{
-                bookmarks: library.bookmarks,
-                onRefreshBookmark: library.handleRefreshBookmark,
-                onLoadBookmarkDetails: library.handleLoadBookmarkDetails,
-                onSelectBookmarks: selection.handleSelectBookmarks,
-              }}
+              enrichmentHealth={enrichmentHealth}
             />
             <div className="pt-4 md:pt-6">
               <CommandBar
@@ -134,7 +158,7 @@ export function DashboardLayout({
                     selectionMode={selection.selectionMode}
                     selectedIds={selection.selectedIds}
                     onToggleSelection={selection.handleToggleSelection}
-                    onEnterSelectionMode={() => selection.setSelectionMode(true)}
+                    onEnterSelectionMode={handleEnterSelectionMode}
                     onKeyboardContextChange={library.setKeyboardContext}
                     layoutDensity={library.layoutDensity}
                     folderHeaderTint={library.folderHeaderTint}
@@ -154,7 +178,7 @@ export function DashboardLayout({
                     selectionMode={selection.selectionMode}
                     selectedIds={selection.selectedIds}
                     onToggleSelection={selection.handleToggleSelection}
-                    onEnterSelectionMode={() => selection.setSelectionMode(true)}
+                    onEnterSelectionMode={handleEnterSelectionMode}
                     layoutDensity={library.layoutDensity}
                   />
                 )}
@@ -177,4 +201,4 @@ export function DashboardLayout({
       </div>
     </>
   )
-}
+})

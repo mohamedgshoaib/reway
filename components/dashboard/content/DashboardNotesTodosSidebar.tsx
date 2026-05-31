@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { memo, useEffect, useMemo, useRef, useState } from "react"
 import type { NoteRow, TodoRow } from "@/lib/supabase/queries"
 import { cn } from "@/lib/utils"
 import { NotesSection } from "./notes-todos/NotesSection"
@@ -26,7 +26,7 @@ interface DashboardNotesTodosSidebarProps {
   layoutDensity?: "compact" | "extended"
 }
 
-export function DashboardNotesTodosSidebar({
+export const DashboardNotesTodosSidebar = memo(function DashboardNotesTodosSidebar({
   notes,
   todos,
   onCreateNote,
@@ -295,4 +295,4 @@ export function DashboardNotesTodosSidebar({
       ) : null}
     </>
   )
-}
+})
