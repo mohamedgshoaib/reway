@@ -37,7 +37,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-plan.md` |
 | 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-known-pitfalls.md` |
 | 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-plan.md` |
-| 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `pending` | None |
+| 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-advanced-troubleshooting.md` |
 | 8 | `supabase-load-scale` | `supabase-scale-reliability/` | `pending` | None |
 | 9 | `supabase-reliability-patterns` | `supabase-scale-reliability/` | `pending` | None |
 
@@ -112,6 +112,13 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Execute sixth skill step 3 | `done` | Removed redundant extension route insert broadcasts and verified with `pnpm typecheck`, `pnpm build`, trigger inspection, and publication inspection. |
 | Execute sixth skill step 4 | `done` | Trimmed extension bookmark GET payload by removing unused `description` and verified with `pnpm typecheck` and `pnpm build`. |
 | Close sixth skill execution | `done` | Supabase performance-tuning phase is closed; visit-only suppression and full-list sort index remain deferred pending freshness/larger-account evidence. |
+| Begin seventh skill | `done` | `supabase-advanced-troubleshooting` loading artifact created at `supabase-performance-diagnostics/loading-advanced-troubleshooting.md`; no app code or Supabase state changed. |
+| Analyze seventh skill | `done` | Read-only advanced diagnostics created at `supabase-performance-diagnostics/analysis-advanced-troubleshooting-pass-1.md`; private Realtime authorization failures are the main first-pass candidate. |
+| Report seventh skill | `done` | First-pass advanced troubleshooting report created at `supabase-performance-diagnostics/report-advanced-troubleshooting-pass-1.md`; execution is not ready until Realtime auth timing is re-analyzed. |
+| Re-analyze seventh skill | `done` | Re-analysis confirmed a code-only candidate: await Realtime auth before private Broadcast channel subscription in `useDashboardRealtime`. |
+| Final report seventh skill | `done` | Final advanced troubleshooting report created at `supabase-performance-diagnostics/report-advanced-troubleshooting-final.md`; execution awaits approval. |
+| Execute seventh skill step 1 | `done` | `useDashboardRealtime` now awaits Realtime auth before private Broadcast subscription and was verified with `pnpm typecheck` and `pnpm build`. |
+| Close seventh skill execution | `done` | Supabase advanced-troubleshooting phase is closed; post-patch Realtime logs showed fresh Broadcast initialization without new private-channel unauthorized bookmark/group messages in the sampled window. |
 
 ## Execution Rules
 

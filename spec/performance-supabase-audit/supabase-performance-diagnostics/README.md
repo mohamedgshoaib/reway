@@ -9,7 +9,7 @@
 
 `supabase-performance-tuning` is `closed`.
 
-`supabase-advanced-troubleshooting` is `pending`.
+`supabase-advanced-troubleshooting` is `closed`.
 
 ## Scope
 
@@ -26,4 +26,10 @@
 - `report-pass-1.md`
 - `analysis-pass-2.md`
 - `report-final.md` - current
-- `execution-plan.md` - current
+- `execution-plan.md`
+- `loading-advanced-troubleshooting.md` - current
+- `analysis-advanced-troubleshooting-pass-1.md` - current
+- `report-advanced-troubleshooting-pass-1.md` - current
+- `analysis-advanced-troubleshooting-pass-2.md` - current
+- `report-advanced-troubleshooting-final.md` - current
+- `execution-advanced-troubleshooting.md` - current

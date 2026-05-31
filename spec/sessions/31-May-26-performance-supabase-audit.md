@@ -101,6 +101,16 @@
 - Started Supabase performance execution step 4 by removing unused `description` from the extension bookmark GET select list.
 - Verified Supabase performance step 4 with `pnpm typecheck` and `pnpm build`.
 - Closed the `supabase-performance-tuning` phase with visit-only suppression and full-list sort indexes intentionally deferred.
+- Started the `supabase-advanced-troubleshooting` audit phase and created `spec/performance-supabase-audit/supabase-performance-diagnostics/loading-advanced-troubleshooting.md`.
+- Completed first-pass Supabase advanced troubleshooting analysis at `spec/performance-supabase-audit/supabase-performance-diagnostics/analysis-advanced-troubleshooting-pass-1.md`.
+- Completed first-pass Supabase advanced troubleshooting report at `spec/performance-supabase-audit/supabase-performance-diagnostics/report-advanced-troubleshooting-pass-1.md`.
+- Completed Supabase advanced troubleshooting re-analysis at `spec/performance-supabase-audit/supabase-performance-diagnostics/analysis-advanced-troubleshooting-pass-2.md`.
+- Completed final Supabase advanced troubleshooting report at `spec/performance-supabase-audit/supabase-performance-diagnostics/report-advanced-troubleshooting-final.md`; execution awaits approval.
+- Executed Supabase advanced troubleshooting step 1 in `components/dashboard/content/useDashboardRealtime.ts`, awaiting Realtime auth before private Broadcast subscription and adding effect cancellation protection.
+- Verified Supabase advanced troubleshooting step 1 with `pnpm typecheck`, `pnpm build`, and read-only publication/trigger inspection.
+- Ran `git diff --check` after the Realtime auth patch; no whitespace errors were reported. Realtime logs were sampled, but there was no fresh post-patch dashboard join evidence, so operational log validation remains inconclusive until the dashboard is opened.
+- Rechecked Realtime logs after fresh post-patch activity; a new Broadcast replication initialization appeared without new private-channel unauthorized bookmark/group messages above it in the returned window.
+- Closed the `supabase-advanced-troubleshooting` phase from a code and Supabase diagnostics standpoint.
 
 ---
 
@@ -155,6 +165,13 @@
 - Supabase performance execution is now at the next approval gate: decide whether to do the low-priority extension bookmark GET payload trim, or close with visit-only suppression and full-list sort indexes deferred.
 - Supabase performance execution step 4 is code-only payload cleanup for the extension fallback bookmark list route.
 - Supabase performance-tuning phase is closed from a code/database-change standpoint; browser/manual realtime sync validation remains the validation gap.
+- Supabase advanced-troubleshooting phase has started in `loading`; no app code, schema, data, migration, index, publication, trigger, RLS policy, function, or Supabase state change has been made.
+- Supabase advanced-troubleshooting first-pass analysis found no live lock, transaction, connection, advisor, Edge Function, or stuck enrichment issue; repeated private Realtime authorization failures are the main candidate for reporting.
+- Supabase advanced-troubleshooting first-pass report ranks the private Realtime auth race as P1 and treats cumulative Realtime counters / historical `order_index` stats as non-execution caveats pending re-analysis.
+- Supabase advanced-troubleshooting re-analysis confirmed the likely low-risk execution candidate: await Realtime auth before subscribing to private Broadcast channels in `useDashboardRealtime`, without changing RLS, channel topics, triggers, or publication state.
+- Supabase advanced-troubleshooting final report recommends one code-only execution candidate: await Realtime auth before private Broadcast subscription in `useDashboardRealtime`; no database, policy, publication, or trigger change is recommended.
+- Supabase advanced-troubleshooting execution step 1 is code-only; it changes private channel subscription timing only and leaves RLS, triggers, publication state, and extension behavior unchanged.
+- Supabase advanced-troubleshooting phase is closed; browser/manual realtime interaction checks remain useful optional validation, not an open execution candidate.
 
 ---
 

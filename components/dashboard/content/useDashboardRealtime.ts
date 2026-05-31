@@ -45,69 +45,83 @@ export function useDashboardRealtime({
 }: UseDashboardRealtimeOptions) {
   useEffect(() => {
     const supabase = createClient()
-    supabase.realtime.setAuth()
+    let isCancelled = false
+    let bookmarksChannel: ReturnType<typeof supabase.channel> | null = null
+    let groupsChannel: ReturnType<typeof supabase.channel> | null = null
 
-    const bookmarksChannel = supabase
-      .channel(`user:${userId}:bookmarks`, { config: { private: true } })
-      .on("broadcast", { event: "INSERT" }, (payload) => {
-        const nextRow = payload.payload as BookmarkRow | undefined
-        if (!nextRow) return
-        setBookmarks((prev) => {
-          if (prev.some((b) => b.id === nextRow.id)) return prev
-          const normalized = normalizeBookmark(nextRow)
-          if (!normalized) return prev
-          return sortBookmarks([normalized, ...prev])
-        })
-      })
-      .on("broadcast", { event: "UPDATE" }, (payload) => {
-        const nextRow = payload.payload as BookmarkRow | undefined
-        if (!nextRow) return
-        setBookmarks((prev) => {
-          const existingIndex = prev.findIndex((b) => b.id === nextRow.id)
-          if (existingIndex === -1) return prev
-          const normalized = normalizeBookmark(nextRow, prev[existingIndex])
-          if (!normalized) return prev
-          const updated = [...prev]
-          updated[existingIndex] = normalized
-          return sortBookmarks(updated)
-        })
-      })
-      .on("broadcast", { event: "DELETE" }, (payload) => {
-        const oldRow = payload.payload as { id: string } | undefined
-        if (!oldRow) return
-        setBookmarks((prev) => prev.filter((item) => item.id !== oldRow.id))
-      })
-      .subscribe()
+    async function subscribeToRealtime() {
+      await supabase.realtime.setAuth()
+      if (isCancelled) return
 
-    const groupsChannel = supabase
-      .channel(`user:${userId}:groups`, { config: { private: true } })
-      .on("broadcast", { event: "INSERT" }, (payload) => {
-        const nextRow = payload.payload as GroupRow | undefined
-        if (!nextRow?.name?.trim()) return
-        setGroups((prev) => {
-          if (prev.some((g) => g.id === nextRow.id)) return prev
-          return sortGroups([nextRow, ...prev])
+      bookmarksChannel = supabase
+        .channel(`user:${userId}:bookmarks`, { config: { private: true } })
+        .on("broadcast", { event: "INSERT" }, (payload) => {
+          const nextRow = payload.payload as BookmarkRow | undefined
+          if (!nextRow) return
+          setBookmarks((prev) => {
+            if (prev.some((b) => b.id === nextRow.id)) return prev
+            const normalized = normalizeBookmark(nextRow)
+            if (!normalized) return prev
+            return sortBookmarks([normalized, ...prev])
+          })
         })
-      })
-      .on("broadcast", { event: "UPDATE" }, (payload) => {
-        const nextRow = payload.payload as GroupRow | undefined
-        if (!nextRow) return
-        setGroups((prev) =>
-          sortGroups(prev.map((item) => (item.id === nextRow.id ? nextRow : item))),
-        )
-      })
-      .on("broadcast", { event: "DELETE" }, (payload) => {
-        const oldRow = payload.payload as GroupRow | undefined
-        if (!oldRow) return
-        setGroups((prev) => prev.filter((item) => item.id !== oldRow.id))
-      })
-      .subscribe()
+        .on("broadcast", { event: "UPDATE" }, (payload) => {
+          const nextRow = payload.payload as BookmarkRow | undefined
+          if (!nextRow) return
+          setBookmarks((prev) => {
+            const existingIndex = prev.findIndex((b) => b.id === nextRow.id)
+            if (existingIndex === -1) return prev
+            const normalized = normalizeBookmark(nextRow, prev[existingIndex])
+            if (!normalized) return prev
+            const updated = [...prev]
+            updated[existingIndex] = normalized
+            return sortBookmarks(updated)
+          })
+        })
+        .on("broadcast", { event: "DELETE" }, (payload) => {
+          const oldRow = payload.payload as { id: string } | undefined
+          if (!oldRow) return
+          setBookmarks((prev) => prev.filter((item) => item.id !== oldRow.id))
+        })
+        .subscribe()
+
+      groupsChannel = supabase
+        .channel(`user:${userId}:groups`, { config: { private: true } })
+        .on("broadcast", { event: "INSERT" }, (payload) => {
+          const nextRow = payload.payload as GroupRow | undefined
+          if (!nextRow?.name?.trim()) return
+          setGroups((prev) => {
+            if (prev.some((g) => g.id === nextRow.id)) return prev
+            return sortGroups([nextRow, ...prev])
+          })
+        })
+        .on("broadcast", { event: "UPDATE" }, (payload) => {
+          const nextRow = payload.payload as GroupRow | undefined
+          if (!nextRow) return
+          setGroups((prev) =>
+            sortGroups(prev.map((item) => (item.id === nextRow.id ? nextRow : item))),
+          )
+        })
+        .on("broadcast", { event: "DELETE" }, (payload) => {
+          const oldRow = payload.payload as GroupRow | undefined
+          if (!oldRow) return
+          setGroups((prev) => prev.filter((item) => item.id !== oldRow.id))
+        })
+        .subscribe()
+    }
+
+    void subscribeToRealtime()
 
     return () => {
-      void bookmarksChannel.unsubscribe()
-      void groupsChannel.unsubscribe()
-      supabase.removeChannel(bookmarksChannel)
-      supabase.removeChannel(groupsChannel)
+      isCancelled = true
+      if (bookmarksChannel) {
+        void bookmarksChannel.unsubscribe()
+        supabase.removeChannel(bookmarksChannel)
+      }
+      if (groupsChannel) {
+        void groupsChannel.unsubscribe()
+        supabase.removeChannel(groupsChannel)
+      }
     }
   }, [setBookmarks, setGroups, sortBookmarks, sortGroups, userId])
 
