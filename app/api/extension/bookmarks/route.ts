@@ -6,7 +6,6 @@ import {
 import { listBookmarksForExtension } from "@/lib/library/server/reads"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import {
-  broadcastExtensionInsert,
   getAuthenticatedExtensionUserId,
   isDuplicateConstraintError,
   toExtensionErrorResponse,
@@ -87,8 +86,6 @@ export async function POST(request: Request) {
       console.error("Failed to create bookmark:", error)
       return jsonResponse({ error: "Failed to create bookmark" }, { status: 500, request })
     }
-
-    await broadcastExtensionInsert(userId, "bookmarks", data)
 
     return jsonResponse({ id: data.id, bookmark: data }, { request })
   } catch (error) {

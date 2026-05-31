@@ -87,6 +87,20 @@
 - Executed approved Supabase known-pitfalls step 3 in `package.json`, adding a `types:supabase` script without regenerating `lib/supabase/database.types.ts`.
 - Verified Supabase known-pitfalls step 3 with `pnpm typecheck` and `pnpm build`.
 - Closed the `supabase-known-pitfalls` phase without applying the drafted default-privileges SQL because the remaining item is future-facing governance hardening and not worth forcing now for a solo-dev workflow.
+- Started the `supabase-performance-tuning` audit phase and created `spec/performance-supabase-audit/supabase-performance-diagnostics/loading.md`.
+- Completed first-pass Supabase performance analysis at `spec/performance-supabase-audit/supabase-performance-diagnostics/analysis-pass-1.md`.
+- Completed first-pass Supabase performance report at `spec/performance-supabase-audit/supabase-performance-diagnostics/report-pass-1.md`.
+- Completed Supabase performance re-analysis at `spec/performance-supabase-audit/supabase-performance-diagnostics/analysis-pass-2.md`.
+- Completed final Supabase performance report at `spec/performance-supabase-audit/supabase-performance-diagnostics/report-final.md`; execution awaits approval.
+- Started Supabase performance execution step 1 in `components/dashboard/content/useDashboardRealtime.ts`, removing the bookmark `postgres_changes` client subscription while keeping private Broadcast handlers and the extension bridge.
+- Verified Supabase performance execution step 1 with `pnpm typecheck` and `pnpm build`.
+- Executed Supabase performance step 2 by applying migration `20260531145415_drop_realtime_publication_tables`, removing `public.bookmarks` and `public.groups` from native `supabase_realtime`.
+- Verified Supabase performance step 2 with a read-only publication query returning zero rows for those tables and performance advisors returning no lints.
+- Started Supabase performance execution step 3 by removing redundant manual extension route insert broadcasts from the bookmark/group extension routes.
+- Verified Supabase performance step 3 with `pnpm typecheck`, `pnpm build`, trigger inspection, and publication inspection.
+- Started Supabase performance execution step 4 by removing unused `description` from the extension bookmark GET select list.
+- Verified Supabase performance step 4 with `pnpm typecheck` and `pnpm build`.
+- Closed the `supabase-performance-tuning` phase with visit-only suppression and full-list sort indexes intentionally deferred.
 
 ---
 
@@ -129,6 +143,18 @@
 - Supabase known-pitfalls execution step 2 is complete; the code-only create-return select cleanup passed verification, and the next remaining candidate is the `types:supabase` script unless the user wants to apply the drafted default-privileges SQL first.
 - Supabase known-pitfalls execution step 3 is complete; the low-risk code/process work is finished, and the only remaining candidate in this skill is the approval-gated default-privileges SQL proposal.
 - Supabase known-pitfalls phase is now closed; future `public` table work should explicitly decide grants alongside RLS/policies instead of relying on old defaults, but no live default-privileges change was applied.
+- Supabase performance-tuning phase has started in `loading`; no app code, schema, data, migration, index, extension, or Supabase state changes have been made.
+- First-pass Supabase performance analysis found healthy current read/index/cache baselines, with Realtime/change fan-out and visit-update pressure as the main re-reporting candidates.
+- First-pass Supabase performance report ranks realtime delivery overlap and visit-update fan-out above generic index creation.
+- Supabase performance re-analysis refined the top candidate to a Broadcast-only realtime path; visit-only update suppression is deferred until freshness behavior is explicitly handled.
+- Supabase performance final report recommends code-only Broadcast prep first, then an approval-gated SQL proposal to remove `public.bookmarks` and `public.groups` from native `supabase_realtime`.
+- Supabase performance execution step 1 is code-only prep; no publication, schema, data, migration, index, trigger, or Supabase state change has been applied.
+- Supabase performance execution step 2 changed live publication membership only; trigger-backed private Broadcast remains the canonical realtime path.
+- Supabase performance execution is now at the next approval gate: verify dashboard/extension sync behavior and decide whether to remove redundant manual extension insert broadcasts.
+- Supabase performance execution step 3 is code-only cleanup; trigger-backed private Broadcast remains intact.
+- Supabase performance execution is now at the next approval gate: decide whether to do the low-priority extension bookmark GET payload trim, or close with visit-only suppression and full-list sort indexes deferred.
+- Supabase performance execution step 4 is code-only payload cleanup for the extension fallback bookmark list route.
+- Supabase performance-tuning phase is closed from a code/database-change standpoint; browser/manual realtime sync validation remains the validation gap.
 
 ---
 

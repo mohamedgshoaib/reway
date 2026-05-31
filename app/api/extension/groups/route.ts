@@ -2,7 +2,6 @@ import { createGroupRecord, findDuplicateGroupByName } from "@/lib/library/serve
 import { listGroupsForExtension } from "@/lib/library/server/reads"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import {
-  broadcastExtensionInsert,
   getAuthenticatedExtensionUserId,
   isDuplicateConstraintError,
   toExtensionErrorResponse,
@@ -128,8 +127,6 @@ export async function POST(request: Request) {
       console.error("Failed to create group:", error)
       return jsonResponse({ error: "Failed to create group" }, { status: 500, request })
     }
-
-    await broadcastExtensionInsert(userId, "groups", data)
 
     return jsonResponse({ group: data }, { request })
   } catch (error) {

@@ -36,7 +36,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | 3 | `refactor-method-complexity-reduce` | `method-complexity/` | `closed` | `method-complexity/execution-plan.md` |
 | 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-plan.md` |
 | 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-known-pitfalls.md` |
-| 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `pending` | None |
+| 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-plan.md` |
 | 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `pending` | None |
 | 8 | `supabase-load-scale` | `supabase-scale-reliability/` | `pending` | None |
 | 9 | `supabase-reliability-patterns` | `supabase-scale-reliability/` | `pending` | None |
@@ -102,6 +102,16 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Execute fifth skill step 2 | `done` | Replaced create-return `.select(\"*\")` with explicit select constants in `lib/library/server/capture.ts` and verified with `pnpm typecheck` and `pnpm build`. |
 | Execute fifth skill step 3 | `done` | Added `types:supabase` to `package.json` without regenerating the types file, and verified with `pnpm typecheck` and `pnpm build`. |
 | Close fifth skill execution | `done` | Supabase known-pitfalls phase is closed; the remaining default-privileges SQL is documented as optional future hardening rather than applied. |
+| Begin sixth skill | `done` | `supabase-performance-tuning` loading artifact created at `supabase-performance-diagnostics/loading.md`. |
+| Analyze sixth skill | `done` | First Supabase performance analysis created at `supabase-performance-diagnostics/analysis-pass-1.md`. |
+| Report sixth skill | `done` | First Supabase performance report created at `supabase-performance-diagnostics/report-pass-1.md`. |
+| Re-analyze sixth skill | `done` | Refined Supabase performance findings in `supabase-performance-diagnostics/analysis-pass-2.md`. |
+| Final report sixth skill | `done` | Final Supabase performance report created at `supabase-performance-diagnostics/report-final.md`; execution awaits approval. |
+| Execute sixth skill step 1 | `done` | Dashboard bookmark realtime moved to Broadcast-only client handling and verified with `pnpm typecheck` and `pnpm build`; live publication SQL awaits approval. |
+| Execute sixth skill step 2 | `done` | Removed `public.bookmarks` and `public.groups` from native `supabase_realtime`; publication verification returned zero rows and performance advisors stayed clean. |
+| Execute sixth skill step 3 | `done` | Removed redundant extension route insert broadcasts and verified with `pnpm typecheck`, `pnpm build`, trigger inspection, and publication inspection. |
+| Execute sixth skill step 4 | `done` | Trimmed extension bookmark GET payload by removing unused `description` and verified with `pnpm typecheck` and `pnpm build`. |
+| Close sixth skill execution | `done` | Supabase performance-tuning phase is closed; visit-only suppression and full-list sort index remain deferred pending freshness/larger-account evidence. |
 
 ## Execution Rules
 

@@ -49,40 +49,6 @@ export function useDashboardRealtime({
 
     const bookmarksChannel = supabase
       .channel(`user:${userId}:bookmarks`, { config: { private: true } })
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "bookmarks",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const nextRow = payload.new as BookmarkRow
-            setBookmarks((prev) => {
-              if (prev.some((b) => b.id === nextRow.id)) return prev
-              const normalized = normalizeBookmark(nextRow)
-              if (!normalized) return prev
-              return sortBookmarks([normalized, ...prev])
-            })
-          } else if (payload.eventType === "UPDATE") {
-            const nextRow = payload.new as BookmarkRow
-            setBookmarks((prev) => {
-              const existingIndex = prev.findIndex((b) => b.id === nextRow.id)
-              if (existingIndex === -1) return prev
-              const normalized = normalizeBookmark(nextRow, prev[existingIndex])
-              if (!normalized) return prev
-              const updated = [...prev]
-              updated[existingIndex] = normalized
-              return sortBookmarks(updated)
-            })
-          } else if (payload.eventType === "DELETE") {
-            const oldRow = payload.old as { id: string }
-            setBookmarks((prev) => prev.filter((item) => item.id !== oldRow.id))
-          }
-        },
-      )
       .on("broadcast", { event: "INSERT" }, (payload) => {
         const nextRow = payload.payload as BookmarkRow | undefined
         if (!nextRow) return

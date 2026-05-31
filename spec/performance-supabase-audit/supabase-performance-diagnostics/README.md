@@ -7,7 +7,9 @@
 
 ## Phase
 
-`pending`
+`supabase-performance-tuning` is `closed`.
+
+`supabase-advanced-troubleshooting` is `pending`.
 
 ## Scope
 
@@ -19,9 +21,9 @@
 
 ## Artifacts
 
-- `loading.md`
+- `loading.md` - current
 - `analysis-pass-1.md`
 - `report-pass-1.md`
 - `analysis-pass-2.md`
-- `report-final.md`
-- `execution-plan.md`
+- `report-final.md` - current
+- `execution-plan.md` - current

@@ -13,7 +13,7 @@ export const DASHBOARD_BOOKMARK_DETAIL_SELECT =
   "id,description,og_image_url,image_url,screenshot_url,last_fetched_at,error_reason"
 
 const EXTENSION_BOOKMARK_SELECT =
-  "id, url, title, description, group_id, created_at, order_index, rank"
+  "id, url, title, group_id, created_at, order_index, rank"
 
 const DASHBOARD_GROUP_SELECT = "id,name,icon,color,user_id,created_at,order_index,rank,hide_from_all_bookmarks"
 const EXTENSION_GROUP_SELECT = "id, name, icon, color, order_index, rank, created_at"
