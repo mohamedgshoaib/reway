@@ -39,7 +39,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-plan.md` |
 | 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `closed` | `supabase-performance-diagnostics/execution-advanced-troubleshooting.md` |
 | 8 | `supabase-load-scale` | `supabase-scale-reliability/` | `closed` | `supabase-scale-reliability/execution-load-scale.md` |
-| 9 | `supabase-reliability-patterns` | `supabase-scale-reliability/` | `pending` | None |
+| 9 | `supabase-reliability-patterns` | `supabase-scale-reliability/` | `closed` | `supabase-scale-reliability/execution-reliability.md` |
 
 ## Progress Log
 
@@ -126,6 +126,13 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Final report eighth skill | `done` | Final Supabase load-scale report created at `supabase-scale-reliability/report-final-load-scale.md`; execution awaits approval for import missing-group throttling. |
 | Execute eighth skill | `done` | Import missing-group creation is now throttled with the existing import concurrency helper and verified with `pnpm typecheck` and `pnpm build`. |
 | Close eighth skill execution | `done` | Supabase load-scale phase is closed; no infrastructure, schema, Realtime, dashboard virtualization, or extension parallelization change was needed. |
+| Begin ninth skill | `done` | `supabase-reliability-patterns` loading artifact created at `supabase-scale-reliability/loading-reliability.md`; no code or Supabase state change has been made. |
+| Analyze ninth skill | `done` | First-pass reliability analysis created at `supabase-scale-reliability/analysis-pass-1.md`; dashboard startup outage handling and extension write replay safety are the main candidates. |
+| Report ninth skill | `done` | First-pass reliability report created at `supabase-scale-reliability/report-pass-1.md`; dashboard route error handling is the main execution candidate, while generic write retry is explicitly rejected. |
+| Re-analyze ninth skill | `done` | Re-analysis created at `supabase-scale-reliability/analysis-pass-2.md`; dashboard route error UI is confirmed safe, worker read/preflight transport alignment remains secondary, and bookmark-write retry remains unsafe without idempotency. |
+| Final report ninth skill | `done` | Final reliability report created at `supabase-scale-reliability/report-final-reliability.md`; execution plan recorded at `supabase-scale-reliability/execution-reliability.md` with dashboard route error UI as the primary approval-gated candidate. |
+| Execute ninth skill | `done` | Added `app/dashboard/error.tsx` and verified with `pnpm typecheck` and `pnpm build`; no Supabase state change was made. |
+| Close ninth skill execution | `done` | Supabase reliability-patterns phase is closed after the primary dashboard recovery candidate was executed; worker read/preflight transport alignment remains optional and unapplied. |
 
 ## Execution Rules
 

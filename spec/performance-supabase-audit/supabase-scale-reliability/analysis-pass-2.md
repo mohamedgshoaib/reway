@@ -1,108 +1,144 @@
-# Supabase Load Scale Analysis Pass 2
+# Supabase Reliability Patterns Analysis — Pass 2
 
-## Status
+## Phase
 
 `re-analyzing`
 
-## Re-Analysis Questions
+## What This Pass Answered
 
-1. Is import missing-group throttling worth executing now?
-2. Are full-list dashboard reads currently over the practical scale target?
-3. Is there any remaining low-risk extension read or payload improvement?
-4. Should this phase recommend infrastructure changes?
+This pass narrowed the open questions from `report-pass-1.md`:
 
-## Current Largest-Account Shape
+1. Which extension worker operations are retry-safe or transport-alignment-safe today?
+2. Is bookmark creation idempotent enough to justify retry?
+3. What is the smallest dashboard outage recovery change that matches current Next.js conventions?
 
-Fresh read-only payload estimate for the dashboard bookmark field set:
+## Additional Verification
 
-| Bookmark count | Group count | Bookmark JSON bytes | Approx bytes/bookmark |
-| ---: | ---: | ---: | ---: |
-| `264` | `21` | `168522` | `638.3` |
-| `242` | `5` | `176884` | `730.9` |
-| `158` | `22` | `94443` | `597.7` |
-| `138` | `12` | `91178` | `660.7` |
+Local repo checks:
 
-The existing dashboard scalability decision record scoped the target around `500-1000` bookmarks per user. Current largest accounts are still below that target, and the present payload shape projects roughly:
+- `extension/background.js`
+- `extension/js/api.js`
+- `extension/popup.js`
+- `app/error.tsx`
+- `app/dashboard/page.tsx`
+- `app/dashboard/layout.tsx`
+- `lib/library/server/capture.ts`
+- `lib/dashboard/server/library-mutations.ts`
+- `app/dashboard/actions/bookmarks.ts`
 
-- `1000` bookmarks: about `0.6-0.75 MB` uncompressed bookmark JSON.
-- `5000` bookmarks: about `3-3.7 MB` uncompressed bookmark JSON.
-- `10000` bookmarks: about `6-7.3 MB` uncompressed bookmark JSON.
+Official Next.js docs checked:
 
-This confirms full-list dashboard reads are not an execution item for this phase. They remain the correct future threshold to watch.
+- [Error Handling](https://nextjs.org/docs/app/getting-started/error-handling)
+- [error.js file convention](https://nextjs.org/docs/app/api-reference/file-conventions/error)
 
-## Dashboard Full-List Read Decision
+Confirmed pattern from docs:
 
-Do not execute a dashboard data-shape change in this skill.
+- route-segment `error.tsx` is the supported App Router recovery boundary
+- it must be a Client Component
+- it receives `error` and `reset`
+- `reset()` is the correct recovery path for rerendering a failed segment
 
-Reasons:
+## Safe / Unsafe Reliability Buckets
 
-- Current largest account is below the documented `500-1000` bookmark target.
-- The initial bookmark field set was already trimmed in prior scalability work.
-- Reintroducing virtualization is explicitly out of scope due prior UX regressions.
-- Read replicas do not help same-user dashboard read-after-write semantics on the Free-plan/current setup.
-- Pagination/infinite loading would be a product interaction change, not a scale patch.
+### Safe execution bucket
 
-Carry-forward guardrail:
+#### 1. Dashboard route error UI
 
-- Revisit dashboard read shape when a real account exceeds about `5000` bookmarks or when measured initial dashboard payload consistently crosses about `3 MB` uncompressed bookmark JSON. This is not a hard product limit; it is a signal to re-measure and design.
+**Why it is safe**
 
-## Import Group Creation Decision
+- It is UI-only recovery shaping.
+- It follows the official Next.js route-segment `error.tsx` pattern.
+- It does not alter auth, query shape, mutation semantics, or realtime behavior.
+- The repo already has a global `app/error.tsx`, so a dashboard-scoped version can follow an existing local visual pattern instead of inventing a new one.
 
-Carry import missing-group throttling forward as the first execution candidate.
+**Expected scope**
 
-Current behavior:
+- add `app/dashboard/error.tsx`
+- use `reset()` for retry
+- tailor the message to dashboard load failure rather than generic app failure
+- optionally include a home navigation path, matching existing error-page conventions
 
-- `createMissingImportGroups` creates every missing group with `Promise.all`.
-- Bookmark creation is already capped at concurrency `3`.
-- Enrichment is already capped at concurrency `2`.
+#### 2. Worker-side read/preflight transport alignment
 
-Why it is worth doing:
+**Why it is probably safe**
 
-- It is small and local to import handling.
-- It aligns missing-group creation with the existing import concurrency posture.
-- It reduces peak API/database write pressure for folder-heavy imports.
-- It preserves the capture-first/import UX because normal imports usually have far fewer missing groups than bookmarks.
+The background worker has several requests that are either read-only or preflight-like:
 
-Trade-off:
+- `fetchExtensionGroups(baseUrl)` in `extension/background.js`
+- `fetchGroupBookmarkUrls(baseUrl, groupId)` in `extension/background.js`
 
-- Imports with many missing groups may spend slightly longer in the group-creation stage before bookmark creation starts.
-- This is acceptable because folder creation is setup work and protects the Free/Nano posture from avoidable bursts.
+These can likely adopt the shared popup transport behavior without introducing duplicate-write risk, because they do not create bookmarks. The main benefit would be:
 
-Suggested execution shape:
+- localhost fallback through `getSettings()`
+- consistent structured error parsing
+- consistent auth cache clearing on `401`
 
-- Add a `CREATE_GROUP_CONCURRENCY` cap, likely `3`.
-- Replace the missing-group `Promise.all` with `runWithConcurrency`.
-- Preserve returned group ordering so generated rank assignment and UI insertion remain deterministic.
-- Do not change bookmark create concurrency or enrichment concurrency in this phase.
+**Boundary**
 
-## Extension Read / Payload Decision
+This pass does not yet recommend execution, only that it remains a legitimate candidate for the final report.
 
-No execution candidate.
+### Unsafe execution bucket
 
-Reasons:
+#### 1. Generic retry for bookmark creation
 
-- Extension group reads are already cached in `chrome.storage.local`.
-- Extension bookmark fallback reads use a smaller select list after prior payload trimming.
-- Extension session saves are sequential, which is intentionally DB-calm for Free/Nano constraints.
-- Parallelizing extension session saves belongs, if ever needed, in the reliability phase with retry/backoff/progress design.
+**Why it remains unsafe**
 
-## Infrastructure Decision
+- `createBookmarkRecord(...)` inserts a new row directly.
+- There is no request id, idempotency token, or `onConflict` protection for extension bookmark creation.
+- Duplicate bookmarks are intentionally allowed as a product decision.
+- A network timeout after commit is indistinguishable from a true failure from the client’s perspective.
 
-No infrastructure execution candidate.
+**Implication**
 
-Reasons:
+Retrying these writes blindly can create real duplicate rows and confusing UX.
 
-- Database size is `18 MB`.
-- Current connection use is low relative to `60` max connections.
-- The app does not use direct Postgres clients or an ORM pool.
-- No Storage objects exist.
-- No Edge Functions are deployed.
-- Read replicas and compute upgrades are paid-plan/cost decisions and not justified by current evidence.
+Affected paths:
 
-## Final Report Direction
+- popup save-page bookmark creation
+- session save bookmark creation
+- grabbed-link bookmark creation
+- X/Twitter worker bookmark creation
 
-The final report should recommend one approval-gated code execution candidate:
+#### 2. Offline queue / deferred replay for bookmark writes
 
-1. Throttle import missing-group creation with the existing import concurrency helper.
+**Why it remains unjustified**
 
-Everything else should close as documented guardrails or future evidence thresholds.
+An offline queue would be even riskier than simple retry unless each queued write had a safe dedupe or idempotency story. Right now it would add:
+
+- state persistence complexity
+- replay ambiguity
+- duplicate risk
+- new recovery UX demands
+
+without a proven outage problem large enough to justify that complexity.
+
+## Focused Outcome
+
+The phase now has a tighter shape:
+
+### Strong candidate
+
+- dashboard route error UI via `app/dashboard/error.tsx`
+
+### Plausible but secondary candidate
+
+- align worker read/preflight requests with popup transport behavior
+
+### Explicitly out of scope for execution
+
+- blind retry for bookmark writes
+- offline queue for bookmark writes
+- generic circuit breaker layer around client writes
+- custom SSR retry wrappers for dashboard Supabase reads
+
+## Recommendation For Final Report
+
+Keep the execution queue small:
+
+1. Execute dashboard route error UI first.
+2. Decide whether worker read/preflight transport alignment is worth doing in this phase only if it can stay read-only/preflight-only and avoid touching bookmark write replay semantics.
+3. Close the phase if no additional safe candidate survives that filter.
+
+## Next Step
+
+Move to final `reporting` with a final recommendation set, explicit non-goals, and an approval-gated execution plan that starts with the dashboard route error boundary.

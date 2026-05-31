@@ -20,8 +20,11 @@
 ## Artifacts
 
 - `loading-load-scale.md`
+- `loading-reliability.md`
 - `analysis-pass-1.md`
 - `report-pass-1.md`
 - `analysis-pass-2.md`
+- `report-final-reliability.md`
+- `execution-reliability.md`
 - `report-final-load-scale.md`
 - `execution-load-scale.md`
