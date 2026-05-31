@@ -33,13 +33,13 @@ function handleLinkSaveFailure(err, mode, statusTarget) {
   setStatus(message, "error", statusTarget)
 }
 
-function finishLinkSave(createBtn, statusTarget, duplicateCount) {
+function finishLinkSave(createBtn, statusTarget, conflictCount) {
   createBtn.classList.add("success")
   setLoading(createBtn, false, "Saved")
 
-  if (duplicateCount > 0) {
+  if (conflictCount > 0) {
     setStatus(
-      `Saved links. Skipped ${duplicateCount} duplicate bookmark(s).`,
+      `Saved links. Skipped ${conflictCount} conflicting bookmark save(s).`,
       "success",
       statusTarget,
     )
@@ -186,13 +186,13 @@ export async function createGroupFromLinks(destination) {
       title: link.title || link.url,
       groupId,
     }))
-    const { duplicates, nonDuplicateFailures } = partitionBookmarkBatchResults(results)
+    const { conflicts, nonConflictFailures } = partitionBookmarkBatchResults(results)
 
-    if (nonDuplicateFailures.length > 0) {
-      throw nonDuplicateFailures[0].reason
+    if (nonConflictFailures.length > 0) {
+      throw nonConflictFailures[0].reason
     }
     await chrome.runtime.sendMessage({ type: "clearGrabbedLinks" })
-    finishLinkSave(createBtn, statusTarget, duplicates.length)
+    finishLinkSave(createBtn, statusTarget, conflicts.length)
   } catch (err) {
     showLinkSaveError(createBtn, statusTarget, "")
     handleLinkSaveFailure(err, mode, statusTarget)

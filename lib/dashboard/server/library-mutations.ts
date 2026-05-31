@@ -170,13 +170,18 @@ const normalizePriority = (value: string): TodoPriority => {
 export const notesMutations = {
   async create(formData: { text: string; color?: string | null }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const { data: minOrderData } = await supabase
+      const { data: minOrderData, error: minOrderError } = await supabase
         .from("notes")
         .select("order_index")
         .eq("user_id", userId)
         .order("order_index", { ascending: true })
         .limit(1)
-        .single()
+        .maybeSingle()
+
+      if (minOrderError) {
+        console.error("Error loading note order:", minOrderError)
+        throw new Error("Failed to create note")
+      }
 
       const nextOrderIndex = minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0
 
@@ -283,13 +288,18 @@ export const notesMutations = {
 export const todosMutations = {
   async create(formData: { text: string; priority: TodoPriority | string }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const { data: minOrderData } = await supabase
+      const { data: minOrderData, error: minOrderError } = await supabase
         .from("todos")
         .select("order_index")
         .eq("user_id", userId)
         .order("order_index", { ascending: true })
         .limit(1)
-        .single()
+        .maybeSingle()
+
+      if (minOrderError) {
+        console.error("Error loading todo order:", minOrderError)
+        throw new Error("Failed to create todo")
+      }
 
       const nextOrderIndex = minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0
       const priority = normalizePriority(formData.priority)

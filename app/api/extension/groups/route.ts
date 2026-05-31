@@ -1,8 +1,42 @@
 import { createGroupRecord, findDuplicateGroupByName } from "@/lib/library/server/capture"
 import { listGroupsForExtension } from "@/lib/library/server/reads"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import { broadcastExtensionInsert, getAuthenticatedExtensionUserId } from "../route-adapter"
-import { getCorsHeaders, jsonResponse } from "../utils"
+import {
+  broadcastExtensionInsert,
+  getAuthenticatedExtensionUserId,
+  isDuplicateConstraintError,
+  toExtensionErrorResponse,
+} from "../route-adapter"
+import { ExtensionApiError, getCorsHeaders, isRecord, jsonResponse, parseJsonBody } from "../utils"
+
+interface GroupPayload {
+  name: string
+  icon?: string
+  color?: string | null
+}
+
+function parseGroupPayload(body: unknown): GroupPayload {
+  if (!isRecord(body)) {
+    throw new ExtensionApiError(400, "Invalid group payload")
+  }
+
+  const name = typeof body.name === "string" ? body.name.trim() : ""
+  if (!name) {
+    throw new ExtensionApiError(400, "Group name is required")
+  }
+
+  const icon = typeof body.icon === "string" ? body.icon : undefined
+  const color =
+    body.color === null || body.color === undefined
+      ? undefined
+      : typeof body.color === "string"
+        ? body.color
+        : (() => {
+            throw new ExtensionApiError(400, "Invalid group color")
+          })()
+
+  return { name, icon, color }
+}
 
 function pickRandomGroupColor() {
   const palette = [
@@ -42,8 +76,7 @@ export async function GET(request: Request) {
 
     return jsonResponse({ groups: data ?? [] }, { request })
   } catch (error) {
-    console.error("Extension auth failed:", error)
-    return jsonResponse({ error: "Unauthorized" }, { status: 401, request })
+    return toExtensionErrorResponse(error, request, "Extension groups list failed:")
   }
 }
 
@@ -55,19 +88,24 @@ export async function POST(request: Request) {
     }
 
     const userId = auth.userId
-    const body = await request.json()
-
-    const name = body.name.trim()
-    if (!name) {
-      return jsonResponse({ error: "Group name is required" }, { status: 400, request })
-    }
+    const body = parseGroupPayload(await parseJsonBody(request))
+    const name = body.name
 
     const icon = body.icon || "folder"
     const color =
       body.color || ((icon === "folder" || !icon) && !body.color ? pickRandomGroupColor() : null)
 
     // Check for duplicates
-    const { data: existingGroup } = await findDuplicateGroupByName(supabaseAdmin, userId, name)
+    const { data: existingGroup, error: duplicateLookupError } = await findDuplicateGroupByName(
+      supabaseAdmin,
+      userId,
+      name,
+    )
+
+    if (duplicateLookupError) {
+      console.error("Failed to check duplicate groups:", duplicateLookupError)
+      return jsonResponse({ error: "Failed to check group availability" }, { status: 500, request })
+    }
 
     if (existingGroup) {
       return jsonResponse(
@@ -78,12 +116,15 @@ export async function POST(request: Request) {
 
     // Get the maximum order_index to append new group at the end
     const { data, error } = await createGroupRecord(supabaseAdmin, userId, {
-      name: body.name.trim(),
+      name,
       icon,
       color,
     })
 
     if (error) {
+      if (isDuplicateConstraintError(error)) {
+        return jsonResponse({ error: "A group with this name already exists" }, { status: 409, request })
+      }
       console.error("Failed to create group:", error)
       return jsonResponse({ error: "Failed to create group" }, { status: 500, request })
     }
@@ -92,7 +133,6 @@ export async function POST(request: Request) {
 
     return jsonResponse({ group: data }, { request })
   } catch (error) {
-    console.error("Extension auth failed:", error)
-    return jsonResponse({ error: "Unauthorized" }, { status: 401, request })
+    return toExtensionErrorResponse(error, request, "Extension group create failed:")
   }
 }

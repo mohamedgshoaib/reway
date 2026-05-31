@@ -7,7 +7,7 @@
 
 ## Phase
 
-`pending`
+`closed`
 
 ## Scope
 
@@ -23,5 +23,5 @@
 - `analysis-pass-1.md`
 - `report-pass-1.md`
 - `analysis-pass-2.md`
-- `report-final.md`
+- `report-final.md` - current
 - `execution-plan.md`

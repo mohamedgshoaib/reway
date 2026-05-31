@@ -36,13 +36,17 @@ export async function findNextGroupOrderIndex(
   supabase: LibrarySupabaseClient,
   userId: string,
 ) {
-  const { data: maxOrderData } = await supabase
+  const { data: maxOrderData, error } = await supabase
     .from("groups")
     .select("order_index")
     .eq("user_id", userId)
     .order("order_index", { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
 
   return maxOrderData ? (maxOrderData.order_index ?? 0) + 1 : 0
 }
@@ -132,13 +136,17 @@ export async function findNextBookmarkOrderIndex(
   supabase: LibrarySupabaseClient,
   userId: string,
 ) {
-  const { data: minOrderData } = await supabase
+  const { data: minOrderData, error } = await supabase
     .from("bookmarks")
     .select("order_index")
     .eq("user_id", userId)
     .order("order_index", { ascending: true })
     .limit(1)
-    .single()
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
 
   return minOrderData ? (minOrderData.order_index ?? 0) - 1 : 0
 }

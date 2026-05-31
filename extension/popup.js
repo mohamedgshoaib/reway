@@ -573,8 +573,8 @@ async function saveBookmark() {
     if (error?.status === 409) {
       setStatus(
         mode === "existing"
-          ? "This bookmark already exists in this group"
-          : "This bookmark already exists",
+          ? "This bookmark couldn't be saved because of a conflicting record in this group"
+          : "This bookmark couldn't be saved because of a conflicting record",
         "error",
         statusTarget,
       )

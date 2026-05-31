@@ -63,6 +63,19 @@
 - Executed approved method-complexity step 5 in `components/dashboard/content/useImportHandlers.ts` and verified local complexity score `14`, `pnpm typecheck`, and `pnpm build`.
 - Executed approved method-complexity step 6 in `extension/background.js` and verified local listener complexity score `8`, `pnpm typecheck`, and `pnpm build`.
 - Executed approved method-complexity step 7 in `app/auth/confirm/route.ts` and `components/dashboard/content/import/parse-bookmarks-html.ts` and verified local route/parser scores `10`, `20`, and `19`, `pnpm typecheck`, and `pnpm build`.
+- Started the `supabase-common-errors` audit phase and created `spec/performance-supabase-audit/supabase-errors-pitfalls/loading.md`.
+- Completed first-pass Supabase common-errors analysis at `spec/performance-supabase-audit/supabase-errors-pitfalls/analysis-pass-1.md`.
+- Completed first-pass Supabase common-errors report at `spec/performance-supabase-audit/supabase-errors-pitfalls/report-pass-1.md`.
+- Completed Supabase common-errors re-analysis at `spec/performance-supabase-audit/supabase-errors-pitfalls/analysis-pass-2.md`.
+- Completed final Supabase common-errors report at `spec/performance-supabase-audit/supabase-errors-pitfalls/report-final.md`; execution awaits approval.
+- Executed approved Supabase common-errors step 1 in `lib/supabase/queries.ts`, making dashboard loaders throw readable Supabase load errors instead of returning empty arrays on failures.
+- Verified Supabase common-errors step 1 with `pnpm typecheck` and `pnpm build`.
+- Executed approved Supabase common-errors step 2 in `app/api/extension/utils.ts`, `app/api/extension/route-adapter.ts`, `app/api/extension/bookmarks/route.ts`, and `app/api/extension/groups/route.ts`, adding request validation and truthful `400` / `401` / `409` / `500` mapping.
+- Verified Supabase common-errors step 2 with `pnpm typecheck` and `pnpm build`.
+- Executed approved Supabase common-errors step 3 in `lib/library/server/capture.ts` and `lib/dashboard/server/library-mutations.ts`, changing optional first-row order lookups from `.single()` to `.maybeSingle()` while keeping required-row lookups unchanged.
+- Verified Supabase common-errors step 3 with `pnpm typecheck` and `pnpm build`.
+- Executed approved Supabase common-errors step 4 in `app/api/extension/bookmarks/route.ts`, `extension/js/save-bookmarks.js`, `extension/js/grabber.js`, `extension/js/sessions.js`, and `extension/popup.js`, rewording bookmark conflict handling so the extension no longer implies duplicate-bookmark rejection.
+- Verified Supabase common-errors step 4 with `pnpm typecheck` and `pnpm build`.
 
 ---
 
@@ -87,6 +100,15 @@
 - Sixth approved method-complexity execution reached the target threshold: the top-level background worker message listener now scores `8` by the local estimator.
 - Seventh approved method-complexity execution finished the documented leftovers: auth confirm now scores `10`, and the import parser now scores `20` with recursive `traverse` at `19`.
 - Method-complexity phase is now closed because the documented candidate queue has been executed rather than deferred.
+- Supabase common-errors phase has started in `loading`; no app code, schema, data, migration, or Supabase state changes have been made.
+- First-pass Supabase common-errors analysis ranks dashboard loader error swallowing, extension route error classification, optional `.single()` lookups, auth error classification, and duplicate semantics for re-reporting.
+- First-pass Supabase common-errors report recommends a code-only execution lane after re-analysis: dashboard loader failures, extension route status mapping, and optional `.single()` cleanup.
+- Supabase common-errors re-analysis narrowed execution to dashboard loader fail-closed behavior, extension route request/status mapping, optional first-row `.maybeSingle()` cleanup, and scoped extension auth classification.
+- Supabase common-errors final report recommends dashboard loader fail-closed behavior as the first execution step; no app code or Supabase state has changed in this skill yet.
+- First approved Supabase common-errors execution is complete; next candidate is extension route request validation and status mapping.
+- Second approved Supabase common-errors execution is complete; next candidate is optional first-row `.single()` cleanup to `.maybeSingle()`.
+- Third approved Supabase common-errors execution is complete; the remaining item is lower-priority bookmark conflict wording against the locked duplicate-bookmarks policy.
+- Fourth approved Supabase common-errors execution is complete; the documented candidate queue is now exhausted and the phase is closed.
 
 ---
 

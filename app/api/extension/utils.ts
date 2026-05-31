@@ -1,3 +1,13 @@
+export class ExtensionApiError extends Error {
+  status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = "ExtensionApiError"
+    this.status = status
+  }
+}
+
 export function getCorsHeaders(request: Request) {
   const origin = request.headers.get("origin")
 
@@ -20,6 +30,18 @@ export function getCorsHeaders(request: Request) {
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
   }
+}
+
+export async function parseJsonBody(request: Request) {
+  try {
+    return await request.json()
+  } catch {
+    throw new ExtensionApiError(400, "Invalid JSON body")
+  }
+}
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
 }
 
 export function jsonResponse(body: unknown, init?: ResponseInit & { request?: Request }) {

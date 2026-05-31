@@ -34,7 +34,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | 1 | `nextjs-performance` | `nextjs-performance/` | `closed` | `nextjs-performance/execution-plan.md` |
 | 2 | `react-performance-optimization` | `react-performance/` | `closed` | `react-performance/execution-plan.md` |
 | 3 | `refactor-method-complexity-reduce` | `method-complexity/` | `closed` | `method-complexity/execution-plan.md` |
-| 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `pending` | None |
+| 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `closed` | `supabase-errors-pitfalls/execution-plan.md` |
 | 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `pending` | None |
 | 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `pending` | None |
 | 7 | `supabase-advanced-troubleshooting` | `supabase-performance-diagnostics/` | `pending` | None |
@@ -83,6 +83,16 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Execute third skill step 6 | `done` | Extension background listener extraction verified with listener score `8`, `pnpm typecheck`, and `pnpm build`. |
 | Execute third skill step 7 | `done` | Auth confirm and parser helper extraction verified with route score `10`, parser scores `20` and `19`, `pnpm typecheck`, and `pnpm build`. |
 | Close third skill execution | `done` | Method-complexity phase is closed; the documented candidate queue has been executed. |
+| Begin fourth skill | `done` | `supabase-common-errors` loading artifact created at `supabase-errors-pitfalls/loading.md`. |
+| Analyze fourth skill | `done` | Supabase common-error candidates documented in `supabase-errors-pitfalls/analysis-pass-1.md`. |
+| Report fourth skill | `done` | First Supabase common-errors report created at `supabase-errors-pitfalls/report-pass-1.md`. |
+| Re-analyze fourth skill | `done` | Refined Supabase common-errors execution queue in `supabase-errors-pitfalls/analysis-pass-2.md`. |
+| Final report fourth skill | `done` | Final Supabase common-errors report created at `supabase-errors-pitfalls/report-final.md`; execution awaits approval. |
+| Execute fourth skill step 1 | `done` | Dashboard loader fail-closed patch verified with `pnpm typecheck` and `pnpm build`; execution log started at `supabase-errors-pitfalls/execution-plan.md`. |
+| Execute fourth skill step 2 | `done` | Extension route validation/status patch verified with `pnpm typecheck` and `pnpm build`. |
+| Execute fourth skill step 3 | `done` | Optional first-row `.maybeSingle()` cleanup verified with `pnpm typecheck` and `pnpm build`. |
+| Execute fourth skill step 4 | `done` | Bookmark conflict wording now matches the duplicate-bookmarks-allowed policy and was verified with `pnpm typecheck` and `pnpm build`. |
+| Close fourth skill execution | `done` | Supabase common-errors phase is closed; the documented candidate queue has been executed. |
 
 ## Execution Rules
 

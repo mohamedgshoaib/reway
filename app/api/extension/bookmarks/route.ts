@@ -9,8 +9,9 @@ import {
   broadcastExtensionInsert,
   getAuthenticatedExtensionUserId,
   isDuplicateConstraintError,
+  toExtensionErrorResponse,
 } from "../route-adapter"
-import { getCorsHeaders, jsonResponse } from "../utils"
+import { ExtensionApiError, getCorsHeaders, isRecord, jsonResponse, parseJsonBody } from "../utils"
 
 interface BookmarkPayload {
   url: string
@@ -18,6 +19,36 @@ interface BookmarkPayload {
   description?: string
   groupId?: string | null
   faviconUrl?: string | null
+}
+
+function parseBookmarkPayload(body: unknown): BookmarkPayload {
+  if (!isRecord(body)) {
+    throw new ExtensionApiError(400, "Invalid bookmark payload")
+  }
+
+  const url = typeof body.url === "string" ? body.url.trim() : ""
+  if (!url) {
+    throw new ExtensionApiError(400, "Missing url")
+  }
+
+  const groupId =
+    body.groupId === null || body.groupId === undefined
+      ? null
+      : typeof body.groupId === "string"
+        ? body.groupId
+        : (() => {
+            throw new ExtensionApiError(400, "Invalid group")
+          })()
+
+  const readOptionalString = (value: unknown) => (typeof value === "string" ? value : undefined)
+
+  return {
+    url,
+    groupId,
+    title: readOptionalString(body.title),
+    description: readOptionalString(body.description),
+    faviconUrl: readOptionalString(body.faviconUrl),
+  }
 }
 
 export async function OPTIONS(request: Request) {
@@ -32,11 +63,7 @@ export async function POST(request: Request) {
     }
 
     const userId = auth.userId
-    const payload = (await request.json()) as BookmarkPayload
-
-    if (!payload?.url) {
-      return jsonResponse({ error: "Missing url" }, { status: 400, request })
-    }
+    const payload = parseBookmarkPayload(await parseJsonBody(request))
 
     const groupValidation = await validateGroupAccess(supabaseAdmin, userId, payload.groupId ?? null)
     if (!groupValidation.valid) {
@@ -55,7 +82,7 @@ export async function POST(request: Request) {
 
     if (error) {
       if (isDuplicateConstraintError(error)) {
-        return jsonResponse({ error: "Bookmark already exists", code: error.code }, { status: 409, request })
+        return jsonResponse({ error: "Bookmark save conflict", code: error.code }, { status: 409, request })
       }
       console.error("Failed to create bookmark:", error)
       return jsonResponse({ error: "Failed to create bookmark" }, { status: 500, request })
@@ -65,8 +92,7 @@ export async function POST(request: Request) {
 
     return jsonResponse({ id: data.id, bookmark: data }, { request })
   } catch (error) {
-    console.error("Extension auth failed:", error)
-    return jsonResponse({ error: "Unauthorized" }, { status: 401, request })
+    return toExtensionErrorResponse(error, request, "Extension bookmark create failed:")
   }
 }
 
@@ -90,7 +116,6 @@ export async function GET(request: Request) {
 
     return jsonResponse({ bookmarks: data ?? [] }, { request })
   } catch (error) {
-    console.error("Extension auth failed:", error)
-    return jsonResponse({ error: "Unauthorized" }, { status: 401, request })
+    return toExtensionErrorResponse(error, request, "Extension bookmark list failed:")
   }
 }

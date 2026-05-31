@@ -41,13 +41,13 @@ function showSessionValidationError(saveBtn, statusTarget, message) {
   setStatus(message, "error", statusTarget)
 }
 
-function finishSessionSave(saveBtn, statusTarget, duplicateCount) {
+function finishSessionSave(saveBtn, statusTarget, conflictCount) {
   saveBtn.classList.add("success")
   setLoading(saveBtn, false, "Saved")
 
-  if (duplicateCount > 0) {
+  if (conflictCount > 0) {
     setStatus(
-      `Saved session. Skipped ${duplicateCount} duplicate bookmark(s).`,
+      `Saved session. Skipped ${conflictCount} conflicting bookmark save(s).`,
       "success",
       statusTarget,
     )
@@ -200,13 +200,13 @@ export async function saveTabSession(destination) {
       title: tab.title || tab.url,
       groupId,
     }))
-    const { duplicates, nonDuplicateFailures } = partitionBookmarkBatchResults(results)
+    const { conflicts, nonConflictFailures } = partitionBookmarkBatchResults(results)
 
-    if (nonDuplicateFailures.length > 0) {
-      throw nonDuplicateFailures[0].reason
+    if (nonConflictFailures.length > 0) {
+      throw nonConflictFailures[0].reason
     }
 
-    finishSessionSave(saveBtn, statusTarget, duplicates.length)
+    finishSessionSave(saveBtn, statusTarget, conflicts.length)
   } catch (err) {
     setLoading(saveBtn, false, "Save Session")
     handleSessionSaveError(err, mode, statusTarget)

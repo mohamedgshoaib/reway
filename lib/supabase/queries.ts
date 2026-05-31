@@ -21,17 +21,23 @@ export type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 export type NoteRow = Database["public"]["Tables"]["notes"]["Row"]
 export type TodoRow = Database["public"]["Tables"]["todos"]["Row"]
 
+function createSupabaseQueryError(scope: string, error: { code?: string; message?: string }) {
+  const detail = error.code ? `[${error.code}] ${error.message || "Unknown error"}` : (error.message || "Unknown error")
+  return new Error(`Failed to load ${scope}: ${detail}`, {
+    cause: error,
+  })
+}
+
 export async function getBookmarks() {
   const supabase = await createClient()
 
   const { data, error } = await listBookmarksForDashboard(supabase)
 
   if (error) {
-    console.error("Error fetching bookmarks:", error.message || error)
-    return []
+    throw createSupabaseQueryError("bookmarks", error)
   }
 
-  return data.map((bookmark) => ({
+  return (data ?? []).map((bookmark) => ({
     ...bookmark,
     is_enriching: false,
   }))
@@ -47,11 +53,10 @@ export async function getNotes() {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("Error fetching notes:", error.message || error)
-    return []
+    throw createSupabaseQueryError("notes", error)
   }
 
-  return data
+  return data ?? []
 }
 
 export async function getTodos() {
@@ -65,11 +70,10 @@ export async function getTodos() {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("Error fetching todos:", error.message || error)
-    return []
+    throw createSupabaseQueryError("todos", error)
   }
 
-  return data
+  return data ?? []
 }
 
 export async function getGroups() {
@@ -78,9 +82,8 @@ export async function getGroups() {
   const { data, error } = await listGroupsForDashboard(supabase)
 
   if (error) {
-    console.error("Error fetching groups:", error.message || error)
-    return []
+    throw createSupabaseQueryError("groups", error)
   }
 
-  return data
+  return data ?? []
 }

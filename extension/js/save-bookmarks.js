@@ -47,12 +47,12 @@ export function isDuplicateBookmarkError(error) {
 
 export function partitionBookmarkBatchResults(results) {
   const rejected = results.filter((result) => result.status === "rejected")
-  const duplicates = rejected.filter((result) => isDuplicateBookmarkError(result.reason))
-  const nonDuplicateFailures = rejected.filter((result) => !isDuplicateBookmarkError(result.reason))
+  const conflicts = rejected.filter((result) => isDuplicateBookmarkError(result.reason))
+  const nonConflictFailures = rejected.filter((result) => !isDuplicateBookmarkError(result.reason))
 
   return {
     rejected,
-    duplicates,
-    nonDuplicateFailures,
+    conflicts,
+    nonConflictFailures,
   }
 }
