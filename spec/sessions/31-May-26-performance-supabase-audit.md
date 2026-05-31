@@ -51,6 +51,18 @@
 - Verified React execution step 3 with `pnpm typecheck` and `pnpm build`.
 - Closed the React performance execution phase after the approved low-risk patches.
 - Explicitly deferred virtualization for this phase because the previous implementation had already been removed after introducing laggy scroll behavior and visible gaps between bookmarks.
+- Started the `refactor-method-complexity-reduce` audit phase and created `spec/performance-supabase-audit/method-complexity/loading.md`.
+- Completed method-complexity candidate analysis at `spec/performance-supabase-audit/method-complexity/candidates.md`.
+- Completed first-pass method-complexity report at `spec/performance-supabase-audit/method-complexity/report-pass-1.md`.
+- Completed method-complexity re-analysis at `spec/performance-supabase-audit/method-complexity/analysis-pass-2.md`.
+- Completed final method-complexity report at `spec/performance-supabase-audit/method-complexity/report-final.md`.
+- Executed approved method-complexity step 1 in `components/dashboard/bookmark-board/useBookmarkKeyboardNav.ts` and verified local complexity score `18`, `pnpm typecheck`, and `pnpm build`.
+- Executed approved method-complexity step 2 in `components/dashboard/folder-board/useFolderKeyboardNav.ts` and verified local complexity score `13`, `pnpm typecheck`, and `pnpm build`.
+- Executed approved method-complexity step 3 in `components/dashboard/command-bar/useCommandHandlers.ts` and verified local complexity score `14`, `pnpm typecheck`, and `pnpm build`.
+- Executed approved method-complexity step 4 in `extension/js/save-bookmarks.js`, `extension/js/sessions.js`, and `extension/js/grabber.js` and verified local complexity scores `12` and `11`, `pnpm typecheck`, and `pnpm build`.
+- Executed approved method-complexity step 5 in `components/dashboard/content/useImportHandlers.ts` and verified local complexity score `14`, `pnpm typecheck`, and `pnpm build`.
+- Executed approved method-complexity step 6 in `extension/background.js` and verified local listener complexity score `8`, `pnpm typecheck`, and `pnpm build`.
+- Executed approved method-complexity step 7 in `app/auth/confirm/route.ts` and `components/dashboard/content/import/parse-bookmarks-html.ts` and verified local route/parser scores `10`, `20`, and `19`, `pnpm typecheck`, and `pnpm build`.
 
 ---
 
@@ -62,6 +74,19 @@
 - Preserve the extension metadata response contract while consolidating route logic onto shared helpers.
 - Prefer low-risk route-boundary splits before deeper dashboard architecture changes.
 - In server components, keep deferred client sections compatible with App Router by avoiding `ssr: false` on `next/dynamic`.
+- For method-complexity work, identify and rank candidate methods before selecting a target threshold or proposing execution.
+- Initial method-complexity recommendation is to report around keyboard navigation extraction first, then batch-flow extraction; execution still requires explicit target approval.
+- First method-complexity execution candidate is `useBookmarkKeyboardNav`; `useFolderKeyboardNav` should be re-analyzed after the smaller keyboard hook plan is validated.
+- Re-analysis confirmed `useBookmarkKeyboardNav` should be refactored locally first; shared keyboard helpers with folder navigation should wait because folder navigation has different semantics.
+- Method-complexity execution is now awaiting approval; first candidate is local helper extraction in `useBookmarkKeyboardNav` with `handleKeyDown` target complexity below 20.
+- First approved method-complexity execution reached the target threshold: `useBookmarkKeyboardNav` `handleKeyDown` now scores `18` by the local estimator.
+- Second approved method-complexity execution reached the target threshold: `useFolderKeyboardNav` `handleKeyDown` now scores `13` by the local estimator.
+- Third approved method-complexity execution reached the target threshold: `processUrls` in command-bar handlers now scores `14` by the local estimator.
+- Fourth approved method-complexity execution reached the target threshold: `saveTabSession` now scores `12` and `createGroupFromLinks` now scores `11` by the local estimator.
+- Fifth approved method-complexity execution reached the target threshold: `handleConfirmImport` now scores `14` by the local estimator.
+- Sixth approved method-complexity execution reached the target threshold: the top-level background worker message listener now scores `8` by the local estimator.
+- Seventh approved method-complexity execution finished the documented leftovers: auth confirm now scores `10`, and the import parser now scores `20` with recursive `traverse` at `19`.
+- Method-complexity phase is now closed because the documented candidate queue has been executed rather than deferred.
 
 ---
 

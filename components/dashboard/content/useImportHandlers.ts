@@ -45,6 +45,237 @@ interface UseImportHandlersOptions {
   setGroups: React.Dispatch<React.SetStateAction<GroupRow[]>>
 }
 
+function getSelectedImportEntries(
+  entries: ImportEntry[],
+  selectedGroups: string[],
+  normalizeGroupName: (value?: string | null) => string,
+) {
+  const allowed = new Set(selectedGroups.map((name) => normalizeGroupName(name)))
+
+  return entries.flatMap((entry) => {
+    const groupName = normalizeGroupName(entry.groupName)
+    if (!allowed.has(groupName) || entry.action === "skip") return []
+    return [{ ...entry, groupName }]
+  })
+}
+
+function buildExistingGroupMap(
+  groups: GroupRow[],
+  normalizeGroupName: (value?: string | null) => string,
+) {
+  const existingGroups = new Map<string, GroupRow>()
+
+  groups.forEach((group) => {
+    const name = normalizeGroupName(group.name)
+    if (name !== "Ungrouped") {
+      existingGroups.set(name, group)
+    }
+  })
+
+  return existingGroups
+}
+
+async function createMissingImportGroups({
+  entries,
+  groups,
+  existingGroups,
+  createGroup,
+  userId,
+}: {
+  entries: Array<ImportEntry & { groupName: string }>
+  groups: GroupRow[]
+  existingGroups: Map<string, GroupRow>
+  createGroup: UseImportHandlersOptions["createGroup"]
+  userId: string
+}) {
+  const groupNamesToCreate = Array.from(
+    new Set(
+      entries.flatMap((entry) =>
+        entry.groupName !== "Ungrouped" && !existingGroups.has(entry.groupName)
+          ? [entry.groupName]
+          : [],
+      ),
+    ),
+  )
+
+  const groupRanks = generateRanksBetween(groups.at(-1)?.rank ?? null, null, groupNamesToCreate.length)
+
+  return Promise.all(
+    groupNamesToCreate.map(async (name, index) => {
+      const color = pickRandomGroupColor()
+      const rank = groupRanks[index] ?? generateRankBetween(groups.at(-1)?.rank ?? null, null)
+      const newGroupId = await createGroup({
+        name,
+        icon: "folder",
+        color,
+        rank,
+      })
+
+      return {
+        id: newGroupId,
+        name,
+        icon: "folder",
+        color,
+        user_id: userId,
+        created_at: new Date().toISOString(),
+        hide_from_all_bookmarks: false,
+        order_index: null,
+        rank,
+      } satisfies GroupRow
+    }),
+  )
+}
+
+function getImportStartingOrder(bookmarks: BookmarkRow[]) {
+  const currentMinOrder = bookmarks.reduce<number>((min, bookmark) => {
+    const orderValue = bookmark.order_index ?? Number.POSITIVE_INFINITY
+    return orderValue < min ? orderValue : min
+  }, Number.POSITIVE_INFINITY)
+
+  return currentMinOrder === Number.POSITIVE_INFINITY ? 0 : currentMinOrder
+}
+
+function buildPendingImportEntries(
+  entries: Array<ImportEntry & { groupName: string }>,
+  groupMap: Map<string, GroupRow>,
+  bookmarks: BookmarkRow[],
+) {
+  const startingOrder = getImportStartingOrder(bookmarks)
+  const entriesByGroup = new Map<string, number>()
+
+  entries.forEach((entry) => {
+    const groupId = entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
+    const key = groupId ?? "__ungrouped__"
+    entriesByGroup.set(key, (entriesByGroup.get(key) ?? 0) + 1)
+  })
+
+  const ranksByGroup = new Map<string, string[]>()
+  entriesByGroup.forEach((count, key) => {
+    const groupId = key === "__ungrouped__" ? null : key
+    const firstRank = bookmarks
+      .filter((bookmark) => (bookmark.group_id ?? null) === groupId)
+      .toSorted(compareRankedItems)[0]?.rank
+    ranksByGroup.set(key, generateRanksBetween(null, firstRank ?? null, count))
+  })
+
+  const rankOffsetsByGroup = new Map<string, number>()
+
+  return entries.map((entry, index) => {
+    const groupId = entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
+    const key = groupId ?? "__ungrouped__"
+    const offset = rankOffsetsByGroup.get(key) ?? 0
+    rankOffsetsByGroup.set(key, offset + 1)
+
+    return {
+      entry,
+      groupId,
+      orderIndex: startingOrder - (entries.length - index),
+      rank: ranksByGroup.get(key)?.[offset] ?? generateRankBetween(null, null),
+    }
+  })
+}
+
+function createImportEnrichmentWorker({
+  setBookmarks,
+  enrichCreatedBookmark,
+}: {
+  setBookmarks: UseImportHandlersOptions["setBookmarks"]
+  enrichCreatedBookmark: UseImportHandlersOptions["enrichCreatedBookmark"]
+}) {
+  return async ({ id, url }: { id: string; url: string }) => {
+    try {
+      const enrichment = await enrichBookmarkWithTimeout({
+        bookmarkId: id,
+        url,
+        timeoutMs: 120000,
+        enrichCreatedBookmark: enrichCreatedBookmark as (
+          id: string,
+          url: string,
+        ) => Promise<EnrichmentResult | undefined>,
+      })
+
+      if (enrichment?.status === "ready") {
+        setBookmarks((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  title: enrichment.title ?? item.title,
+                  description: enrichment.description ?? item.description,
+                  favicon_url: enrichment.favicon_url ?? item.favicon_url,
+                  og_image_url: enrichment.og_image_url ?? item.og_image_url,
+                  image_url: enrichment.image_url ?? item.image_url,
+                  status: "ready",
+                  is_enriching: false,
+                  error_reason: null,
+                  last_fetched_at: enrichment.last_fetched_at ?? item.last_fetched_at,
+                }
+              : item,
+          ),
+        )
+        return
+      }
+
+      if (enrichment?.status === "failed") {
+        setBookmarks((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  status: "failed",
+                  is_enriching: false,
+                  error_reason: enrichment.error_reason ?? "Enrichment failed",
+                }
+              : item,
+          ),
+        )
+        return
+      }
+
+      setBookmarks((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                is_enriching: false,
+              }
+            : item,
+        ),
+      )
+    } catch (error) {
+      console.error("Enrichment worker error for", url, error)
+      if (isBookmarkEnrichmentTimeoutError(error)) {
+        setBookmarks((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  is_enriching: false,
+                }
+              : item,
+          ),
+        )
+        return
+      }
+
+      const failure = buildBookmarkEnrichmentFailure(error)
+      setBookmarks((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: failure.status,
+                is_enriching: false,
+                error_reason: failure.error_reason ?? "Enrichment error",
+                last_fetched_at: failure.last_fetched_at ?? item.last_fetched_at,
+              }
+            : item,
+        ),
+      )
+    }
+  }
+}
+
 export function useImportHandlers({
   bookmarks,
   groups,
@@ -120,12 +351,11 @@ export function useImportHandlers({
       processedRef.current = 0
       setImportResult(null)
 
-      const allowed = new Set(selectedGroups.map((name) => normalizeGroupName(name)))
-      const entries = importPreview.entries.flatMap((entry) => {
-        const groupName = normalizeGroupName(entry.groupName)
-        if (!allowed.has(groupName) || entry.action === "skip") return []
-        return [{ ...entry, groupName }]
-      })
+      const entries = getSelectedImportEntries(
+        importPreview.entries,
+        selectedGroups,
+        normalizeGroupName,
+      )
       if (entries.length === 0) {
         return
       }
@@ -136,53 +366,14 @@ export function useImportHandlers({
         status: "importing",
       })
 
-      const existingGroups = new Map<string, GroupRow>()
-      groups.forEach((group) => {
-        const name = normalizeGroupName(group.name)
-        if (name !== "Ungrouped") {
-          existingGroups.set(name, group)
-        }
+      const existingGroups = buildExistingGroupMap(groups, normalizeGroupName)
+      const createdGroups = await createMissingImportGroups({
+        entries,
+        groups,
+        existingGroups,
+        createGroup,
+        userId,
       })
-
-      const groupNamesToCreate = Array.from(
-        new Set(
-          entries.flatMap((entry) =>
-            entry.groupName !== "Ungrouped" && !existingGroups.has(entry.groupName)
-              ? [entry.groupName]
-              : []
-          ),
-        ),
-      )
-
-      const groupRanks = generateRanksBetween(
-        groups.at(-1)?.rank ?? null,
-        null,
-        groupNamesToCreate.length,
-      )
-
-      const createdGroups = await Promise.all(
-        groupNamesToCreate.map(async (name, index) => {
-          const color = pickRandomGroupColor()
-          const rank = groupRanks[index] ?? generateRankBetween(groups.at(-1)?.rank ?? null, null)
-          const newGroupId = await createGroup({
-            name,
-            icon: "folder",
-            color,
-            rank,
-          })
-          return {
-            id: newGroupId,
-            name,
-            icon: "folder",
-            color,
-            user_id: userId,
-            created_at: new Date().toISOString(),
-            hide_from_all_bookmarks: false,
-            order_index: null,
-            rank,
-          } satisfies GroupRow
-        }),
-      )
 
       const groupMap = new Map<string, GroupRow>([...existingGroups])
       createdGroups.forEach((group) => groupMap.set(group.name, group))
@@ -191,46 +382,7 @@ export function useImportHandlers({
         setGroups((prev) => sortGroups([...prev, ...createdGroups]))
       }
 
-      const currentMinOrder = bookmarks.reduce<number>((min, bookmark) => {
-        const orderValue = bookmark.order_index ?? Number.POSITIVE_INFINITY
-        return orderValue < min ? orderValue : min
-      }, Number.POSITIVE_INFINITY)
-      const startingOrder = currentMinOrder === Number.POSITIVE_INFINITY ? 0 : currentMinOrder
-
-      const entriesByGroup = new Map<string, number>()
-      entries.forEach((entry) => {
-        const groupId =
-          entry.groupName === "Ungrouped"
-            ? null
-            : (groupMap.get(entry.groupName)?.id ?? null)
-        const key = groupId ?? "__ungrouped__"
-        entriesByGroup.set(key, (entriesByGroup.get(key) ?? 0) + 1)
-      })
-
-      const ranksByGroup = new Map<string, string[]>()
-      entriesByGroup.forEach((count, key) => {
-        const groupId = key === "__ungrouped__" ? null : key
-        const firstRank = bookmarks
-          .filter((bookmark) => (bookmark.group_id ?? null) === groupId)
-          .toSorted(compareRankedItems)[0]?.rank
-        ranksByGroup.set(key, generateRanksBetween(null, firstRank ?? null, count))
-      })
-
-      const rankOffsetsByGroup = new Map<string, number>()
-
-      const pendingEntries = entries.map((entry, index) => {
-        const groupId =
-          entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
-        const key = groupId ?? "__ungrouped__"
-        const offset = rankOffsetsByGroup.get(key) ?? 0
-        rankOffsetsByGroup.set(key, offset + 1)
-        return {
-          entry,
-          groupId,
-          orderIndex: startingOrder - (entries.length - index),
-          rank: ranksByGroup.get(key)?.[offset] ?? generateRankBetween(null, null),
-        }
-      })
+      const pendingEntries = buildPendingImportEntries(entries, groupMap, bookmarks)
 
       let importedCount = 0
       let failedCount = 0
@@ -290,93 +442,10 @@ export function useImportHandlers({
         }
       }
 
-      const enrichmentWorker = async ({ id, url }: { id: string; url: string }) => {
-        try {
-          const enrichment = await enrichBookmarkWithTimeout({
-            bookmarkId: id,
-            url,
-            timeoutMs: 120000,
-            enrichCreatedBookmark: enrichCreatedBookmark as (
-              id: string,
-              url: string,
-            ) => Promise<EnrichmentResult | undefined>,
-          })
-
-          if (enrichment?.status === "ready") {
-            setBookmarks((prev) =>
-              prev.map((item) =>
-                item.id === id
-                  ? {
-                      ...item,
-                      title: enrichment.title ?? item.title,
-                      description: enrichment.description ?? item.description,
-                      favicon_url: enrichment.favicon_url ?? item.favicon_url,
-                      og_image_url: enrichment.og_image_url ?? item.og_image_url,
-                      image_url: enrichment.image_url ?? item.image_url,
-                      status: "ready",
-                      is_enriching: false,
-                      error_reason: null,
-                      last_fetched_at: enrichment.last_fetched_at ?? item.last_fetched_at,
-                    }
-                  : item,
-              ),
-            )
-          } else if (enrichment?.status === "failed") {
-            setBookmarks((prev) =>
-              prev.map((item) =>
-                item.id === id
-                  ? {
-                      ...item,
-                      status: "failed",
-                      is_enriching: false,
-                      error_reason: enrichment.error_reason ?? "Enrichment failed",
-                    }
-                  : item,
-              ),
-            )
-          } else {
-            setBookmarks((prev) =>
-              prev.map((item) =>
-                item.id === id
-                  ? {
-                      ...item,
-                      is_enriching: false,
-                    }
-                  : item,
-              ),
-            )
-          }
-        } catch (error) {
-          console.error("Enrichment worker error for", url, error)
-          if (isBookmarkEnrichmentTimeoutError(error)) {
-            setBookmarks((prev) =>
-              prev.map((item) =>
-                item.id === id
-                  ? {
-                      ...item,
-                      is_enriching: false,
-                    }
-                  : item,
-              ),
-            )
-            return
-          }
-          const failure = buildBookmarkEnrichmentFailure(error)
-          setBookmarks((prev) =>
-            prev.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    status: failure.status,
-                    is_enriching: false,
-                    error_reason: failure.error_reason ?? "Enrichment error",
-                    last_fetched_at: failure.last_fetched_at ?? item.last_fetched_at,
-                  }
-                : item,
-            ),
-          )
-        }
-      }
+      const enrichmentWorker = createImportEnrichmentWorker({
+        setBookmarks,
+        enrichCreatedBookmark,
+      })
 
       const startBackgroundEnrichment = () => {
         if (enrichmentQueue.length === 0) return

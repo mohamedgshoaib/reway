@@ -262,7 +262,7 @@ export const FolderBoard = memo(function FolderBoard({
         <AccordionItem
           key={group.id}
           value={group.id}
-          className={`rounded-3xl border-0 ring-1 ring-foreground/8 bg-background/30 ${
+          className={`overflow-hidden isolate rounded-3xl border-0 ring-1 ring-foreground/8 bg-background/30 ${
             hasKeyboardFocus && isSelectedFolder && selectedBookmarkIndex < 0
               ? "ring-2 ring-primary/20"
               : ""
@@ -281,7 +281,7 @@ export const FolderBoard = memo(function FolderBoard({
           />
 
           <AccordionContent className="px-0">
-            <div className="p-2 bg-background/60">
+            <div className="rounded-b-3xl bg-background/60 p-2">
               {groupBookmarks.length === 0 ? (
                 <EmptyFolder />
               ) : (

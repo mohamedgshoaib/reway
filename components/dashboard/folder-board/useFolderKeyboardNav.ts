@@ -25,6 +25,209 @@ interface UseFolderKeyboardNavOptions {
   onToggleCollapse: (groupId: string) => void
 }
 
+interface FolderKeyboardState {
+  visibleGroups: GroupRow[]
+  selectedFolderId: string | null
+  selectedBookmarkIndex: number
+  bookmarkBuckets: Record<string, BookmarkRow[]>
+  collapsedGroups: Record<string, boolean>
+  gridColumns: number
+  isFolderGrid: boolean
+}
+
+interface FolderKeyboardActions {
+  setSelectedFolderId: React.Dispatch<React.SetStateAction<string | null>>
+  setSelectedBookmarkIndex: React.Dispatch<React.SetStateAction<number>>
+  setHasKeyboardFocus: React.Dispatch<React.SetStateAction<boolean>>
+  onPreview: (bookmark: BookmarkRow) => void
+  onToggleCollapse: (groupId: string) => void
+  findFolderNeighbor: (
+    currentFolderId: string | null,
+    direction: "left" | "right" | "up" | "down",
+  ) => string | null
+}
+
+function getSelectedBookmark(bookmarks: BookmarkRow[], selectedIndex: number) {
+  return selectedIndex >= 0 ? bookmarks[selectedIndex] : undefined
+}
+
+function openOrCopyBookmark(bookmark: BookmarkRow, event: KeyboardEvent) {
+  if (event.metaKey || event.ctrlKey) {
+    recordBookmarkVisit(bookmark.id)
+    window.open(bookmark.url, "_blank", "noopener,noreferrer")
+    return
+  }
+
+  navigator.clipboard.writeText(bookmark.url)
+  toast.success("URL copied to clipboard")
+}
+
+function getHorizontalBookmarkIndex(
+  previousIndex: number,
+  bookmarksLength: number,
+  direction: "left" | "right",
+) {
+  if (direction === "right") {
+    const nextIndex = previousIndex + 1
+    return nextIndex < bookmarksLength ? nextIndex : previousIndex
+  }
+
+  const nextIndex = previousIndex - 1
+  return nextIndex >= 0 ? nextIndex : previousIndex
+}
+
+function getVerticalBookmarkIndex(
+  previousIndex: number,
+  columns: number,
+  direction: "up" | "down",
+) {
+  if (direction === "down") {
+    return previousIndex + columns
+  }
+
+  return previousIndex - columns
+}
+
+function getFolderKeyboardContext(state: FolderKeyboardState) {
+  const folderIndex = state.selectedFolderId
+    ? state.visibleGroups.findIndex((group) => group.id === state.selectedFolderId)
+    : -1
+  const activeGroup = folderIndex >= 0 ? state.visibleGroups[folderIndex] : undefined
+  const activeBookmarks = activeGroup ? (state.bookmarkBuckets[activeGroup.id] ?? []) : []
+  const selectedBookmark = getSelectedBookmark(activeBookmarks, state.selectedBookmarkIndex)
+
+  return {
+    folderIndex,
+    activeGroup,
+    activeBookmarks,
+    selectedBookmark,
+  }
+}
+
+function isFolderKeyboardFocusKey(key: string) {
+  return (
+    key === "ArrowDown" ||
+    key === "ArrowUp" ||
+    key === "ArrowLeft" ||
+    key === "ArrowRight" ||
+    key === " " ||
+    key === "Enter"
+  )
+}
+
+function handleArrowDown(state: FolderKeyboardState, actions: FolderKeyboardActions) {
+  const { folderIndex, activeGroup, activeBookmarks } = getFolderKeyboardContext(state)
+
+  if (state.selectedBookmarkIndex >= 0) {
+    actions.setSelectedBookmarkIndex((prev) => {
+      const nextIndex = getVerticalBookmarkIndex(prev, state.gridColumns, "down")
+      if (nextIndex < activeBookmarks.length) {
+        return nextIndex
+      }
+      if (folderIndex >= 0 && folderIndex < state.visibleGroups.length - 1) {
+        actions.setSelectedFolderId(state.visibleGroups[folderIndex + 1].id)
+        return -1
+      }
+      return prev
+    })
+    return
+  }
+
+  if (folderIndex < 0) {
+    actions.setSelectedFolderId(state.visibleGroups[0]?.id ?? null)
+    return
+  }
+
+  if (!state.collapsedGroups[activeGroup?.id ?? ""] && activeBookmarks.length > 0) {
+    actions.setSelectedBookmarkIndex(0)
+    return
+  }
+
+  if (state.isFolderGrid) {
+    const nextId = actions.findFolderNeighbor(state.selectedFolderId, "down")
+    if (nextId) actions.setSelectedFolderId(nextId)
+  } else {
+    const next = Math.min(state.visibleGroups.length - 1, folderIndex + 1)
+    actions.setSelectedFolderId(state.visibleGroups[next].id)
+  }
+
+  actions.setSelectedBookmarkIndex(-1)
+}
+
+function handleArrowUp(state: FolderKeyboardState, actions: FolderKeyboardActions) {
+  const { folderIndex } = getFolderKeyboardContext(state)
+
+  if (state.selectedBookmarkIndex >= 0) {
+    actions.setSelectedBookmarkIndex((prev) => {
+      const nextIndex = getVerticalBookmarkIndex(prev, state.gridColumns, "up")
+      return nextIndex >= 0 ? nextIndex : -1
+    })
+    return
+  }
+
+  if (folderIndex < 0) {
+    actions.setSelectedFolderId(state.visibleGroups[0]?.id ?? null)
+    return
+  }
+
+  if (state.isFolderGrid) {
+    const nextId = actions.findFolderNeighbor(state.selectedFolderId, "up")
+    if (nextId) actions.setSelectedFolderId(nextId)
+  } else {
+    const next = Math.max(0, folderIndex - 1)
+    actions.setSelectedFolderId(state.visibleGroups[next].id)
+  }
+
+  actions.setSelectedBookmarkIndex(-1)
+}
+
+function handleArrowHorizontal(
+  direction: "left" | "right",
+  state: FolderKeyboardState,
+  actions: FolderKeyboardActions,
+) {
+  const { activeBookmarks } = getFolderKeyboardContext(state)
+
+  if (state.selectedBookmarkIndex < 0) {
+    if (!state.isFolderGrid) return
+    const nextId = actions.findFolderNeighbor(state.selectedFolderId, direction)
+    if (nextId) actions.setSelectedFolderId(nextId)
+    return
+  }
+
+  actions.setSelectedBookmarkIndex((prev) =>
+    getHorizontalBookmarkIndex(prev, activeBookmarks.length, direction),
+  )
+}
+
+function handlePreview(state: FolderKeyboardState, actions: FolderKeyboardActions) {
+  const { selectedBookmark } = getFolderKeyboardContext(state)
+  if (!selectedBookmark) return
+  actions.onPreview(selectedBookmark)
+}
+
+function handleEnter(
+  event: KeyboardEvent,
+  state: FolderKeyboardState,
+  actions: FolderKeyboardActions,
+) {
+  const { activeGroup, selectedBookmark } = getFolderKeyboardContext(state)
+  if (!activeGroup) return
+
+  if (selectedBookmark) {
+    openOrCopyBookmark(selectedBookmark, event)
+    return
+  }
+
+  actions.onToggleCollapse(activeGroup.id)
+}
+
+function handleEscape(actions: FolderKeyboardActions) {
+  actions.setSelectedBookmarkIndex(-1)
+  actions.setSelectedFolderId(null)
+  actions.setHasKeyboardFocus(false)
+}
+
 export function useFolderKeyboardNav({
   bookmarkBuckets,
   collapsedGroups,
@@ -161,165 +364,68 @@ export function useFolderKeyboardNav({
     (e: KeyboardEvent) => {
       if (shouldIgnoreDashboardHotkey(e)) return
 
-      const visibleGroupsValue = visibleGroupsRef.current
-      const selectedFolderValue = selectedFolderIdRef.current
-      const selectedBookmarkValue = selectedBookmarkIndexRef.current
-      const bucketsValue = bookmarkBucketsRef.current
-      const collapsedValue = collapsedGroupsRef.current
-      const columns = gridColumnsRef.current
-      const folderGrid = isFolderGridRef.current
+      const state: FolderKeyboardState = {
+        visibleGroups: visibleGroupsRef.current,
+        selectedFolderId: selectedFolderIdRef.current,
+        selectedBookmarkIndex: selectedBookmarkIndexRef.current,
+        bookmarkBuckets: bookmarkBucketsRef.current,
+        collapsedGroups: collapsedGroupsRef.current,
+        gridColumns: gridColumnsRef.current,
+        isFolderGrid: isFolderGridRef.current,
+      }
+      const actions: FolderKeyboardActions = {
+        setSelectedFolderId,
+        setSelectedBookmarkIndex,
+        setHasKeyboardFocus,
+        onPreview: onPreviewRef.current,
+        onToggleCollapse: onToggleCollapseRef.current,
+        findFolderNeighbor,
+      }
 
-      const folderIndex = selectedFolderValue
-        ? visibleGroupsValue.findIndex((group) => group.id === selectedFolderValue)
-        : -1
-      const activeGroup = folderIndex >= 0 ? visibleGroupsValue[folderIndex] : undefined
-      const activeBookmarks = activeGroup ? (bucketsValue[activeGroup.id] ?? []) : []
-
-      if (
-        e.key === "ArrowDown" ||
-        e.key === "ArrowUp" ||
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowRight" ||
-        e.key === " " ||
-        e.key === "Enter"
-      ) {
-        setHasKeyboardFocus(true)
+      if (isFolderKeyboardFocusKey(e.key)) {
+        actions.setHasKeyboardFocus(true)
       }
 
       if (e.key === "ArrowDown") {
         e.preventDefault()
-        if (selectedBookmarkValue >= 0) {
-          setSelectedBookmarkIndex((prev) => {
-            const nextIndex = prev + columns
-            if (nextIndex < activeBookmarks.length) {
-              return nextIndex
-            }
-            if (folderIndex >= 0 && folderIndex < visibleGroupsValue.length - 1) {
-              setSelectedFolderId(visibleGroupsValue[folderIndex + 1].id)
-              return -1
-            }
-            return prev
-          })
-          return
-        }
-
-        if (folderIndex < 0) {
-          setSelectedFolderId(visibleGroupsValue[0]?.id ?? null)
-          return
-        }
-
-        if (!collapsedValue[activeGroup?.id ?? ""] && activeBookmarks.length > 0) {
-          setSelectedBookmarkIndex(0)
-          return
-        }
-
-        if (folderGrid) {
-          const nextId = findFolderNeighbor(selectedFolderValue, "down")
-          if (nextId) setSelectedFolderId(nextId)
-        } else {
-          const next = Math.min(visibleGroupsValue.length - 1, folderIndex + 1)
-          setSelectedFolderId(visibleGroupsValue[next].id)
-        }
-        setSelectedBookmarkIndex(-1)
+        handleArrowDown(state, actions)
         return
       }
 
       if (e.key === "ArrowUp") {
         e.preventDefault()
-        if (selectedBookmarkValue >= 0) {
-          setSelectedBookmarkIndex((prev) => {
-            const nextIndex = prev - columns
-            if (nextIndex >= 0) {
-              return nextIndex
-            }
-            return -1
-          })
-          return
-        }
-
-        if (folderIndex < 0) {
-          setSelectedFolderId(visibleGroupsValue[0]?.id ?? null)
-          return
-        }
-
-        if (folderGrid) {
-          const nextId = findFolderNeighbor(selectedFolderValue, "up")
-          if (nextId) setSelectedFolderId(nextId)
-        } else {
-          const next = Math.max(0, folderIndex - 1)
-          setSelectedFolderId(visibleGroupsValue[next].id)
-        }
-        setSelectedBookmarkIndex(-1)
+        handleArrowUp(state, actions)
         return
       }
 
-      if (selectedBookmarkValue < 0 && folderGrid && e.key === "ArrowRight") {
+      if (e.key === "ArrowRight") {
         e.preventDefault()
-        const nextId = findFolderNeighbor(selectedFolderValue, "right")
-        if (nextId) setSelectedFolderId(nextId)
+        handleArrowHorizontal("right", state, actions)
         return
       }
 
-      if (selectedBookmarkValue < 0 && folderGrid && e.key === "ArrowLeft") {
+      if (e.key === "ArrowLeft") {
         e.preventDefault()
-        const nextId = findFolderNeighbor(selectedFolderValue, "left")
-        if (nextId) setSelectedFolderId(nextId)
-        return
-      }
-
-      if (selectedBookmarkValue >= 0 && e.key === "ArrowRight") {
-        e.preventDefault()
-        setSelectedBookmarkIndex((prev) => {
-          const nextIndex = prev + 1
-          return nextIndex < activeBookmarks.length ? nextIndex : prev
-        })
-        return
-      }
-
-      if (selectedBookmarkValue >= 0 && e.key === "ArrowLeft") {
-        e.preventDefault()
-        setSelectedBookmarkIndex((prev) => {
-          const nextIndex = prev - 1
-          return nextIndex >= 0 ? nextIndex : prev
-        })
+        handleArrowHorizontal("left", state, actions)
         return
       }
 
       if (e.key === " ") {
-        if (selectedBookmarkValue >= 0) {
-          const bookmark = activeBookmarks[selectedBookmarkValue]
-          if (!bookmark) return
-          e.preventDefault()
-          onPreviewRef.current(bookmark)
-        }
+        if (!getFolderKeyboardContext(state).selectedBookmark) return
+        e.preventDefault()
+        handlePreview(state, actions)
         return
       }
 
       if (e.key === "Enter") {
-        if (!activeGroup) return
+        if (!getFolderKeyboardContext(state).activeGroup) return
         e.preventDefault()
-
-        if (selectedBookmarkValue >= 0) {
-          const bookmark = activeBookmarks[selectedBookmarkValue]
-          if (!bookmark) return
-          if (e.metaKey || e.ctrlKey) {
-            recordBookmarkVisit(bookmark.id)
-            window.open(bookmark.url, "_blank", "noopener,noreferrer")
-          } else {
-            navigator.clipboard.writeText(bookmark.url)
-            toast.success("URL copied to clipboard")
-          }
-          return
-        }
-
-        onToggleCollapseRef.current(activeGroup.id)
+        handleEnter(e, state, actions)
         return
       }
 
       if (e.key === "Escape") {
-        setSelectedBookmarkIndex(-1)
-        setSelectedFolderId(null)
-        setHasKeyboardFocus(false)
+        handleEscape(actions)
       }
     },
     [findFolderNeighbor, setHasKeyboardFocus, setSelectedBookmarkIndex, setSelectedFolderId],

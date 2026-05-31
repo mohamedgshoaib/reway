@@ -1,8 +1,51 @@
 import { apiFetch } from "./api.js"
+import {
+  partitionBookmarkBatchResults,
+  resolveDestinationGroupId,
+  saveBookmarkBatch,
+} from "./save-bookmarks.js"
 import { setStatus, setLoading } from "./ui.js"
 
 function notifyPopup(type, detail) {
   document.dispatchEvent(new CustomEvent(type, { detail }))
+}
+
+function showLinkSaveError(createBtn, statusTarget, message) {
+  setLoading(createBtn, false, "Save Links")
+  setStatus(message, "error", statusTarget)
+}
+
+function handleLinkSaveFailure(err, mode, statusTarget) {
+  let message = "Failed to create group"
+
+  if (err.status === 409) {
+    message = "A group with this name already exists. Switch to Existing group."
+  } else if (err.status === 401) {
+    message = "Log in to keep saving links to Reway."
+    notifyPopup("reway:auth-required", { flow: "links", message })
+  } else if (err.status === 400) {
+    message = "That group is no longer available. Refreshing your groups now."
+    notifyPopup("reway:invalid-group", { flow: "links", message })
+  } else if (mode === "existing") {
+    message = "Failed to add links to group"
+  }
+
+  setStatus(message, "error", statusTarget)
+}
+
+function finishLinkSave(createBtn, statusTarget, duplicateCount) {
+  createBtn.classList.add("success")
+  setLoading(createBtn, false, "Saved")
+
+  if (duplicateCount > 0) {
+    setStatus(
+      `Saved links. Skipped ${duplicateCount} duplicate bookmark(s).`,
+      "success",
+      statusTarget,
+    )
+  }
+
+  setTimeout(() => window.close(), 800)
 }
 
 export async function loadGrabbedLinks() {
@@ -133,74 +176,25 @@ export async function createGroupFromLinks(destination) {
   setLoading(createBtn, true, "Saving")
 
   try {
-    let groupId = existingGroupId
-
-    if (mode === "new") {
-      const groupData = await apiFetch("/api/extension/groups", {
-        method: "POST",
-        body: JSON.stringify({ name: groupName }),
-      })
-
-      groupId = groupData.group.id
-    }
-
-    const results = []
-    for (const link of links) {
-      try {
-        const value = await apiFetch("/api/extension/bookmarks", {
-          method: "POST",
-          body: JSON.stringify({
-            url: link.url,
-            title: link.title || link.url,
-            groupId,
-          }),
-        })
-        results.push({ status: "fulfilled", value })
-      } catch (reason) {
-        results.push({ status: "rejected", reason })
-      }
-    }
-    const rejected = results.filter((r) => r.status === "rejected")
-    const duplicates = rejected.filter((r) => {
-      const err = r.reason
-      if (err?.status === 409) return true
-      const code = err?.data?.code
-      if (code === "23505") return true
-      const msg = String(err?.message || "").toLowerCase()
-      return msg.includes("already exists") || msg.includes("duplicate")
+    const groupId = await resolveDestinationGroupId({
+      mode,
+      existingGroupId,
+      groupName,
     })
-    const nonDuplicateFailures = rejected.filter((r) => !duplicates.includes(r))
+    const results = await saveBookmarkBatch(links, (link) => ({
+      url: link.url,
+      title: link.title || link.url,
+      groupId,
+    }))
+    const { duplicates, nonDuplicateFailures } = partitionBookmarkBatchResults(results)
+
     if (nonDuplicateFailures.length > 0) {
       throw nonDuplicateFailures[0].reason
     }
     await chrome.runtime.sendMessage({ type: "clearGrabbedLinks" })
-
-    createBtn.classList.add("success")
-    setLoading(createBtn, false, "Saved")
-    if (duplicates.length > 0) {
-      setStatus(
-        `Saved links. Skipped ${duplicates.length} duplicate bookmark(s).`,
-        "success",
-        statusTarget,
-      )
-    }
-    setTimeout(() => window.close(), 800)
+    finishLinkSave(createBtn, statusTarget, duplicates.length)
   } catch (err) {
-    setLoading(createBtn, false, "Save Links")
-
-    let message = "Failed to create group"
-    if (err.status === 409) {
-      message = "A group with this name already exists. Switch to Existing group."
-    } else if (err.status === 401) {
-      message = "Log in to keep saving links to Reway."
-      notifyPopup("reway:auth-required", { flow: "links", message })
-    } else if (err.status === 400) {
-      message = "That group is no longer available. Refreshing your groups now."
-      notifyPopup("reway:invalid-group", { flow: "links", message })
-    } else if (mode === "existing") {
-      message = "Failed to add links to group"
-    }
-
-    setStatus(message, "error", statusTarget)
+    showLinkSaveError(createBtn, statusTarget, "")
+    handleLinkSaveFailure(err, mode, statusTarget)
   }
 }

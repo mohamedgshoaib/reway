@@ -15,6 +15,54 @@ interface UseBookmarkKeyboardNavOptions {
   onPreview: (bookmark: BookmarkRow) => void
 }
 
+function getVerticalSelectionIndex(
+  previousIndex: number,
+  length: number,
+  step: number,
+  direction: "down" | "up",
+) {
+  if (direction === "down") {
+    if (previousIndex < 0) return 0
+    const nextIndex = previousIndex + step
+    return nextIndex < length ? nextIndex : previousIndex
+  }
+
+  if (previousIndex <= 0) return 0
+  const nextIndex = previousIndex - step
+  return nextIndex >= 0 ? nextIndex : previousIndex
+}
+
+function getHorizontalSelectionIndex(
+  previousIndex: number,
+  length: number,
+  direction: "left" | "right",
+) {
+  if (direction === "right") {
+    if (previousIndex < 0) return 0
+    const nextIndex = previousIndex + 1
+    return nextIndex < length ? nextIndex : previousIndex
+  }
+
+  if (previousIndex <= 0) return 0
+  const nextIndex = previousIndex - 1
+  return nextIndex >= 0 ? nextIndex : previousIndex
+}
+
+function getSelectedBookmark(bookmarks: BookmarkRow[], selectedIndex: number) {
+  return selectedIndex >= 0 ? bookmarks[selectedIndex] : undefined
+}
+
+function openOrCopyBookmark(bookmark: BookmarkRow, event: KeyboardEvent) {
+  if (event.metaKey || event.ctrlKey) {
+    recordBookmarkVisit(bookmark.id)
+    window.open(bookmark.url, "_blank", "noopener,noreferrer")
+    return
+  }
+
+  navigator.clipboard.writeText(bookmark.url)
+  toast.success("URL copied to clipboard")
+}
+
 export function useBookmarkKeyboardNav({
   bookmarks,
   isGridView,
@@ -51,61 +99,54 @@ export function useBookmarkKeyboardNav({
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (shouldIgnoreDashboardHotkey(e)) return
 
-    const bookmarks = bookmarksRef.current
+    const currentBookmarks = bookmarksRef.current
     const isGrid = isGridViewRef.current
     const columns = gridColumnsRef.current
-    const currentIndex = selectedIndexRef.current
+    const selectedBookmark = getSelectedBookmark(currentBookmarks, selectedIndexRef.current)
 
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setSelectedIndex((prev) => {
-        if (prev < 0) return 0
-        const nextIndex = prev + (isGrid ? columns : 1)
-        return nextIndex < bookmarks.length ? nextIndex : prev
-      })
-    } else if (e.key === "ArrowUp") {
+      setSelectedIndex((prev) =>
+        getVerticalSelectionIndex(prev, currentBookmarks.length, isGrid ? columns : 1, "down"),
+      )
+      return
+    }
+
+    if (e.key === "ArrowUp") {
       e.preventDefault()
-      setSelectedIndex((prev) => {
-        if (prev <= 0) return 0
-        const nextIndex = prev - (isGrid ? columns : 1)
-        return nextIndex >= 0 ? nextIndex : prev
-      })
-    } else if (isGrid && e.key === "ArrowRight") {
+      setSelectedIndex((prev) =>
+        getVerticalSelectionIndex(prev, currentBookmarks.length, isGrid ? columns : 1, "up"),
+      )
+      return
+    }
+
+    if (isGrid && e.key === "ArrowRight") {
       e.preventDefault()
-      setSelectedIndex((prev) => {
-        if (prev < 0) return 0
-        const nextIndex = prev + 1
-        return nextIndex < bookmarks.length ? nextIndex : prev
-      })
-    } else if (isGrid && e.key === "ArrowLeft") {
+      setSelectedIndex((prev) => getHorizontalSelectionIndex(prev, currentBookmarks.length, "right"))
+      return
+    }
+
+    if (isGrid && e.key === "ArrowLeft") {
       e.preventDefault()
-      setSelectedIndex((prev) => {
-        if (prev <= 0) return 0
-        const nextIndex = prev - 1
-        return nextIndex >= 0 ? nextIndex : prev
-      })
-    } else if (e.key === " ") {
-      if (currentIndex >= 0) {
-        e.preventDefault()
-        const bookmark = bookmarks[currentIndex]
-        if (bookmark) {
-          onPreviewRef.current(bookmark)
-        }
-      }
-    } else if (e.key === "Enter") {
-      if (currentIndex >= 0) {
-        e.preventDefault()
-        const bookmark = bookmarks[currentIndex]
-        if (!bookmark) return
-        if (e.metaKey || e.ctrlKey) {
-          recordBookmarkVisit(bookmark.id)
-          window.open(bookmark.url, "_blank", "noopener,noreferrer")
-        } else {
-          navigator.clipboard.writeText(bookmark.url)
-          toast.success("URL copied to clipboard")
-        }
-      }
-    } else if (e.key === "Escape") {
+      setSelectedIndex((prev) => getHorizontalSelectionIndex(prev, currentBookmarks.length, "left"))
+      return
+    }
+
+    if (e.key === " ") {
+      if (!selectedBookmark) return
+      e.preventDefault()
+      onPreviewRef.current(selectedBookmark)
+      return
+    }
+
+    if (e.key === "Enter") {
+      if (!selectedBookmark) return
+      e.preventDefault()
+      openOrCopyBookmark(selectedBookmark, e)
+      return
+    }
+
+    if (e.key === "Escape") {
       setSelectedIndex(-1)
     }
   }, [])

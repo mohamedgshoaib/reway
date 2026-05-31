@@ -6,7 +6,7 @@
 
 ## Phase
 
-`pending`
+`closed`
 
 ## Scope
 

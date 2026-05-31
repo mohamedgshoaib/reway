@@ -30,6 +30,36 @@ interface UseCommandHandlersOptions {
   onAddBusyChange?: (busy: boolean) => void
 }
 
+function normalizeCommandUrl(url: string) {
+  return url.startsWith("http") ? url : `https://${url}`
+}
+
+function buildOptimisticBookmark(url: string, stableId: string, groupId: string | null): BookmarkRow {
+  return {
+    id: stableId,
+    url,
+    normalized_url: url,
+    domain: null,
+    title: url,
+    description: null,
+    favicon_url: null,
+    og_image_url: null,
+    image_url: null,
+    screenshot_url: null,
+    group_id: groupId,
+    user_id: "",
+    created_at: new Date().toISOString(),
+    order_index: Number.MIN_SAFE_INTEGER,
+    rank: null,
+    status: "pending",
+    is_enriching: true,
+    last_fetched_at: null,
+    last_visited_at: null,
+    visit_count: 0,
+    error_reason: null,
+  }
+}
+
 export function useCommandHandlers({
   onAddBookmark,
   onApplyEnrichment,
@@ -66,34 +96,13 @@ export function useCommandHandlers({
 
   const processUrls = useCallback(
     async (urls: string[]) => {
-      const executeAdd = async (url: string) => {
+      const addSingleUrl = async (rawUrl: string) => {
+        const url = normalizeCommandUrl(rawUrl)
         const stableId = crypto.randomUUID()
         let createdId: string | null = null
         const targetGroupId = getActiveTargetGroupId()
 
-        onAddBookmark({
-          id: stableId,
-          url,
-          normalized_url: url,
-          domain: null,
-          title: url,
-          description: null,
-          favicon_url: null,
-          og_image_url: null,
-          image_url: null,
-          screenshot_url: null,
-          group_id: targetGroupId,
-          user_id: "",
-          created_at: new Date().toISOString(),
-          order_index: Number.MIN_SAFE_INTEGER,
-          rank: null,
-          status: "pending",
-          is_enriching: true,
-          last_fetched_at: null,
-          last_visited_at: null,
-          visit_count: 0,
-          error_reason: null,
-        })
+        onAddBookmark(buildOptimisticBookmark(url, stableId, targetGroupId))
 
         try {
           const createdBookmark = await addBookmark({
@@ -132,76 +141,12 @@ export function useCommandHandlers({
       }
 
       if (urls.length === 1) {
-        const u = urls[0]
-        const fullUrl = u.startsWith("http") ? u : `https://${u}`
-        const stableId = crypto.randomUUID()
-        let createdId: string | null = null
-        const targetGroupId = getActiveTargetGroupId()
-
-        onAddBookmark({
-          id: stableId,
-          url: fullUrl,
-          normalized_url: fullUrl,
-          domain: null,
-          title: fullUrl,
-          description: null,
-          favicon_url: null,
-          og_image_url: null,
-          image_url: null,
-          screenshot_url: null,
-          group_id: targetGroupId,
-          user_id: "",
-          created_at: new Date().toISOString(),
-          order_index: Number.MIN_SAFE_INTEGER,
-          rank: null,
-          status: "pending",
-          is_enriching: true,
-          last_fetched_at: null,
-          last_visited_at: null,
-          visit_count: 0,
-          error_reason: null,
-        })
-
-        try {
-          const createdBookmark = await addBookmark({
-            url: fullUrl,
-            group_id: targetGroupId ?? undefined,
-          })
-          createdId = createdBookmark?.id ?? null
-          if (createdBookmark) {
-            onReplaceBookmarkId?.(stableId, createdBookmark.id)
-            onAddBookmark({ ...createdBookmark, is_enriching: true })
-          }
-          if (!createdBookmark) {
-            throw new Error("Failed to create bookmark")
-          }
-
-          const enrichment = await enrichBookmarkWithTimeout({
-            bookmarkId: createdBookmark.id,
-            url: fullUrl,
-            timeoutMs: 30000,
-            enrichCreatedBookmark,
-          })
-          onApplyEnrichment?.(createdBookmark.id, enrichment)
-        } catch (error) {
-          console.error("Failed to add bookmark:", error)
-          if (isBookmarkEnrichmentTimeoutError(error)) {
-            if (createdId) {
-              onApplyEnrichment?.(createdId)
-            }
-            return
-          }
-          toast.error(`Failed to add ${fullUrl}`)
-          if (createdId) {
-            onApplyEnrichment?.(createdId, buildBookmarkEnrichmentFailure(error))
-          }
-        }
+        await addSingleUrl(urls[0])
         return
       }
 
-      const fullUrls = urls.map((u) => (u.startsWith("http") ? u : `https://${u}`))
-      for (const url of fullUrls) {
-        await executeAdd(url)
+      for (const url of urls) {
+        await addSingleUrl(url)
       }
     },
     [

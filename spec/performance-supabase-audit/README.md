@@ -33,7 +33,7 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | --- | --- | --- | --- | --- |
 | 1 | `nextjs-performance` | `nextjs-performance/` | `closed` | `nextjs-performance/execution-plan.md` |
 | 2 | `react-performance-optimization` | `react-performance/` | `closed` | `react-performance/execution-plan.md` |
-| 3 | `refactor-method-complexity-reduce` | `method-complexity/` | `pending` | None |
+| 3 | `refactor-method-complexity-reduce` | `method-complexity/` | `closed` | `method-complexity/execution-plan.md` |
 | 4 | `supabase-common-errors` | `supabase-errors-pitfalls/` | `pending` | None |
 | 5 | `supabase-known-pitfalls` | `supabase-errors-pitfalls/` | `pending` | None |
 | 6 | `supabase-performance-tuning` | `supabase-performance-diagnostics/` | `pending` | None |
@@ -70,6 +70,19 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Execute second skill step 2 | `done` | Board display transform cleanup verified with `pnpm typecheck` and `pnpm build`. |
 | Execute second skill step 3 | `done` | Shell and adapter stability patch verified with `pnpm typecheck` and `pnpm build`. |
 | Close second skill execution | `done` | React execution is closed after the approved low-risk patches; virtualization stays deferred because the previous implementation regressed scroll quality and introduced row gaps. |
+| Begin third skill | `done` | `refactor-method-complexity-reduce` loading artifact created at `method-complexity/loading.md`. |
+| Analyze third skill | `done` | Method-complexity candidates ranked in `method-complexity/candidates.md`; no refactor executed. |
+| Report third skill | `done` | First method-complexity report created at `method-complexity/report-pass-1.md`; keyboard hooks are the recommended first track. |
+| Re-analyze third skill | `done` | Validated `useBookmarkKeyboardNav` as the first local extraction target in `method-complexity/analysis-pass-2.md`. |
+| Final report third skill | `done` | Final method-complexity report created at `method-complexity/report-final.md`; execution awaits approval. |
+| Execute third skill step 1 | `done` | `useBookmarkKeyboardNav` helper extraction verified with local complexity score `18`, `pnpm typecheck`, and `pnpm build`. |
+| Execute third skill step 2 | `done` | `useFolderKeyboardNav` helper extraction verified with local complexity score `13`, `pnpm typecheck`, and `pnpm build`. |
+| Execute third skill step 3 | `done` | `processUrls` helper extraction verified with local complexity score `14`, `pnpm typecheck`, and `pnpm build`. |
+| Execute third skill step 4 | `done` | Extension batch-save helper extraction verified with `saveTabSession` score `12`, `createGroupFromLinks` score `11`, `pnpm typecheck`, and `pnpm build`. |
+| Execute third skill step 5 | `done` | Import confirmation stage extraction verified with `handleConfirmImport` score `14`, `pnpm typecheck`, and `pnpm build`. |
+| Execute third skill step 6 | `done` | Extension background listener extraction verified with listener score `8`, `pnpm typecheck`, and `pnpm build`. |
+| Execute third skill step 7 | `done` | Auth confirm and parser helper extraction verified with route score `10`, parser scores `20` and `19`, `pnpm typecheck`, and `pnpm build`. |
+| Close third skill execution | `done` | Method-complexity phase is closed; the documented candidate queue has been executed. |
 
 ## Execution Rules
 

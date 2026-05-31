@@ -1,9 +1,79 @@
 import { apiFetch } from "./api.js"
 import { isDashboardUrl } from "./config.js"
+import {
+  partitionBookmarkBatchResults,
+  resolveDestinationGroupId,
+  saveBookmarkBatch,
+} from "./save-bookmarks.js"
 import { setStatus, setLoading } from "./ui.js"
 
 function notifyPopup(type, detail) {
   document.dispatchEvent(new CustomEvent(type, { detail }))
+}
+
+function getSelectedHttpTabs(currentWindow, rewayBaseUrl) {
+  const validTabs = currentWindow.tabs.filter(
+    (tab) => tab.url && !tab.url.startsWith("chrome-") && !isDashboardUrl(tab.url, rewayBaseUrl),
+  )
+
+  const checkedTabIds = Array.from(document.querySelectorAll(".session-tab-checkbox:checked")).map(
+    (cb) => parseInt(cb.dataset.id),
+  )
+
+  const selectedTabs = validTabs.filter((tab) => checkedTabIds.includes(tab.id))
+  const selectedHttpTabs = selectedTabs.filter((tab) => {
+    try {
+      const parsed = new URL(tab.url)
+      return parsed.protocol === "http:" || parsed.protocol === "https:"
+    } catch {
+      return false
+    }
+  })
+
+  return {
+    selectedTabs,
+    selectedHttpTabs,
+  }
+}
+
+function showSessionValidationError(saveBtn, statusTarget, message) {
+  setLoading(saveBtn, false, "Save Session")
+  setStatus(message, "error", statusTarget)
+}
+
+function finishSessionSave(saveBtn, statusTarget, duplicateCount) {
+  saveBtn.classList.add("success")
+  setLoading(saveBtn, false, "Saved")
+
+  if (duplicateCount > 0) {
+    setStatus(
+      `Saved session. Skipped ${duplicateCount} duplicate bookmark(s).`,
+      "success",
+      statusTarget,
+    )
+    setTimeout(() => window.close(), 900)
+    return
+  }
+
+  setTimeout(() => window.close(), 800)
+}
+
+function handleSessionSaveError(err, mode, statusTarget) {
+  let message = "Failed to save session"
+
+  if (err.status === 409) {
+    message = "A group with this name already exists. Switch to Existing group."
+  } else if (err.status === 401) {
+    message = "Log in to keep saving sessions to Reway."
+    notifyPopup("reway:auth-required", { flow: "session", message })
+  } else if (err.status === 400) {
+    message = "That group is no longer available. Refreshing your groups now."
+    notifyPopup("reway:invalid-group", { flow: "session", message })
+  } else if (mode === "existing") {
+    message = "Failed to add tabs to group"
+  }
+
+  setStatus(message, "error", statusTarget)
 }
 
 export async function loadTabSession() {
@@ -108,111 +178,37 @@ export async function saveTabSession(destination) {
   try {
     const currentWindow = await chrome.windows.getCurrent({ populate: true })
     const { rewayBaseUrl } = await chrome.storage.local.get("rewayBaseUrl")
-    const validTabs = currentWindow.tabs.filter(
-      (tab) => tab.url && !tab.url.startsWith("chrome-") && !isDashboardUrl(tab.url, rewayBaseUrl),
-    )
-
-    const checkedTabIds = Array.from(
-      document.querySelectorAll(".session-tab-checkbox:checked"),
-    ).map((cb) => parseInt(cb.dataset.id))
-
-    const selectedTabs = validTabs.filter((tab) => checkedTabIds.includes(tab.id))
-
-    const selectedHttpTabs = selectedTabs.filter((tab) => {
-      try {
-        const parsed = new URL(tab.url)
-        return parsed.protocol === "http:" || parsed.protocol === "https:"
-      } catch {
-        return false
-      }
-    })
+    const { selectedTabs, selectedHttpTabs } = getSelectedHttpTabs(currentWindow, rewayBaseUrl)
 
     if (selectedTabs.length === 0) {
-      setLoading(saveBtn, false, "Save Session")
-      setStatus("No tabs selected", "error", statusTarget)
+      showSessionValidationError(saveBtn, statusTarget, "No tabs selected")
       return
     }
 
     if (selectedHttpTabs.length === 0) {
-      setLoading(saveBtn, false, "Save Session")
-      setStatus("No supported tabs selected", "error", statusTarget)
+      showSessionValidationError(saveBtn, statusTarget, "No supported tabs selected")
       return
     }
 
-    let groupId = existingGroupId
-
-    if (mode === "new") {
-      const groupData = await apiFetch("/api/extension/groups", {
-        method: "POST",
-        body: JSON.stringify({ name: sessionName }),
-      })
-
-      groupId = groupData.group.id
-    }
-
-    const results = []
-    for (const tab of selectedHttpTabs) {
-      try {
-        const value = await apiFetch("/api/extension/bookmarks", {
-          method: "POST",
-          body: JSON.stringify({
-            url: tab.url,
-            title: tab.title || tab.url,
-            groupId,
-          }),
-        })
-        results.push({ status: "fulfilled", value })
-      } catch (reason) {
-        results.push({ status: "rejected", reason })
-      }
-    }
-
-    const isDuplicate = (err) => {
-      const code = err?.data?.code
-      if (code === "23505") return true
-      const msg = String(err?.message || "").toLowerCase()
-      return msg.includes("duplicate") || msg.includes("unique constraint")
-    }
-
-    const rejected = results.filter((r) => r.status === "rejected")
-    const duplicates = rejected.filter((r) => isDuplicate(r.reason))
-    const nonDuplicateFailures = rejected.filter((r) => !isDuplicate(r.reason))
+    const groupId = await resolveDestinationGroupId({
+      mode,
+      existingGroupId,
+      groupName: sessionName,
+    })
+    const results = await saveBookmarkBatch(selectedHttpTabs, (tab) => ({
+      url: tab.url,
+      title: tab.title || tab.url,
+      groupId,
+    }))
+    const { duplicates, nonDuplicateFailures } = partitionBookmarkBatchResults(results)
 
     if (nonDuplicateFailures.length > 0) {
       throw nonDuplicateFailures[0].reason
     }
 
-    if (duplicates.length > 0) {
-      saveBtn.classList.add("success")
-      setLoading(saveBtn, false, "Saved")
-      setStatus(
-        `Saved session. Skipped ${duplicates.length} duplicate bookmark(s).`,
-        "success",
-        statusTarget,
-      )
-      setTimeout(() => window.close(), 900)
-      return
-    }
-
-    saveBtn.classList.add("success")
-    setLoading(saveBtn, false, "Saved")
-    setTimeout(() => window.close(), 800)
+    finishSessionSave(saveBtn, statusTarget, duplicates.length)
   } catch (err) {
     setLoading(saveBtn, false, "Save Session")
-
-    let message = "Failed to save session"
-    if (err.status === 409) {
-      message = "A group with this name already exists. Switch to Existing group."
-    } else if (err.status === 401) {
-      message = "Log in to keep saving sessions to Reway."
-      notifyPopup("reway:auth-required", { flow: "session", message })
-    } else if (err.status === 400) {
-      message = "That group is no longer available. Refreshing your groups now."
-      notifyPopup("reway:invalid-group", { flow: "session", message })
-    } else if (mode === "existing") {
-      message = "Failed to add tabs to group"
-    }
-
-    setStatus(message, "error", statusTarget)
+    handleSessionSaveError(err, mode, statusTarget)
   }
 }

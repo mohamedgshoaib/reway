@@ -1,5 +1,54 @@
 import type { ImportEntry } from "../dashboard-types"
 
+function getTagName(node: Element | null | undefined) {
+  return node?.tagName.toLowerCase() ?? ""
+}
+
+function getFolderHeading(child: Element) {
+  const firstChild = child.firstElementChild
+  return getTagName(firstChild) === "h3" ? firstChild : child.querySelector("h3")
+}
+
+function getBookmarkLink(child: Element) {
+  const firstChild = child.firstElementChild
+  return getTagName(firstChild) === "a" ? firstChild : child.querySelector("a")
+}
+
+function getNestedDefinitionList(child: Element) {
+  let nestedDl = child.nextElementSibling
+
+  if (getTagName(nestedDl) !== "dl") {
+    nestedDl = child.querySelector("dl")
+  }
+
+  return getTagName(nestedDl) === "dl" ? nestedDl : null
+}
+
+function pushBookmarkEntry({
+  link,
+  stack,
+  entries,
+  isValidImportUrl,
+  normalizeGroupName,
+}: {
+  link: Element
+  stack: string[]
+  entries: ImportEntry[]
+  isValidImportUrl: (url: string) => boolean
+  normalizeGroupName: (value?: string | null) => string
+}) {
+  const url = link.getAttribute("href") || ""
+  const title = link.textContent?.trim() || url
+  if (!url || !isValidImportUrl(url)) return
+
+  const groupName = stack.length > 0 ? stack[stack.length - 1] : "Ungrouped"
+  entries.push({
+    title,
+    url,
+    groupName: normalizeGroupName(groupName),
+  })
+}
+
 export function parseBookmarksHtml(options: {
   content: string
   isValidImportUrl: (url: string) => boolean
@@ -16,23 +65,16 @@ export function parseBookmarksHtml(options: {
     const children = Array.from(node.children)
 
     for (const child of children) {
-      const tag = child.tagName.toLowerCase()
+      const tag = getTagName(child)
       if (tag === "dt") {
-        const firstChild = child.firstElementChild
-        const folderHeading =
-          firstChild?.tagName.toLowerCase() === "h3" ? firstChild : child.querySelector("h3")
-        const link =
-          firstChild?.tagName.toLowerCase() === "a" ? firstChild : child.querySelector("a")
+        const folderHeading = getFolderHeading(child)
+        const link = getBookmarkLink(child)
 
         if (folderHeading) {
           const folderName = folderHeading.textContent?.trim() ?? ""
-          let nestedDl = child.nextElementSibling
+          const nestedDl = getNestedDefinitionList(child)
 
-          if (!nestedDl || nestedDl.tagName.toLowerCase() !== "dl") {
-            nestedDl = child.querySelector("dl")
-          }
-
-          if (nestedDl && nestedDl.tagName.toLowerCase() === "dl") {
+          if (nestedDl) {
             if (folderName.length > 0) {
               stack.push(folderName)
               traverse(nestedDl, stack)
@@ -45,16 +87,13 @@ export function parseBookmarksHtml(options: {
         }
 
         if (link) {
-          const url = link.getAttribute("href") || ""
-          const title = link.textContent?.trim() || url
-          if (url && options.isValidImportUrl(url)) {
-            const groupName = stack.length > 0 ? stack[stack.length - 1] : "Ungrouped"
-            entries.push({
-              title,
-              url,
-              groupName: options.normalizeGroupName(groupName),
-            })
-          }
+          pushBookmarkEntry({
+            link,
+            stack,
+            entries,
+            isValidImportUrl: options.isValidImportUrl,
+            normalizeGroupName: options.normalizeGroupName,
+          })
         }
       } else {
         traverse(child, stack)

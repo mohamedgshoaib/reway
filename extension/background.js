@@ -124,6 +124,257 @@ async function updateGrabbedLinksBadge(count) {
   }
 }
 
+function respondAsync(sendResponse, handler) {
+  ;(async () => {
+    try {
+      await handler()
+    } catch (error) {
+      rewayErrorOnce("worker-handler-failed", "Background handler failed:", error)
+      sendResponse({ success: false, error: String(error?.message || "Failed") })
+    }
+  })()
+  return true
+}
+
+function isHttpUrl(candidateUrl) {
+  try {
+    const parsed = new URL(candidateUrl)
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
+function normalizeHttpUrls(urls, limit = 25) {
+  return urls
+    .flatMap((candidateUrl) => {
+      try {
+        const parsed = new URL(candidateUrl)
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return []
+        }
+        return [parsed.toString()]
+      } catch {
+        return []
+      }
+    })
+    .slice(0, limit)
+}
+
+async function openUrlsInBackgroundTabs(urls) {
+  await Promise.all(urls.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })))
+}
+
+async function handleGrabbedLinksMessage(message) {
+  if (message?.type === "getGrabbedLinks") {
+    const links = await getGrabbedLinks()
+    return { success: true, links }
+  }
+
+  if (message?.type === "addGrabbedLink") {
+    return addGrabbedLink(message.url, message.title, message.source, message.favIconUrl)
+  }
+
+  if (message?.type === "removeGrabbedLink") {
+    return removeGrabbedLink(message.url)
+  }
+
+  if (message?.type === "clearGrabbedLinks") {
+    return clearGrabbedLinks()
+  }
+
+  if (message?.type === "captureCurrentTab") {
+    return captureCurrentTab()
+  }
+
+  return null
+}
+
+async function fetchExtensionGroups(baseUrl) {
+  const groupsResponse = await fetch(`${baseUrl}/api/extension/groups`, {
+    credentials: "include",
+  })
+
+  if (!groupsResponse.ok) {
+    console.error("Failed to fetch groups:", groupsResponse.status)
+    throw new Error("Failed to fetch groups")
+  }
+
+  return groupsResponse.json()
+}
+
+async function resolveXBookmarksGroup(baseUrl, groupsData) {
+  const { xBookmarksGroupId } = await chrome.storage.local.get(["xBookmarksGroupId"])
+
+  let xBookmarksGroup = xBookmarksGroupId
+    ? groupsData.groups?.find((g) => g.id === xBookmarksGroupId)
+    : null
+
+  if (!xBookmarksGroup) {
+    xBookmarksGroup = groupsData.groups?.find((g) => g.name === "X Bookmarks")
+    if (xBookmarksGroup) {
+      await chrome.storage.local.set({
+        xBookmarksGroupId: xBookmarksGroup.id,
+      })
+    }
+  }
+
+  if (xBookmarksGroup) {
+    return xBookmarksGroup
+  }
+
+  const createGroupResponse = await fetch(`${baseUrl}/api/extension/groups`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name: "X Bookmarks", icon: "twitter" }),
+  })
+
+  if (!createGroupResponse.ok) {
+    console.error("Failed to create X Bookmarks group:", createGroupResponse.status)
+    throw new Error("Failed to create X Bookmarks group")
+  }
+
+  const createGroupData = await createGroupResponse.json()
+  xBookmarksGroup = createGroupData.group
+  await chrome.storage.local.set({
+    xBookmarksGroupId: xBookmarksGroup.id,
+  })
+
+  return xBookmarksGroup
+}
+
+async function createTwitterBookmark(baseUrl, groupId, message) {
+  const bookmarkTitle = message.title?.trim() || message.description?.trim() || message.url
+  const bookmarkDescription = message.description?.trim() || ""
+  const bookmarkFavicon = message.faviconUrl?.trim() || null
+
+  if (REWAY_DEBUG) {
+    console.log("Creating bookmark with:", {
+      url: message.url,
+      title: bookmarkTitle.substring(0, 100),
+      groupId,
+    })
+  }
+
+  const bookmarkResponse = await fetch(`${baseUrl}/api/extension/bookmarks`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      url: message.url,
+      title: bookmarkTitle,
+      description: bookmarkDescription,
+      faviconUrl: bookmarkFavicon,
+      groupId,
+    }),
+  })
+
+  if (!bookmarkResponse.ok) {
+    console.error(
+      "Failed to create bookmark:",
+      bookmarkResponse.status,
+      await bookmarkResponse.text(),
+    )
+    throw new Error("Failed to create bookmark")
+  }
+
+  return bookmarkResponse.json()
+}
+
+async function handleTwitterBookmark(message, sendResponse) {
+  if (REWAY_DEBUG) console.log("Received Twitter bookmark message:", message)
+
+  try {
+    const settings = await getSettings()
+    if (REWAY_DEBUG) {
+      console.log("Settings retrieved:", {
+        baseUrl: settings.baseUrl,
+      })
+      console.log("Fetching groups...")
+    }
+
+    const groupsData = await fetchExtensionGroups(settings.baseUrl)
+    if (REWAY_DEBUG) console.log("Groups fetched:", groupsData)
+
+    const xBookmarksGroup = await resolveXBookmarksGroup(settings.baseUrl, groupsData)
+    if (REWAY_DEBUG) console.log("X Bookmarks group exists:", !!xBookmarksGroup)
+
+    const bookmarkData = await createTwitterBookmark(settings.baseUrl, xBookmarksGroup.id, message)
+    if (REWAY_DEBUG) console.log("Bookmark created successfully:", bookmarkData)
+
+    sendResponse({ success: true })
+  } catch (error) {
+    const errorMessage = String(error?.message || "Failed")
+    if (REWAY_DEBUG) {
+      console.error("Twitter bookmark failed:", error)
+    } else {
+      rewayWarnOnce(
+        `twitter-bookmark-failed:${errorMessage}`,
+        "Twitter bookmark failed:",
+        errorMessage,
+      )
+    }
+    sendResponse({ success: false, error: errorMessage })
+  }
+}
+
+async function fetchGroupBookmarkUrls(baseUrl, groupId) {
+  const url = new URL(`${baseUrl}/api/extension/bookmarks`)
+  if (groupId) {
+    url.searchParams.set("groupId", groupId)
+  }
+
+  const response = await fetch(url.toString(), {
+    credentials: "include",
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch bookmarks")
+  }
+
+  const data = await response.json()
+  const bookmarks = data.bookmarks || []
+  return normalizeHttpUrls(bookmarks.map((bookmark) => bookmark.url).filter(Boolean))
+}
+
+async function validateOpenGroupSender(sender, baseUrl) {
+  if (!sender?.url) return
+  const senderUrl = new URL(sender.url)
+  const allowedOrigin = new URL(baseUrl).origin
+  if (senderUrl.origin !== allowedOrigin) {
+    throw new Error("Invalid sender origin")
+  }
+}
+
+async function handleOpenGroup(message, sender, sendResponse) {
+  try {
+    const settings = await getSettings()
+    await validateOpenGroupSender(sender, settings.baseUrl)
+
+    const directUrls = Array.isArray(message.urls) ? message.urls.filter(Boolean) : []
+    const normalizedUrls = normalizeHttpUrls(directUrls)
+
+    if (normalizedUrls.length > 0) {
+      await openUrlsInBackgroundTabs(normalizedUrls)
+      sendResponse({ ok: true, count: normalizedUrls.length })
+      return
+    }
+
+    const bookmarkUrls = await fetchGroupBookmarkUrls(settings.baseUrl, message.groupId)
+    await openUrlsInBackgroundTabs(bookmarkUrls)
+    sendResponse({ ok: true, count: bookmarkUrls.length })
+  } catch (error) {
+    const msg = String(error?.message || "Failed")
+    rewayErrorOnce(`open-group-failed:${msg}`, "Open group failed:", error)
+    sendResponse({ ok: false, error: error?.message || "Failed" })
+  }
+}
+
 // Listen for messages from web pages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "checkExtension") {
@@ -131,259 +382,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return
   }
 
-  // ============================================
-  // Link Grab Message Handlers
-  // ============================================
-
-  if (message?.type === "getGrabbedLinks") {
-    ;(async () => {
-      const links = await getGrabbedLinks()
-      sendResponse({ success: true, links })
-    })()
-    return true
+  if (
+    message?.type === "getGrabbedLinks" ||
+    message?.type === "addGrabbedLink" ||
+    message?.type === "removeGrabbedLink" ||
+    message?.type === "clearGrabbedLinks" ||
+    message?.type === "captureCurrentTab"
+  ) {
+    return respondAsync(sendResponse, async () => {
+      sendResponse(await handleGrabbedLinksMessage(message))
+    })
   }
 
-  if (message?.type === "addGrabbedLink") {
-    ;(async () => {
-      const result = await addGrabbedLink(
-        message.url,
-        message.title,
-        message.source,
-        message.favIconUrl,
-      )
-      sendResponse(result)
-    })()
-    return true
-  }
-
-  if (message?.type === "removeGrabbedLink") {
-    ;(async () => {
-      const result = await removeGrabbedLink(message.url)
-      sendResponse(result)
-    })()
-    return true
-  }
-
-  if (message?.type === "clearGrabbedLinks") {
-    ;(async () => {
-      const result = await clearGrabbedLinks()
-      sendResponse(result)
-    })()
-    return true
-  }
-
-  if (message?.type === "captureCurrentTab") {
-    ;(async () => {
-      const result = await captureCurrentTab()
-      sendResponse(result)
-    })()
-    return true
-  }
-
-  // Twitter bookmark handler
   if (message?.type === "twitterBookmark") {
-    if (REWAY_DEBUG) console.log("Received Twitter bookmark message:", message)
-
-    ;(async () => {
-      try {
-        const settings = await getSettings()
-        if (REWAY_DEBUG)
-          console.log("Settings retrieved:", {
-            baseUrl: settings.baseUrl,
-          })
-
-        // Check if "X Bookmarks" group exists, create if not
-        if (REWAY_DEBUG) console.log("Fetching groups...")
-        const groupsResponse = await fetch(`${settings.baseUrl}/api/extension/groups`, {
-          credentials: "include",
-        })
-
-        if (!groupsResponse.ok) {
-          console.error("Failed to fetch groups:", groupsResponse.status)
-          throw new Error("Failed to fetch groups")
-        }
-
-        const groupsData = await groupsResponse.json()
-        if (REWAY_DEBUG) console.log("Groups fetched:", groupsData)
-
-        const { xBookmarksGroupId } = await chrome.storage.local.get(["xBookmarksGroupId"])
-
-        let xBookmarksGroup = xBookmarksGroupId
-          ? groupsData.groups?.find((g) => g.id === xBookmarksGroupId)
-          : null
-
-        if (!xBookmarksGroup) {
-          xBookmarksGroup = groupsData.groups?.find((g) => g.name === "X Bookmarks")
-          if (xBookmarksGroup) {
-            await chrome.storage.local.set({
-              xBookmarksGroupId: xBookmarksGroup.id,
-            })
-          }
-        }
-
-        if (REWAY_DEBUG) console.log("X Bookmarks group exists:", !!xBookmarksGroup)
-
-        // Create group if it doesn't exist
-        if (!xBookmarksGroup) {
-          if (REWAY_DEBUG) console.log("Creating X Bookmarks group...")
-          const createGroupResponse = await fetch(`${settings.baseUrl}/api/extension/groups`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name: "X Bookmarks", icon: "twitter" }),
-          })
-
-          if (!createGroupResponse.ok) {
-            console.error("Failed to create X Bookmarks group:", createGroupResponse.status)
-            throw new Error("Failed to create X Bookmarks group")
-          }
-
-          const createGroupData = await createGroupResponse.json()
-          if (REWAY_DEBUG) console.log("X Bookmarks group created:", createGroupData)
-          xBookmarksGroup = createGroupData.group
-          await chrome.storage.local.set({
-            xBookmarksGroupId: xBookmarksGroup.id,
-          })
-        }
-
-        // Create bookmark
-        const bookmarkTitle = message.title?.trim() || message.description?.trim() || message.url
-        const bookmarkDescription = message.description?.trim() || ""
-        const bookmarkFavicon = message.faviconUrl?.trim() || null
-
-        if (REWAY_DEBUG)
-          console.log("Creating bookmark with:", {
-            url: message.url,
-            title: bookmarkTitle.substring(0, 100),
-            groupId: xBookmarksGroup.id,
-          })
-
-        const bookmarkResponse = await fetch(`${settings.baseUrl}/api/extension/bookmarks`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            url: message.url,
-            title: bookmarkTitle,
-            description: bookmarkDescription,
-            faviconUrl: bookmarkFavicon,
-            groupId: xBookmarksGroup.id,
-          }),
-        })
-
-        if (!bookmarkResponse.ok) {
-          console.error(
-            "Failed to create bookmark:",
-            bookmarkResponse.status,
-            await bookmarkResponse.text(),
-          )
-          throw new Error("Failed to create bookmark")
-        }
-
-        const bookmarkData = await bookmarkResponse.json()
-        if (REWAY_DEBUG) console.log("Bookmark created successfully:", bookmarkData)
-
-        sendResponse({ success: true })
-      } catch (error) {
-        const errorMessage = String(error?.message || "Failed")
-        if (REWAY_DEBUG) {
-          console.error("Twitter bookmark failed:", error)
-        } else {
-          rewayWarnOnce(
-            `twitter-bookmark-failed:${errorMessage}`,
-            "Twitter bookmark failed:",
-            errorMessage,
-          )
-        }
-        sendResponse({ success: false, error: errorMessage })
-      }
-    })()
-    return true
+    return respondAsync(sendResponse, async () => {
+      await handleTwitterBookmark(message, sendResponse)
+    })
   }
 
   if (message?.type === "openGroup") {
-    ;(async () => {
-      try {
-        const settings = await getSettings()
-
-        if (sender?.url) {
-          const senderUrl = new URL(sender.url)
-          const allowedOrigin = new URL(settings.baseUrl).origin
-          if (senderUrl.origin !== allowedOrigin) {
-            throw new Error("Invalid sender origin")
-          }
-        }
-
-        const directUrls = Array.isArray(message.urls) ? message.urls.filter(Boolean) : []
-
-        const normalizedUrls = directUrls
-          .flatMap((candidateUrl) => {
-            try {
-              const parsed = new URL(candidateUrl)
-              if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-                return []
-              }
-              return [parsed.toString()]
-            } catch {
-              return []
-            }
-          })
-          .slice(0, 25)
-
-        if (normalizedUrls.length > 0) {
-          await Promise.all(
-            normalizedUrls.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
-          )
-          sendResponse({ ok: true, count: normalizedUrls.length })
-          return
-        }
-
-        const url = new URL(`${settings.baseUrl}/api/extension/bookmarks`)
-        if (message.groupId) {
-          url.searchParams.set("groupId", message.groupId)
-        }
-
-        const response = await fetch(url.toString(), {
-          credentials: "include",
-        })
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch bookmarks")
-        }
-
-        const data = await response.json()
-        const bookmarks = data.bookmarks || []
-
-        const bookmarkUrls = bookmarks
-          .flatMap((bookmark) => {
-            if (!bookmark.url) return []
-            try {
-              const parsed = new URL(bookmark.url)
-              if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-                return []
-              }
-              return [parsed.toString()]
-            } catch {
-              return []
-            }
-          })
-          .slice(0, 25)
-
-        await Promise.all(
-          bookmarkUrls.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
-        )
-
-        sendResponse({ ok: true, count: bookmarkUrls.length })
-      } catch (error) {
-        const msg = String(error?.message || "Failed")
-        rewayErrorOnce(`open-group-failed:${msg}`, "Open group failed:", error)
-        sendResponse({ ok: false, error: error?.message || "Failed" })
-      }
-    })()
-    return true
+    return respondAsync(sendResponse, async () => {
+      await handleOpenGroup(message, sender, sendResponse)
+    })
   }
 })
