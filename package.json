@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:trace": "powershell -NoProfile -Command \"$env:NEXT_TURBOPACK_TRACING='1'; next dev\"",
     "trace:turbopack": "next internal trace .next/dev/trace-turbopack",
+    "generate:group-icons": "node scripts/generate-group-icon-manifest.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "oxlint",

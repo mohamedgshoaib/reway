@@ -102,7 +102,11 @@ async function createMissingImportGroups({
     ),
   )
 
-  const groupRanks = generateRanksBetween(groups.at(-1)?.rank ?? null, null, groupNamesToCreate.length)
+  const groupRanks = generateRanksBetween(
+    groups.at(-1)?.rank ?? null,
+    null,
+    groupNamesToCreate.length,
+  )
   const createdGroups: GroupRow[] = new Array(groupNamesToCreate.length)
 
   await runWithConcurrency(
@@ -126,6 +130,7 @@ async function createMissingImportGroups({
         user_id: userId,
         created_at: new Date().toISOString(),
         hide_from_all_bookmarks: false,
+        show_in_fab: true,
         order_index: null,
         rank,
       } satisfies GroupRow
@@ -153,7 +158,8 @@ function buildPendingImportEntries(
   const entriesByGroup = new Map<string, number>()
 
   entries.forEach((entry) => {
-    const groupId = entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
+    const groupId =
+      entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
     const key = groupId ?? "__ungrouped__"
     entriesByGroup.set(key, (entriesByGroup.get(key) ?? 0) + 1)
   })
@@ -170,7 +176,8 @@ function buildPendingImportEntries(
   const rankOffsetsByGroup = new Map<string, number>()
 
   return entries.map((entry, index) => {
-    const groupId = entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
+    const groupId =
+      entry.groupName === "Ungrouped" ? null : (groupMap.get(entry.groupName)?.id ?? null)
     const key = groupId ?? "__ungrouped__"
     const offset = rankOffsetsByGroup.get(key) ?? 0
     rankOffsetsByGroup.set(key, offset + 1)
@@ -423,12 +430,10 @@ export function useImportHandlers({
 
           const stableId = createdBookmark.id
           setBookmarks((prev) =>
-            sortBookmarks(
-              [
-                { ...createdBookmark, is_enriching: true },
-                ...prev.filter((item) => item.id !== stableId),
-              ],
-            ),
+            sortBookmarks([
+              { ...createdBookmark, is_enriching: true },
+              ...prev.filter((item) => item.id !== stableId),
+            ]),
           )
 
           enrichmentQueue.push({ id: stableId, url: entry.url })
@@ -456,10 +461,15 @@ export function useImportHandlers({
       const startBackgroundEnrichment = () => {
         if (enrichmentQueue.length === 0) return
         // Skip stop check for enrichment - always complete enrichment for created bookmarks
-        void runWithConcurrency([...enrichmentQueue], ENRICH_BOOKMARK_CONCURRENCY, enrichmentWorker, {
-          shouldStop: () => stopRequestedRef.current,
-          skipStopCheck: true,
-        })
+        void runWithConcurrency(
+          [...enrichmentQueue],
+          ENRICH_BOOKMARK_CONCURRENCY,
+          enrichmentWorker,
+          {
+            shouldStop: () => stopRequestedRef.current,
+            skipStopCheck: true,
+          },
+        )
       }
 
       await runWithConcurrency(pendingEntries, CREATE_BOOKMARK_CONCURRENCY, handleCreate, {

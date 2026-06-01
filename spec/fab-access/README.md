@@ -182,8 +182,7 @@ rewayAccessBookmarksByGroup: {
 
 - Add Chrome command `open-quick-access`.
 - Default shortcut:
-  - Windows/Linux: `Alt+Shift+R`
-  - macOS: `Option+Shift+R`
+  - `Ctrl+Shift+Y`
 - If command cannot open quick access on current page, do nothing.
 - Shortcut opens menu in Raycast-style mode:
   - search input has caret ready
@@ -239,20 +238,20 @@ Goal: backend can express FAB group visibility, no-group bookmark reads, search,
 
 Tasks:
 
-- [ ] Add `show_in_fab boolean default true` to groups schema/migration.
-- [ ] Update generated Supabase types if schema changes.
-- [ ] Include `show_in_fab` in dashboard and extension group selects.
-- [ ] Add dashboard mutation/action for toggling group quick-access visibility.
-- [ ] Add explicit extension bookmark handling for `groupId=none`.
-- [ ] Add favicon/domain fields to extension bookmark list payload if missing.
-- [ ] Add user-scoped extension bookmark search endpoint.
-- [ ] Reuse `/api/bookmarks/visits` for best-effort visit tracking, or add extension-safe visit tracking only if needed.
-- [ ] Verify auth scoping on every route/mutation.
+- [x] Add `show_in_fab boolean default true` to groups schema/migration.
+- [x] Update generated Supabase types if schema changes.
+- [x] Include `show_in_fab` in dashboard and extension group selects.
+- [x] Add dashboard mutation/action for toggling group quick-access visibility.
+- [x] Add explicit extension bookmark handling for `groupId=none`.
+- [x] Add favicon/domain fields to extension bookmark list payload if missing.
+- [x] Add user-scoped extension bookmark search endpoint.
+- [x] Reuse `/api/bookmarks/visits` for best-effort visit tracking, or add extension-safe visit tracking only if needed.
+- [x] Verify auth scoping on every route/mutation.
 
 Suggested verification:
 
-- [ ] `pnpm typecheck`
-- [ ] targeted lint for changed files
+- [x] `pnpm typecheck`
+- [x] targeted lint for changed files
 - [ ] route parsing/auth unhappy-path checks
 
 ### Chunk 2 - Background Access Layer
@@ -261,19 +260,19 @@ Goal: background worker owns API reads, cache, tab opening, visit logging, and c
 
 Tasks:
 
-- [ ] Add access cache helper under `extension/js/`.
-- [ ] Keep existing group cache keys.
-- [ ] Add `rewayAccessBookmarksByGroup` cache handling.
-- [ ] Add cache TTL and stale-while-revalidate flow.
-- [ ] Add quota-pressure eviction.
-- [ ] Add message handlers for groups, group bookmarks, search, open bookmark, open group, login URL, dashboard URL.
-- [ ] Add `chrome.commands.onCommand` handler for `open-quick-access`.
-- [ ] Reuse `apiFetch()` and `getSettings()`.
-- [ ] Clear group/bookmark access caches on 401.
+- [x] Add access cache helper under `extension/js/`.
+- [x] Keep existing group cache keys.
+- [x] Add `rewayAccessBookmarksByGroup` cache handling.
+- [x] Add cache TTL and stale-while-revalidate flow.
+- [x] Add quota-pressure eviction.
+- [x] Add message handlers for groups, group bookmarks, search, open bookmark, open group, login URL, dashboard URL.
+- [x] Add `chrome.commands.onCommand` handler for `open-quick-access`.
+- [x] Reuse `apiFetch()` and `getSettings()`.
+- [x] Clear group/bookmark access caches on 401.
 
 Suggested verification:
 
-- [ ] syntax check changed extension JS
+- [x] syntax check changed extension JS
 - [ ] manual message-handler smoke checks where practical
 
 ### Chunk 3 - Content Script UI
@@ -282,21 +281,21 @@ Goal: Shadow DOM FAB renders and behaves correctly on allowed desktop pages.
 
 Tasks:
 
-- [ ] Add `extension/access-content-script.js`.
-- [ ] Add `extension/access-content.css`.
-- [ ] Register content script broadly in manifest, top frame only.
-- [ ] Keep dashboard bridge `extension/content-script.js` separate and unchanged unless intentionally required.
-- [ ] Guard Reway origins, hidden hosts, disabled setting, non-desktop contexts.
-- [ ] Inject immediate FAB shell.
-- [ ] Implement Shadow DOM styling and DOM isolation.
-- [ ] Implement hover open/close intent.
-- [ ] Implement free drag + persisted global position.
-- [ ] Implement direction-aware menu and submenu.
-- [ ] Implement groups, no-group, bookmark submenu, search, auth/error/loading states.
-- [ ] Implement intro tooltip.
-- [ ] Implement keyboard command-open mode.
-- [ ] Implement active row navigation and search behavior.
-- [ ] Implement bookmark and group-open messages to background.
+- [x] Add `extension/access-content-script.js`.
+- [x] Add `extension/access-content.css`.
+- [x] Register content script broadly in manifest, top frame only.
+- [x] Keep dashboard bridge `extension/content-script.js` separate and unchanged unless intentionally required.
+- [x] Guard Reway origins, hidden hosts, disabled setting, non-desktop contexts.
+- [x] Inject immediate FAB shell.
+- [x] Implement Shadow DOM styling and DOM isolation.
+- [x] Implement hover open/close intent.
+- [x] Implement free drag + persisted global position.
+- [x] Implement direction-aware menu and submenu.
+- [x] Implement groups, no-group, bookmark submenu, search, auth/error/loading states.
+- [x] Implement intro tooltip.
+- [x] Implement keyboard command-open mode.
+- [x] Implement active row navigation and search behavior.
+- [x] Implement bookmark and group-open messages to background.
 
 Suggested verification:
 
@@ -311,13 +310,13 @@ Goal: extension settings expose local FAB controls and hidden host management.
 
 Tasks:
 
-- [ ] Add `Quick access button` toggle.
-- [ ] Add hidden host input with plus icon.
-- [ ] Add hidden host list with edit/delete icon buttons.
-- [ ] Add save/cancel behavior.
-- [ ] Add group visibility management surface if still required in extension settings after dashboard implementation.
-- [ ] Normalize user-entered URLs/hosts to hostname.
-- [ ] Message open tabs or rely on next page load for setting changes; choose intentionally.
+- [x] Add `Quick access button` toggle.
+- [x] Add hidden host input with plus icon.
+- [x] Add hidden host list with edit/delete icon buttons.
+- [x] Add save/cancel behavior.
+- [x] Add group visibility management surface if still required in extension settings after dashboard implementation. Not added; dashboard owns account-backed group visibility per locked decision.
+- [x] Normalize user-entered URLs/hosts to hostname.
+- [x] Message open tabs or rely on next page load for setting changes; choose intentionally. Chosen behavior: saved settings apply on page refresh or next navigation.
 
 Suggested verification:
 
@@ -331,11 +330,11 @@ Goal: dashboard lets users choose groups shown in quick access.
 
 Tasks:
 
-- [ ] Add group menu/context action: `Show in quick access` / `Hide from quick access`.
-- [ ] Add compact introduction behavior for users without extension context.
-- [ ] Make copy clear that quick access is extension-powered.
-- [ ] Preserve existing group actions and dashboard semantics.
-- [ ] Do not mix with `hide_from_all_bookmarks`.
+- [x] Add group menu/context action: `Show in quick access` / `Hide from quick access`.
+- [x] Add compact introduction behavior for users without extension context.
+- [x] Make copy clear that quick access is extension-powered.
+- [x] Preserve existing group actions and dashboard semantics.
+- [x] Do not mix with `hide_from_all_bookmarks`.
 
 Suggested verification:
 
@@ -349,18 +348,18 @@ Goal: feature feels native to Reway and does not regress existing save workflows
 
 Tasks:
 
-- [ ] Compare against `spec/prototypes/fab-access-demo/refined-preview.png`.
-- [ ] Review with `chrome-extension-ui`.
-- [ ] Review visual/motion details with `make-interfaces-feel-better`.
-- [ ] Verify popup save flows unchanged.
-- [ ] Verify dashboard bridge content script unchanged.
-- [ ] Verify extension permissions are justified.
-- [ ] Document final behavior in README or extension docs if needed.
+- [x] Compare against `spec/prototypes/fab-access-demo/refined-preview.png`.
+- [x] Review with `chrome-extension-ui`.
+- [x] Review visual/motion details with `make-interfaces-feel-better`.
+- [x] Verify popup save flows unchanged.
+- [x] Verify dashboard bridge content script unchanged.
+- [x] Verify extension permissions are justified.
+- [x] Document final behavior in README or extension docs if needed.
 
 Suggested verification:
 
-- [ ] `pnpm typecheck`
-- [ ] targeted `oxlint`
+- [x] `pnpm typecheck`
+- [x] targeted `oxlint`
 - [ ] manual Chrome extension smoke test
 
 ## Progress Tracker
@@ -369,12 +368,12 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`.
 
 | Chunk | Status | Notes |
 | --- | --- | --- |
-| 1 - Data Model And API | not-started | Needs schema + route planning before code. |
-| 2 - Background Access Layer | not-started | Depends on route contracts from Chunk 1. |
-| 3 - Content Script UI | not-started | Can start after message contracts are drafted. |
-| 4 - Popup Settings | not-started | Requires storage keys and UX copy final. |
-| 5 - Dashboard Group Visibility | not-started | Requires `show_in_fab` persistence. |
-| 6 - Polish And Regression | not-started | Final pass after production wiring. |
+| 1 - Data Model And API | done | Added `show_in_fab`, extension no-group reads, favicon/domain payload fields, capped search route, and extension-safe visit route CORS. Verified with `pnpm typecheck` and targeted `oxlint`; no live route smoke run. |
+| 2 - Background Access Layer | done | Added access cache helper, stale refresh messages, background API/open handlers, visit logging, and `open-quick-access` command routing. Verified syntax, manifest JSON, `pnpm typecheck`, and targeted `oxlint`; no manual extension smoke run. |
+| 3 - Content Script UI | done | Added Shadow DOM FAB/content CSS, desktop/page guards, hover/drag/menu/submenu/search/auth states, command-open keyboard mode, and bookmark/group-open messaging. Verified JS syntax, manifest JSON, targeted `oxlint`, and `pnpm typecheck`; no Chrome-loaded manual smoke run. |
+| 4 - Popup Settings | done | Added local quick-access toggle, hidden-host draft editing, hostname normalization, save/cancel persistence, and refresh-on-next-page-load semantics. Verified JS syntax, targeted `oxlint`, and `pnpm typecheck`; no Chrome popup smoke run. |
+| 5 - Dashboard Group Visibility | done | Added extension quick-access visibility actions to dashboard group menus/context menus with optimistic user-scoped mutation and extension-specific copy. Verified `pnpm typecheck` and targeted `oxlint`; no live DB/FAB cache smoke run. |
+| 6 - Polish And Regression | done | Compared against refined prototype, reviewed extension UI/motion/permissions, preserved popup save and dashboard bridge separation, tightened keyboard command mode and active-row behavior. Verified `pnpm typecheck`, targeted `oxlint`, targeted `oxfmt --check`, extension JS syntax, manifest JSON, and `pnpm build`; no manual Chrome extension smoke run. |
 
 ## Resume Protocol
 

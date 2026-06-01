@@ -29,6 +29,7 @@ export interface DashboardGroupControlsAdapter {
   handleInlineCreateGroup: (onError?: () => void) => Promise<void>
   handleDeleteGroup: (groupId: string) => Promise<void>
   handleToggleHideFromAllBookmarks: (id: string, hide: boolean) => Promise<void>
+  handleToggleShowInQuickAccess: (id: string, show: boolean) => Promise<void>
   startEditingGroup: (group: GroupRow) => void
   cancelEditingGroup: () => void
   cancelInlineCreateGroup: () => void

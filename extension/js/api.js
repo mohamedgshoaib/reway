@@ -1,4 +1,6 @@
 export const DEFAULT_BASE_URL = "https://www.reway.page"
+const ACCESS_CACHE_KEYS = ["rewayGroups", "rewayGroupsFetchedAt", "rewayAccessBookmarksByGroup"]
+const MAX_ERROR_BODY_LENGTH = 240
 
 function isLocalhostBaseUrl(baseUrl) {
   try {
@@ -67,7 +69,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   if (!response.ok) {
     if (response.status === 401) {
-      await chrome.storage.local.remove(["rewayGroups", "rewayGroupsFetchedAt"])
+      await chrome.storage.local.remove(ACCESS_CACHE_KEYS)
     }
 
     let bodyText = ""
@@ -79,7 +81,7 @@ export async function apiFetch(endpoint, options = {}) {
         bodyData = data
         bodyText = data?.error || data?.message || (data ? JSON.stringify(data) : "")
       } else {
-        bodyText = await response.text()
+        bodyText = summarizeResponseText(await response.text())
       }
     } catch {
       bodyText = ""
@@ -92,5 +94,21 @@ export async function apiFetch(endpoint, options = {}) {
     throw err
   }
 
+  if (response.status === 204) {
+    return null
+  }
+
   return response.json()
+}
+
+function summarizeResponseText(text) {
+  const value = String(text || "").trim()
+  if (!value) return ""
+
+  const titleMatch = value.match(/<title[^>]*>(.*?)<\/title>/i)
+  const summary = titleMatch?.[1]?.trim() || value.replace(/\s+/g, " ")
+
+  return summary.length > MAX_ERROR_BODY_LENGTH
+    ? `${summary.slice(0, MAX_ERROR_BODY_LENGTH)}...`
+    : summary
 }

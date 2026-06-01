@@ -41,5 +41,6 @@ export function createNoGroupRow(): GroupRow {
     hide_from_all_bookmarks: false,
     order_index: null,
     rank: null,
+    show_in_fab: true,
   }
 }

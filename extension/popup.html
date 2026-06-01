@@ -321,7 +321,12 @@
             </div>
             <div id="session-new-group-field" class="hidden">
               <div class="input-with-suffix">
-                <input id="session-name" type="text" placeholder="Name this session" maxlength="18" />
+                <input
+                  id="session-name"
+                  type="text"
+                  placeholder="Name this session"
+                  maxlength="18"
+                />
                 <span id="session-char-count" class="input-suffix char-count">0/18</span>
               </div>
             </div>
@@ -339,6 +344,63 @@
           <div>
             <h2>Settings</h2>
             <p>Adjust extension behavior and testing preferences.</p>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <label class="switch-field" for="quick-access-toggle">
+            <span class="switch-copy">
+              <span class="switch-title">Quick access button</span>
+              <span class="switch-note">Show Reway on normal webpages.</span>
+            </span>
+            <input id="quick-access-toggle" type="checkbox" role="switch" />
+          </label>
+
+          <label class="switch-field" for="x-auto-capture-toggle">
+            <span class="switch-copy">
+              <span class="switch-title">Capture X bookmarks automatically</span>
+              <span class="switch-note">
+                Save new X bookmarks into your X Bookmarks group.
+              </span>
+            </span>
+            <input id="x-auto-capture-toggle" type="checkbox" role="switch" />
+          </label>
+
+          <div class="field">
+            <span>Hidden hosts</span>
+            <div class="inline-input">
+              <input
+                id="hidden-host-input"
+                type="text"
+                placeholder="example.com"
+                aria-label="Hidden host"
+              />
+              <button
+                id="add-hidden-host"
+                class="secondary link-action-button icon-button"
+                type="button"
+                aria-label="Add hidden host"
+                title="Add hidden host"
+              >
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M8 3.25v9.5M3.25 8h9.5"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div id="hidden-host-list" class="hidden-host-list" role="list"></div>
+            <p id="hidden-host-empty" class="field-hint">No hidden hosts.</p>
+          </div>
+
+          <div id="access-settings-status" class="status"></div>
+
+          <div class="actions settings-actions">
+            <button id="save-access-settings" class="secondary">Save Settings</button>
+            <button id="cancel-access-settings" class="ghost" type="button">Cancel</button>
           </div>
         </div>
 

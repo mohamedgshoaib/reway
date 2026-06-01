@@ -1,3 +1,4 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role */
 import {
   ArrowUpRight03Icon,
   CheckmarkSquare02Icon,
@@ -6,6 +7,7 @@ import {
   MoreVerticalIcon,
   PencilEdit01Icon,
   ViewOffIcon,
+  ZapIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -36,6 +38,7 @@ export function GroupRowItem({
   onEdit,
   onRequestDelete,
   onToggleHideFromAllBookmarks,
+  onToggleShowInQuickAccess,
   onActionMenuOpenChange,
 }: {
   group: GroupRow
@@ -49,6 +52,7 @@ export function GroupRowItem({
   onEdit: () => void
   onRequestDelete: () => void
   onToggleHideFromAllBookmarks: (hide: boolean) => void
+  onToggleShowInQuickAccess: (show: boolean) => void
   onActionMenuOpenChange?: (open: boolean) => void
 }) {
   const GroupIcon = group.icon ? ALL_ICONS_MAP[group.icon] : Folder01Icon
@@ -117,6 +121,9 @@ export function GroupRowItem({
                     className="text-muted-foreground/60 ml-auto"
                   />
                 )}
+                {group.show_in_fab === false && (
+                  <HugeiconsIcon icon={ZapIcon} size={12} className="text-muted-foreground/60" />
+                )}
               </div>
             </div>
           )}
@@ -137,7 +144,7 @@ export function GroupRowItem({
                 <HugeiconsIcon icon={MoreVerticalIcon} size={14} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-40">
+            <DropdownMenuContent align="center" className="w-52">
               <DropdownMenuItem
                 onSelect={() => {
                   if (selectionMode) {
@@ -178,12 +185,24 @@ export function GroupRowItem({
                 <HugeiconsIcon icon={ViewOffIcon} size={14} />
                 {group.hide_from_all_bookmarks ? "Show in All" : "Hide from All"}
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleShowInQuickAccess(group.show_in_fab === false)
+                }}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                <HugeiconsIcon icon={ZapIcon} size={14} />
+                {group.show_in_fab === false
+                  ? "Show in extension quick access"
+                  : "Hide from extension quick access"}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </ContextMenuTrigger>
 
-      <ContextMenuContent className="w-44">
+      <ContextMenuContent className="w-52">
         <ContextMenuItem
           onSelect={() => {
             if (selectionMode) {
@@ -222,6 +241,17 @@ export function GroupRowItem({
         >
           <HugeiconsIcon icon={ViewOffIcon} size={14} />
           {group.hide_from_all_bookmarks ? "Show in All" : "Hide from All"}
+        </ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() => {
+            onToggleShowInQuickAccess(group.show_in_fab === false)
+          }}
+          className="gap-2 text-xs cursor-pointer"
+        >
+          <HugeiconsIcon icon={ZapIcon} size={14} />
+          {group.show_in_fab === false
+            ? "Show in extension quick access"
+            : "Hide from extension quick access"}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

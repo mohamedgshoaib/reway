@@ -133,10 +133,7 @@ function setSettingsPanelOpen(isOpen) {
   document.querySelector(".shell")?.classList.toggle("settings-open", isOpen)
   elements.devPanel?.classList.toggle("open", isOpen)
   elements.settingsToggle?.setAttribute("aria-expanded", String(isOpen))
-  elements.settingsToggle?.setAttribute(
-    "aria-label",
-    isOpen ? "Close settings" : "Open settings",
-  )
+  elements.settingsToggle?.setAttribute("aria-label", isOpen ? "Close settings" : "Open settings")
   elements.settingsToggle?.setAttribute("title", isOpen ? "Close settings" : "Settings")
 }
 
@@ -235,7 +232,11 @@ function setDestinationMode(flow, mode) {
         : popupState.groups === "error"
           ? "Couldn’t load groups right now. Try again."
           : ""
-    setStatus(stateMessage, popupState.groups === "loading" ? "" : "error", getFlowStatusTarget(flow))
+    setStatus(
+      stateMessage,
+      popupState.groups === "loading" ? "" : "error",
+      getFlowStatusTarget(flow),
+    )
   }
 
   syncActionAvailability()
@@ -586,6 +587,16 @@ async function saveBookmark() {
 }
 
 let currentDevEnv = "prod"
+const accessSettingsDraft = {
+  enabled: true,
+  xAutoCaptureEnabled: true,
+  hiddenHosts: [],
+  editingIndex: null,
+  savedEnabled: true,
+  savedXAutoCaptureEnabled: true,
+  savedHiddenHosts: [],
+}
+
 function switchEnv(env) {
   currentDevEnv = env
   const isProd = env === "prod"
@@ -620,6 +631,213 @@ async function hydrateEnvironmentControls() {
   }
 
   switchEnv("prod")
+}
+
+function normalizeHostInput(value) {
+  const raw = String(value || "").trim()
+  if (!raw) return null
+
+  try {
+    const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`)
+    const hostname = parsed.hostname.trim().toLowerCase().replace(/\.$/, "")
+    if (!hostname || hostname.includes(" ")) return null
+    return hostname
+  } catch {
+    return null
+  }
+}
+
+function areAccessSettingsDirty() {
+  if (accessSettingsDraft.enabled !== accessSettingsDraft.savedEnabled) return true
+  if (accessSettingsDraft.xAutoCaptureEnabled !== accessSettingsDraft.savedXAutoCaptureEnabled) {
+    return true
+  }
+  if (accessSettingsDraft.hiddenHosts.length !== accessSettingsDraft.savedHiddenHosts.length) {
+    return true
+  }
+  return accessSettingsDraft.hiddenHosts.some(
+    (host, index) => host !== accessSettingsDraft.savedHiddenHosts[index],
+  )
+}
+
+function setAccessSettingsStatus(message, tone = "") {
+  setStatus(message, tone, elements.accessSettingsStatus)
+}
+
+function updateAccessSettingsControls() {
+  const dirty = areAccessSettingsDirty()
+  if (elements.saveAccessSettings) {
+    elements.saveAccessSettings.disabled = !dirty
+  }
+  if (elements.cancelAccessSettings) {
+    elements.cancelAccessSettings.disabled = !dirty
+  }
+}
+
+function renderHiddenHosts() {
+  if (!elements.hiddenHostList || !elements.hiddenHostEmpty) return
+
+  elements.hiddenHostList.replaceChildren()
+  elements.hiddenHostEmpty.classList.toggle("hidden", accessSettingsDraft.hiddenHosts.length > 0)
+
+  accessSettingsDraft.hiddenHosts.forEach((host, index) => {
+    const row = document.createElement("div")
+    row.className = "hidden-host-row"
+    row.setAttribute("role", "listitem")
+
+    const name = document.createElement("span")
+    name.className = "hidden-host-name"
+    name.textContent = host
+
+    const actions = document.createElement("span")
+    actions.className = "hidden-host-actions"
+
+    const edit = document.createElement("button")
+    edit.type = "button"
+    edit.className = "ghost icon-button tiny-icon-button"
+    edit.setAttribute("aria-label", `Edit ${host}`)
+    edit.title = "Edit"
+    edit.innerHTML = `<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.25 11.75 3 13l1.25-.25 7.45-7.45a1.45 1.45 0 0 0-2.05-2.05L3.25 9.65v2.1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>`
+    edit.addEventListener("click", () => {
+      accessSettingsDraft.editingIndex = index
+      elements.hiddenHostInput.value = host
+      elements.hiddenHostInput.focus()
+      elements.addHiddenHost.title = "Save hidden host"
+      elements.addHiddenHost.setAttribute("aria-label", "Save hidden host")
+      setAccessSettingsStatus("")
+    })
+
+    const remove = document.createElement("button")
+    remove.type = "button"
+    remove.className = "ghost icon-button tiny-icon-button"
+    remove.setAttribute("aria-label", `Remove ${host}`)
+    remove.title = "Remove"
+    remove.innerHTML = `<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.25 4.25 11.75 11.75M11.75 4.25 4.25 11.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
+    remove.addEventListener("click", () => {
+      accessSettingsDraft.hiddenHosts = accessSettingsDraft.hiddenHosts.filter(
+        (_, i) => i !== index,
+      )
+      if (accessSettingsDraft.editingIndex === index) {
+        accessSettingsDraft.editingIndex = null
+        elements.hiddenHostInput.value = ""
+        elements.addHiddenHost.title = "Add hidden host"
+        elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
+      } else if (
+        accessSettingsDraft.editingIndex !== null &&
+        accessSettingsDraft.editingIndex > index
+      ) {
+        accessSettingsDraft.editingIndex -= 1
+      }
+      renderHiddenHosts()
+      updateAccessSettingsControls()
+      setAccessSettingsStatus("")
+    })
+
+    actions.append(edit, remove)
+    row.append(name, actions)
+    elements.hiddenHostList.append(row)
+  })
+
+  updateAccessSettingsControls()
+}
+
+function addOrUpdateHiddenHost() {
+  const host = normalizeHostInput(elements.hiddenHostInput?.value)
+  if (!host) {
+    setAccessSettingsStatus("Enter a valid host.", "error")
+    return
+  }
+
+  const existingIndex = accessSettingsDraft.hiddenHosts.indexOf(host)
+  if (existingIndex !== -1 && existingIndex !== accessSettingsDraft.editingIndex) {
+    setAccessSettingsStatus("Host is already hidden.", "error")
+    return
+  }
+
+  if (accessSettingsDraft.editingIndex !== null) {
+    accessSettingsDraft.hiddenHosts = accessSettingsDraft.hiddenHosts.map((item, index) =>
+      index === accessSettingsDraft.editingIndex ? host : item,
+    )
+  } else {
+    accessSettingsDraft.hiddenHosts = [...accessSettingsDraft.hiddenHosts, host]
+  }
+
+  accessSettingsDraft.hiddenHosts = [...accessSettingsDraft.hiddenHosts].sort()
+  accessSettingsDraft.editingIndex = null
+  elements.hiddenHostInput.value = ""
+  elements.addHiddenHost.title = "Add hidden host"
+  elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
+  setAccessSettingsStatus("")
+  renderHiddenHosts()
+}
+
+async function hydrateAccessSettings() {
+  const { rewayAccessFabEnabled, rewayAccessFabHiddenHosts, rewayXAutoCaptureEnabled } =
+    await chrome.storage.local.get([
+    "rewayAccessFabEnabled",
+    "rewayAccessFabHiddenHosts",
+    "rewayXAutoCaptureEnabled",
+  ])
+  const hiddenHosts = Array.isArray(rewayAccessFabHiddenHosts)
+    ? rewayAccessFabHiddenHosts.flatMap((host) => normalizeHostInput(host) || [])
+    : []
+  const uniqueHosts = Array.from(new Set(hiddenHosts)).sort()
+
+  accessSettingsDraft.enabled = rewayAccessFabEnabled !== false
+  accessSettingsDraft.xAutoCaptureEnabled = rewayXAutoCaptureEnabled !== false
+  accessSettingsDraft.hiddenHosts = uniqueHosts
+  accessSettingsDraft.savedEnabled = accessSettingsDraft.enabled
+  accessSettingsDraft.savedXAutoCaptureEnabled = accessSettingsDraft.xAutoCaptureEnabled
+  accessSettingsDraft.savedHiddenHosts = [...uniqueHosts]
+  accessSettingsDraft.editingIndex = null
+
+  if (elements.accessToggle) {
+    elements.accessToggle.checked = accessSettingsDraft.enabled
+  }
+  if (elements.xAutoCaptureToggle) {
+    elements.xAutoCaptureToggle.checked = accessSettingsDraft.xAutoCaptureEnabled
+  }
+  if (elements.hiddenHostInput) {
+    elements.hiddenHostInput.value = ""
+  }
+
+  renderHiddenHosts()
+  setAccessSettingsStatus("")
+}
+
+async function saveAccessSettings() {
+  const hiddenHosts = Array.from(new Set(accessSettingsDraft.hiddenHosts)).sort()
+  await chrome.storage.local.set({
+    rewayAccessFabEnabled: accessSettingsDraft.enabled,
+    rewayXAutoCaptureEnabled: accessSettingsDraft.xAutoCaptureEnabled,
+    rewayAccessFabHiddenHosts: hiddenHosts,
+  })
+
+  accessSettingsDraft.hiddenHosts = hiddenHosts
+  accessSettingsDraft.savedEnabled = accessSettingsDraft.enabled
+  accessSettingsDraft.savedXAutoCaptureEnabled = accessSettingsDraft.xAutoCaptureEnabled
+  accessSettingsDraft.savedHiddenHosts = [...hiddenHosts]
+  accessSettingsDraft.editingIndex = null
+  renderHiddenHosts()
+  setAccessSettingsStatus("Saved. Refresh pages to apply.", "success")
+}
+
+function cancelAccessSettings() {
+  accessSettingsDraft.enabled = accessSettingsDraft.savedEnabled
+  accessSettingsDraft.xAutoCaptureEnabled = accessSettingsDraft.savedXAutoCaptureEnabled
+  accessSettingsDraft.hiddenHosts = [...accessSettingsDraft.savedHiddenHosts]
+  accessSettingsDraft.editingIndex = null
+  if (elements.accessToggle) {
+    elements.accessToggle.checked = accessSettingsDraft.enabled
+  }
+  if (elements.xAutoCaptureToggle) {
+    elements.xAutoCaptureToggle.checked = accessSettingsDraft.xAutoCaptureEnabled
+  }
+  if (elements.hiddenHostInput) {
+    elements.hiddenHostInput.value = ""
+  }
+  renderHiddenHosts()
+  setAccessSettingsStatus("")
 }
 
 async function hydrateGroups() {
@@ -763,6 +981,7 @@ function initializeShell() {
 function init() {
   initializeShell()
 
+  void hydrateAccessSettings()
   void hydrateEnvironmentControls()
   void hydrateGroups()
   void hydratePageMeta()
@@ -802,6 +1021,34 @@ elements.advancedSettingsToggle?.addEventListener("click", () => {
 elements.envProd?.addEventListener("click", () => switchEnv("prod"))
 elements.envLocal?.addEventListener("click", () => switchEnv("local"))
 elements.saveDevSettings?.addEventListener("click", handleSaveDevSettings)
+
+elements.accessToggle?.addEventListener("change", () => {
+  accessSettingsDraft.enabled = elements.accessToggle.checked
+  setAccessSettingsStatus("")
+  updateAccessSettingsControls()
+})
+elements.xAutoCaptureToggle?.addEventListener("change", () => {
+  accessSettingsDraft.xAutoCaptureEnabled = elements.xAutoCaptureToggle.checked
+  setAccessSettingsStatus("")
+  updateAccessSettingsControls()
+})
+elements.addHiddenHost?.addEventListener("click", addOrUpdateHiddenHost)
+elements.hiddenHostInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault()
+    addOrUpdateHiddenHost()
+  } else if (event.key === "Escape" && accessSettingsDraft.editingIndex !== null) {
+    accessSettingsDraft.editingIndex = null
+    elements.hiddenHostInput.value = ""
+    elements.addHiddenHost.title = "Add hidden host"
+    elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
+    setAccessSettingsStatus("")
+  }
+})
+elements.saveAccessSettings?.addEventListener("click", () => {
+  void saveAccessSettings()
+})
+elements.cancelAccessSettings?.addEventListener("click", cancelAccessSettings)
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && elements.devPanel?.classList.contains("open")) {

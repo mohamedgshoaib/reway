@@ -2,7 +2,11 @@
 
 import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { checkDuplicateGroup, toggleHideFromAllBookmarks } from "@/app/dashboard/actions/groups"
+import {
+  checkDuplicateGroup,
+  toggleHideFromAllBookmarks,
+  toggleShowInQuickAccess,
+} from "@/app/dashboard/actions/groups"
 import { generateRankBetween } from "@/lib/ranking"
 import type { BookmarkRow, GroupRow } from "@/lib/supabase/queries"
 import { ALL_BOOKMARKS_GROUP_ID } from "@/lib/system-groups"
@@ -31,6 +35,7 @@ interface UseGroupActionsOptions {
       icon: string
       color?: string | null
       hide_from_all_bookmarks?: boolean | null
+      show_in_fab?: boolean | null
     },
   ) => Promise<void>
   deleteGroup: (id: string) => Promise<void>
@@ -40,6 +45,7 @@ interface UseGroupActionsOptions {
     icon: string
     color?: string | null
     hide_from_all_bookmarks?: boolean | null
+    show_in_fab?: boolean | null
     order_index?: number | null
     rank?: string | null
   }) => Promise<void>
@@ -96,6 +102,7 @@ export function useGroupActions({
         user_id: userId,
         created_at: new Date().toISOString(),
         hide_from_all_bookmarks: false,
+        show_in_fab: true,
         color: color ?? null,
         order_index: null,
         rank: rank ?? generateRankBetween(groups.at(-1)?.rank ?? null, null),
@@ -214,6 +221,7 @@ export function useGroupActions({
                   icon: lastDeleted.icon || "folder",
                   color: lastDeleted.color,
                   hide_from_all_bookmarks: lastDeleted.hide_from_all_bookmarks,
+                  show_in_fab: lastDeleted.show_in_fab,
                   order_index: lastDeleted.order_index,
                   rank: lastDeleted.rank,
                 })
@@ -358,6 +366,26 @@ export function useGroupActions({
     [groups, setGroups],
   )
 
+  const handleToggleShowInQuickAccess = useCallback(
+    async (id: string, show: boolean) => {
+      setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, show_in_fab: show } : g)))
+
+      try {
+        await toggleShowInQuickAccess(id, show)
+        toast.success(
+          show ? "Shown in extension quick access" : "Hidden from extension quick access",
+        )
+      } catch (error) {
+        console.error("Toggle quick access visibility failed:", error)
+        toast.error("Failed to update quick access visibility")
+        setGroups((prev) =>
+          prev.map((g) => (g.id === id ? groups.find((og) => og.id === id) || g : g)),
+        )
+      }
+    },
+    [groups, setGroups],
+  )
+
   const groupControls = useMemo(
     () => ({
       editingGroupId,
@@ -381,6 +409,7 @@ export function useGroupActions({
       handleInlineCreateGroup,
       handleDeleteGroup,
       handleToggleHideFromAllBookmarks,
+      handleToggleShowInQuickAccess,
       startEditingGroup,
       cancelEditingGroup,
       cancelInlineCreateGroup,
@@ -396,6 +425,7 @@ export function useGroupActions({
       handleInlineCreateGroup,
       handleSidebarGroupUpdate,
       handleToggleHideFromAllBookmarks,
+      handleToggleShowInQuickAccess,
       isCreatingGroup,
       isInlineCreating,
       isUpdatingGroup,
@@ -414,5 +444,6 @@ export function useGroupActions({
     handleDeleteGroup,
     handleInlineCreateGroup,
     handleToggleHideFromAllBookmarks,
+    handleToggleShowInQuickAccess,
   }
 }

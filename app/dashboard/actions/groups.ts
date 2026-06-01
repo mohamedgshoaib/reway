@@ -28,6 +28,7 @@ export async function updateGroup(
     icon: string
     color?: string | null
     hide_from_all_bookmarks?: boolean | null
+    show_in_fab?: boolean | null
   },
 ) {
   return groupsMutations.update(id, formData)
@@ -47,6 +48,7 @@ export async function restoreGroup(group: {
   icon: string
   color?: string | null
   hide_from_all_bookmarks?: boolean | null
+  show_in_fab?: boolean | null
   order_index?: number | null
   rank?: string | null
 }) {
@@ -55,4 +57,8 @@ export async function restoreGroup(group: {
 
 export async function toggleHideFromAllBookmarks(id: string, hide: boolean) {
   return groupsMutations.setHiddenFromAllBookmarks(id, hide)
+}
+
+export async function toggleShowInQuickAccess(id: string, show: boolean) {
+  return groupsMutations.setShownInFab(id, show)
 }

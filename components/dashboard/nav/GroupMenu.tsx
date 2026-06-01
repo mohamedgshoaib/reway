@@ -65,6 +65,7 @@ interface GroupMenuProps {
   onInlineCreateCancel: () => void
   onStartEditingGroup: (group: GroupRowType) => void
   onCancelEditingGroup: () => void
+  onToggleShowInQuickAccess: (id: string, show: boolean) => void
 }
 
 export function GroupMenu({
@@ -96,6 +97,7 @@ export function GroupMenu({
   onInlineCreateCancel,
   onStartEditingGroup,
   onCancelEditingGroup,
+  onToggleShowInQuickAccess,
 }: GroupMenuProps) {
   void groupCounts
   const [menuOpen, setMenuOpen] = useState(false)
@@ -325,6 +327,9 @@ export function GroupMenu({
                     }}
                     onDeleteGroup={() => {
                       openDeleteDialog(group)
+                    }}
+                    onToggleShowInQuickAccess={(show) => {
+                      onToggleShowInQuickAccess(group.id, show)
                     }}
                   />
                 )

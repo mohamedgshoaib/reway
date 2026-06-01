@@ -1,37 +1,41 @@
 // oxlint-disable-next-line import/no-unassigned-import
-import "server-only"
+import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/supabase/database.types"
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
 
-type LibrarySupabaseClient = SupabaseClient<Database>
+type LibrarySupabaseClient = SupabaseClient<Database>;
 
 const DASHBOARD_BOOKMARK_SELECT =
-  "id,url,normalized_url,domain,title,favicon_url,group_id,user_id,created_at,order_index,rank,status,is_enriching,last_visited_at,visit_count"
+  "id,url,normalized_url,domain,title,favicon_url,group_id,user_id,created_at,order_index,rank,status,is_enriching,last_visited_at,visit_count";
 
 export const DASHBOARD_BOOKMARK_DETAIL_SELECT =
-  "id,description,og_image_url,image_url,screenshot_url,last_fetched_at,error_reason"
+  "id,description,og_image_url,image_url,screenshot_url,last_fetched_at,error_reason";
 
 const EXTENSION_BOOKMARK_SELECT =
-  "id, url, title, group_id, created_at, order_index, rank"
+  "id, url, title, domain, favicon_url, group_id, created_at, order_index, rank";
 
-const DASHBOARD_GROUP_SELECT = "id,name,icon,color,user_id,created_at,order_index,rank,hide_from_all_bookmarks"
-const EXTENSION_GROUP_SELECT = "id, name, icon, color, order_index, rank, created_at"
+const DASHBOARD_GROUP_SELECT =
+  "id,name,icon,color,user_id,created_at,order_index,rank,hide_from_all_bookmarks,show_in_fab";
+const EXTENSION_GROUP_SELECT =
+  "id, name, icon, color, order_index, rank, created_at, show_in_fab";
 
 function applyUserScope<T extends { eq: (column: string, value: string) => T }>(
   query: T,
   userId?: string,
 ) {
-  return userId ? query.eq("user_id", userId) : query
+  return userId ? query.eq("user_id", userId) : query;
 }
 
-export async function listBookmarksForDashboard(supabase: LibrarySupabaseClient) {
+export async function listBookmarksForDashboard(
+  supabase: LibrarySupabaseClient,
+) {
   return supabase
     .from("bookmarks")
     .select(DASHBOARD_BOOKMARK_SELECT)
     .order("rank", { ascending: true, nullsFirst: false })
     .order("order_index", { ascending: true })
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 }
 
 export async function getBookmarkDetailsForDashboard(
@@ -44,7 +48,7 @@ export async function getBookmarkDetailsForDashboard(
     .select(DASHBOARD_BOOKMARK_DETAIL_SELECT)
     .eq("id", bookmarkId)
     .eq("user_id", userId)
-    .single()
+    .single();
 }
 
 export async function listBookmarksForExtension(
@@ -52,19 +56,61 @@ export async function listBookmarksForExtension(
   userId: string,
   groupId?: string | null,
 ) {
-  const query = applyUserScope(
+  let query = applyUserScope(
     supabase.from("bookmarks").select(EXTENSION_BOOKMARK_SELECT),
     userId,
-  )
+  );
 
-  if (groupId && groupId !== "all") {
-    query.eq("group_id", groupId)
+  if (groupId === "none") {
+    query = query.is("group_id", null);
+  } else if (groupId && groupId !== "all") {
+    query = query.eq("group_id", groupId);
   }
 
   return query
     .order("rank", { ascending: true, nullsFirst: false })
     .order("order_index", { ascending: true })
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
+}
+
+export async function searchBookmarksForExtension(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+  searchQuery: string,
+  limit: number,
+) {
+  const pattern = `%${searchQuery.replace(/[\\%_]/g, "\\$&")}%`;
+  const columns = ["title", "url", "domain"] as const;
+
+  const results = await Promise.all(
+    columns.map((column) =>
+      applyUserScope(
+        supabase.from("bookmarks").select(EXTENSION_BOOKMARK_SELECT),
+        userId,
+      )
+        .ilike(column, pattern)
+        .order("rank", { ascending: true, nullsFirst: false })
+        .order("order_index", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(limit),
+    ),
+  );
+
+  const error = results.find((result) => result.error)?.error;
+  if (error) {
+    return { data: null, error };
+  }
+
+  const seen = new Set<string>();
+  const data = results
+    .flatMap((result) => result.data ?? [])
+    .filter((bookmark) => {
+      if (seen.has(bookmark.id)) return false;
+      seen.add(bookmark.id);
+      return true;
+    });
+
+  return { data: data.slice(0, limit), error: null };
 }
 
 export async function listGroupsForDashboard(supabase: LibrarySupabaseClient) {
@@ -73,14 +119,17 @@ export async function listGroupsForDashboard(supabase: LibrarySupabaseClient) {
     .select(DASHBOARD_GROUP_SELECT)
     .order("rank", { ascending: true, nullsFirst: false })
     .order("order_index", { ascending: true })
-    .order("name", { ascending: true })
+    .order("name", { ascending: true });
 }
 
 export async function listGroupsForExtension(
   supabase: LibrarySupabaseClient,
   userId: string,
 ) {
-  return applyUserScope(supabase.from("groups").select(EXTENSION_GROUP_SELECT), userId)
+  return applyUserScope(
+    supabase.from("groups").select(EXTENSION_GROUP_SELECT),
+    userId,
+  )
     .order("rank", { ascending: true, nullsFirst: false })
-    .order("order_index", { ascending: true })
+    .order("order_index", { ascending: true });
 }

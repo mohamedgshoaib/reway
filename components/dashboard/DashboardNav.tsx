@@ -19,10 +19,13 @@ import { ThemeControls } from "./nav/ThemeControls"
 import { UserMenu } from "./nav/UserMenu"
 import { ViewModeControls } from "./nav/ViewModeControls"
 
-const NotesTodosSheet = dynamic(() => import("./nav/NotesTodosSheet").then((mod) => mod.NotesTodosSheet), {
-  loading: () => null,
-  ssr: false,
-})
+const NotesTodosSheet = dynamic(
+  () => import("./nav/NotesTodosSheet").then((mod) => mod.NotesTodosSheet),
+  {
+    loading: () => null,
+    ssr: false,
+  },
+)
 
 const ImportSheet = dynamic(() => import("./nav/ImportSheet").then((mod) => mod.ImportSheet), {
   loading: () => null,
@@ -91,8 +94,7 @@ export const DashboardNav = memo(function DashboardNav({
         import: current.import || navigationControls.importSheetOpen,
         export: current.export || navigationControls.exportSheetOpen,
         duplicates: current.duplicates || navigationControls.duplicatesSheetOpen,
-        enrichmentHealth:
-          current.enrichmentHealth || navigationControls.enrichmentHealthSheetOpen,
+        enrichmentHealth: current.enrichmentHealth || navigationControls.enrichmentHealthSheetOpen,
       }
 
       if (
@@ -194,8 +196,8 @@ export const DashboardNav = memo(function DashboardNav({
             <button
               type="button"
               onClick={() => {
-                 document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
-                 router.push("/")
+                document.cookie = "homepage-bypass=1; path=/; max-age=10; SameSite=Strict"
+                router.push("/")
               }}
               className="hidden md:flex shrink-0 items-center cursor-pointer"
               aria-label="Reway Homepage"
@@ -232,6 +234,7 @@ export const DashboardNav = memo(function DashboardNav({
               onInlineCreateCancel={navigation.groupControls.cancelInlineCreateGroup}
               onStartEditingGroup={navigation.groupControls.startEditingGroup}
               onCancelEditingGroup={navigation.groupControls.cancelEditingGroup}
+              onToggleShowInQuickAccess={navigation.groupControls.handleToggleShowInQuickAccess}
             />
           </div>
 

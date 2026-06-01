@@ -98,6 +98,7 @@ export type Database = {
           name: string
           order_index: number | null
           rank: string | null
+          show_in_fab: boolean
           user_id: string
         }
         Insert: {
@@ -109,6 +110,7 @@ export type Database = {
           name: string
           order_index?: number | null
           rank?: string | null
+          show_in_fab?: boolean
           user_id: string
         }
         Update: {
@@ -120,6 +122,7 @@ export type Database = {
           name?: string
           order_index?: number | null
           rank?: string | null
+          show_in_fab?: boolean
           user_id?: string
         }
         Relationships: []

@@ -1,9 +1,11 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role */
 import {
   ArrowUpRight03Icon,
   CheckmarkSquare02Icon,
   Delete02Icon,
   MoreVerticalIcon,
   PencilEdit01Icon,
+  ZapIcon,
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -30,6 +32,7 @@ export function GroupRow({
   onToggleInSelectionMode,
   onEditGroup,
   onDeleteGroup,
+  onToggleShowInQuickAccess,
 }: {
   group: GroupRow
   GroupIcon: IconSvgElement
@@ -43,6 +46,7 @@ export function GroupRow({
   onToggleInSelectionMode: () => void
   onEditGroup: () => void
   onDeleteGroup: () => void
+  onToggleShowInQuickAccess: (show: boolean) => void
 }) {
   return (
     <div className="group/menu-row relative flex items-center gap-3 rounded-xl">
@@ -123,7 +127,7 @@ export function GroupRow({
               <HugeiconsIcon icon={MoreVerticalIcon} size={14} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-40">
+          <DropdownMenuContent align="center" className="w-52">
             <DropdownMenuItem
               onSelect={() => {
                 if (!selectionMode) {
@@ -158,6 +162,17 @@ export function GroupRow({
             >
               <HugeiconsIcon icon={Delete02Icon} size={14} />
               Delete group
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                onToggleShowInQuickAccess(group.show_in_fab === false)
+              }}
+              className="gap-2 text-xs rounded-lg cursor-pointer"
+            >
+              <HugeiconsIcon icon={ZapIcon} size={14} />
+              {group.show_in_fab === false
+                ? "Show in extension quick access"
+                : "Hide from extension quick access"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -4,6 +4,31 @@
 ;(function () {
   "use strict"
 
+  let xAutoCaptureEnabled = true
+  let xAutoCaptureReady = null
+
+  async function hydrateXAutoCaptureSetting() {
+    if (xAutoCaptureReady) return xAutoCaptureReady
+
+    xAutoCaptureReady = chrome.storage.local
+      .get("rewayXAutoCaptureEnabled")
+      .then(({ rewayXAutoCaptureEnabled }) => {
+        xAutoCaptureEnabled = rewayXAutoCaptureEnabled !== false
+      })
+      .catch(() => {
+        xAutoCaptureEnabled = true
+      })
+
+    return xAutoCaptureReady
+  }
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.rewayXAutoCaptureEnabled) return
+    xAutoCaptureEnabled = changes.rewayXAutoCaptureEnabled.newValue !== false
+  })
+
+  void hydrateXAutoCaptureSetting()
+
   // Helper to extract tweet URL from tweet element
   function getTweetUrl(tweetElement) {
     try {
@@ -90,7 +115,7 @@
   }
 
   // Handle bookmark button click
-  function handleBookmarkClick(event) {
+  async function handleBookmarkClick(event) {
     const target = event.target
 
     // Find the bookmark button - it has data-testid="bookmark" or "removeBookmark"
@@ -102,6 +127,9 @@
     // Only proceed if this is a bookmark action (not unbookmark)
     const isBookmarking = bookmarkButton.getAttribute("data-testid") === "bookmark"
     if (!isBookmarking) return
+
+    await hydrateXAutoCaptureSetting()
+    if (!xAutoCaptureEnabled) return
 
     // Find the parent tweet article
     const tweetArticle = findTweetArticle(bookmarkButton)

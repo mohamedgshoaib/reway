@@ -19,17 +19,20 @@ import {
   NO_GROUP_NAME,
 } from "@/lib/system-groups"
 import type { IconPickerPopoverProps } from "../IconPickerPopover"
-import type { DashboardGroupControlsAdapter, DashboardLibraryAdapter } from "./workspace-shell-types"
 import { AllBookmarksRow } from "./sidebar/AllBookmarksRow"
 import { BulkDeleteGroupsDialog, DeleteGroupDialog } from "./sidebar/DeleteGroupDialogs"
+import type { GroupCreateCardProps } from "./sidebar/GroupCreateCard"
+import type { GroupEditCardProps } from "./sidebar/GroupEditCard"
+import type { GroupDragOverlayRowProps } from "./sidebar/GroupReorderRows"
 import { GroupRowItem } from "./sidebar/GroupRowItem"
 import { SelectionModeBar } from "./sidebar/SelectionModeBar"
 import { SortableGroupRowItem } from "./sidebar/SortableGroupRowItem"
 import { useGroupReorderDnd } from "./sidebar/useGroupReorderDnd"
 import { useGroupSelection } from "./sidebar/useGroupSelection"
-import type { GroupCreateCardProps } from "./sidebar/GroupCreateCard"
-import type { GroupEditCardProps } from "./sidebar/GroupEditCard"
-import type { GroupDragOverlayRowProps } from "./sidebar/GroupReorderRows"
+import type {
+  DashboardGroupControlsAdapter,
+  DashboardLibraryAdapter,
+} from "./workspace-shell-types"
 
 const IconPickerPopover = dynamic<IconPickerPopoverProps>(
   () => import("../IconPickerPopover").then((mod) => mod.IconPickerPopover),
@@ -68,7 +71,10 @@ function getServerViewportWidthSnapshot() {
 }
 
 interface DashboardSidebarProps {
-  library: Pick<DashboardLibraryAdapter, "groups" | "bookmarks" | "activeGroupId" | "setActiveGroupId" | "layoutDensity"> & {
+  library: Pick<
+    DashboardLibraryAdapter,
+    "groups" | "bookmarks" | "activeGroupId" | "setActiveGroupId" | "layoutDensity"
+  > & {
     handleOpenGroup: (groupId: string) => void
     reorderGroups: (newOrder: GroupRow[], movedGroupId: string) => Promise<void>
   }
@@ -255,11 +261,13 @@ export const DashboardSidebar = memo(function DashboardSidebar({
             sensors={sensors}
             collisionDetection={collisionDetection}
             onDragStart={(event) => {
-              if (selectionMode || groupControls.editingGroupId || groupControls.isInlineCreating) return
+              if (selectionMode || groupControls.editingGroupId || groupControls.isInlineCreating)
+                return
               handleGroupDragStart(event)
             }}
             onDragEnd={(event) => {
-              if (selectionMode || groupControls.editingGroupId || groupControls.isInlineCreating) return
+              if (selectionMode || groupControls.editingGroupId || groupControls.isInlineCreating)
+                return
               handleGroupDragEnd(event)
             }}
             modifiers={[restrictToVerticalAxis]}
@@ -366,6 +374,9 @@ export const DashboardSidebar = memo(function DashboardSidebar({
                         onRequestDelete={() => openDeleteDialog(group)}
                         onToggleHideFromAllBookmarks={(hide) =>
                           groupControls.handleToggleHideFromAllBookmarks(group.id, hide)
+                        }
+                        onToggleShowInQuickAccess={(show) =>
+                          groupControls.handleToggleShowInQuickAccess(group.id, show)
                         }
                         onActionMenuOpenChange={handleActionMenuOpenChange}
                       />

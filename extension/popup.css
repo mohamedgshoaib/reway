@@ -1338,8 +1338,139 @@ button.success::after {
   margin-top: 0;
 }
 
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.switch-field {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--control-radius);
+  background: color-mix(in oklab, var(--input), transparent 84%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
+}
+
+.switch-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.switch-title {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.switch-note {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.switch-field input[type="checkbox"] {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  flex: 0 0 40px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+  background: var(--muted);
+  cursor: pointer;
+  outline: none;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 92%);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.switch-field input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--foreground);
+  box-shadow: 0 4px 12px -6px rgb(0 0 0 / 0.7);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.switch-field input[type="checkbox"]:checked {
+  background: var(--foreground);
+}
+
+.switch-field input[type="checkbox"]:checked::before {
+  background: var(--background);
+  transform: translateX(16px);
+}
+
+.switch-field input[type="checkbox"]:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 88%),
+    0 0 0 3px color-mix(in oklab, var(--foreground), transparent 82%);
+}
+
+.hidden-host-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.hidden-host-row {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 10px;
+  border-radius: var(--control-radius);
+  background: color-mix(in oklab, var(--input), transparent 84%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
+}
+
+.hidden-host-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hidden-host-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.tiny-icon-button {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  border-radius: 10px;
+}
+
+.tiny-icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+
 .settings-advanced {
-  margin-top: 2px;
+  margin-top: 12px;
 }
 
 .advanced-toggle {

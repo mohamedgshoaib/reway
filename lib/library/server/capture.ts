@@ -2,16 +2,16 @@
 import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/supabase/database.types"
 import { normalizeUrl } from "@/lib/metadata"
 import { generateRankBetween } from "@/lib/ranking"
+import type { Database } from "@/lib/supabase/database.types"
 import { toPersistedGroupId } from "@/lib/system-groups"
 import { getDomain } from "@/lib/utils"
 
 type LibrarySupabaseClient = SupabaseClient<Database>
 
 const CREATE_GROUP_RETURN_SELECT =
-  "id,user_id,name,color,icon,order_index,created_at,hide_from_all_bookmarks,rank"
+  "id,user_id,name,color,icon,order_index,created_at,hide_from_all_bookmarks,rank,show_in_fab"
 
 const CREATE_BOOKMARK_RETURN_SELECT =
   "id,user_id,group_id,url,title,description,favicon_url,og_image_url,image_url,screenshot_url,order_index,created_at,is_enriching,status,error_reason,last_fetched_at,normalized_url,domain,visit_count,last_visited_at,rank"
@@ -38,10 +38,7 @@ interface CreateBookmarkInput {
   last_fetched_at?: string | null
 }
 
-export async function findNextGroupOrderIndex(
-  supabase: LibrarySupabaseClient,
-  userId: string,
-) {
+export async function findNextGroupOrderIndex(supabase: LibrarySupabaseClient, userId: string) {
   const { data: maxOrderData, error } = await supabase
     .from("groups")
     .select("order_index")
@@ -57,10 +54,7 @@ export async function findNextGroupOrderIndex(
   return maxOrderData ? (maxOrderData.order_index ?? 0) + 1 : 0
 }
 
-export async function findNextGroupRank(
-  supabase: LibrarySupabaseClient,
-  userId: string,
-) {
+export async function findNextGroupRank(supabase: LibrarySupabaseClient, userId: string) {
   const { data: lastRankData } = await supabase
     .from("groups")
     .select("rank")
@@ -138,10 +132,7 @@ export async function validateGroupAccess(
   return { groupId: persistedGroupId, valid: true }
 }
 
-export async function findNextBookmarkOrderIndex(
-  supabase: LibrarySupabaseClient,
-  userId: string,
-) {
+export async function findNextBookmarkOrderIndex(supabase: LibrarySupabaseClient, userId: string) {
   const { data: minOrderData, error } = await supabase
     .from("bookmarks")
     .select("order_index")

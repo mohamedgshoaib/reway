@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getCorsHeaders } from "@/app/api/extension/utils"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -26,6 +27,18 @@ function parseBookmarkIds(payload: unknown): string[] {
   })
 }
 
+function withCors(request: Request, response: Response) {
+  const corsHeaders = getCorsHeaders(request)
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+  return response
+}
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, { status: 204, headers: getCorsHeaders(request) })
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const {
@@ -33,7 +46,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return withCors(request, NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
   }
 
   const payload = await request.json().catch(() => null)
@@ -42,7 +55,7 @@ export async function POST(request: Request) {
   const uniqueBookmarkIds = Array.from(new Set(bookmarkIds)).slice(0, MAX_VISIT_BATCH_SIZE)
 
   if (uniqueBookmarkIds.length === 0) {
-    return new NextResponse(null, { status: 204 })
+    return withCors(request, new NextResponse(null, { status: 204 }))
   }
 
   const { error } = await supabaseAdmin.rpc("increment_bookmark_visits", {
@@ -52,8 +65,11 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("Failed to record bookmark visits:", error)
-    return NextResponse.json({ error: "Failed to record bookmark visits" }, { status: 500 })
+    return withCors(
+      request,
+      NextResponse.json({ error: "Failed to record bookmark visits" }, { status: 500 }),
+    )
   }
 
-  return new NextResponse(null, { status: 204 })
+  return withCors(request, new NextResponse(null, { status: 204 }))
 }

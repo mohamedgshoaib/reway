@@ -2,13 +2,13 @@
 import "server-only"
 
 import { revalidatePath } from "next/cache"
-import { fetchMetadata, normalizeUrl } from "@/lib/metadata"
 import {
   createBookmarkRecord,
   createGroupRecord,
   validateGroupAccess,
 } from "@/lib/library/server/capture"
 import { getBookmarkDetailsForDashboard } from "@/lib/library/server/reads"
+import { fetchMetadata, normalizeUrl } from "@/lib/metadata"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { getDomain } from "@/lib/utils"
@@ -253,11 +253,7 @@ export const notesMutations = {
 
   async delete(id: string) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
+      const { error } = await supabase.from("notes").delete().eq("id", id).eq("user_id", userId)
 
       if (error) {
         console.error("Error deleting note:", error)
@@ -401,11 +397,7 @@ export const todosMutations = {
 
   async delete(id: string) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const { error } = await supabase
-        .from("todos")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
+      const { error } = await supabase.from("todos").delete().eq("id", id).eq("user_id", userId)
 
       if (error) {
         console.error("Error deleting todo:", error)
@@ -485,7 +477,12 @@ export const groupsMutations = {
     )
   },
 
-  async create(formData: { name: string; icon: string; color?: string | null; rank?: string | null }) {
+  async create(formData: {
+    name: string
+    icon: string
+    color?: string | null
+    rank?: string | null
+  }) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
       const { data, error } = await createGroupRecord(supabase, userId, formData)
 
@@ -508,6 +505,7 @@ export const groupsMutations = {
       icon: string
       color?: string | null
       hide_from_all_bookmarks?: boolean | null
+      show_in_fab?: boolean | null
     },
   ) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
@@ -518,6 +516,9 @@ export const groupsMutations = {
           icon: formData.icon,
           color: formData.color ?? null,
           hide_from_all_bookmarks: formData.hide_from_all_bookmarks ?? false,
+          ...(formData.show_in_fab === undefined
+            ? {}
+            : { show_in_fab: formData.show_in_fab ?? true }),
         })
         .eq("id", id)
         .eq("user_id", userId)
@@ -549,11 +550,7 @@ export const groupsMutations = {
 
   async delete(id: string) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const { error } = await supabase
-        .from("groups")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
+      const { error } = await supabase.from("groups").delete().eq("id", id).eq("user_id", userId)
 
       if (error) {
         console.error("Error deleting group:", error)
@@ -568,6 +565,7 @@ export const groupsMutations = {
     icon: string
     color?: string | null
     hide_from_all_bookmarks?: boolean | null
+    show_in_fab?: boolean | null
     order_index?: number | null
     rank?: string | null
   }) {
@@ -580,6 +578,7 @@ export const groupsMutations = {
           icon: group.icon,
           color: group.color ?? null,
           hide_from_all_bookmarks: group.hide_from_all_bookmarks ?? false,
+          show_in_fab: group.show_in_fab ?? true,
           order_index: group.order_index ?? null,
           rank: group.rank ?? null,
           user_id: userId,
@@ -606,6 +605,23 @@ export const groupsMutations = {
       if (error) {
         console.error("Error toggling group visibility:", error)
         throw new Error("Failed to update group visibility")
+      }
+    })
+  },
+
+  async setShownInFab(id: string, show: boolean) {
+    return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
+      const { error } = await supabase
+        .from("groups")
+        .update({
+          show_in_fab: show,
+        })
+        .eq("id", id)
+        .eq("user_id", userId)
+
+      if (error) {
+        console.error("Error toggling quick access visibility:", error)
+        throw new Error("Failed to update quick access visibility")
       }
     })
   },
@@ -850,11 +866,7 @@ export const bookmarkMutations = {
 
   async delete(id: string) {
     return runAuthenticatedDashboardOperation(async ({ supabase, userId }) => {
-      const { error } = await supabase
-        .from("bookmarks")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
+      const { error } = await supabase.from("bookmarks").delete().eq("id", id).eq("user_id", userId)
 
       if (error) {
         console.error("Error deleting bookmark:", error)
