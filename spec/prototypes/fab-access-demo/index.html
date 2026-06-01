@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reway FAB - Access Prototype</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Simulated webpage background -->
+    <div class="page-sim">
+      <header class="page-sim-header">
+        <div class="page-sim-logo"></div>
+        <nav class="page-sim-nav">
+          <span>Products</span><span>Docs</span><span>Blog</span
+          ><span>Pricing</span>
+        </nav>
+      </header>
+      <section class="page-sim-hero">
+        <h1>Any webpage, anywhere on the web</h1>
+        <p>
+          This simulates a random page you're browsing. The Reway FAB floats
+          above it as a compact access layer. Hover or click the control in the
+          bottom-right corner.
+        </p>
+      </section>
+      <div class="page-sim-cards">
+        <div class="page-sim-card">
+          <div class="page-sim-bar w60"></div>
+          <div class="page-sim-lines">
+            <div class="page-sim-line w100"></div>
+            <div class="page-sim-line w90"></div>
+            <div class="page-sim-line w75"></div>
+          </div>
+        </div>
+        <div class="page-sim-card">
+          <div class="page-sim-bar w80"></div>
+          <div class="page-sim-lines">
+            <div class="page-sim-line w100"></div>
+            <div class="page-sim-line w55"></div>
+            <div class="page-sim-line w90"></div>
+          </div>
+        </div>
+        <div class="page-sim-card">
+          <div class="page-sim-bar w45"></div>
+          <div class="page-sim-lines">
+            <div class="page-sim-line w75"></div>
+            <div class="page-sim-line w100"></div>
+            <div class="page-sim-line w55"></div>
+          </div>
+        </div>
+      </div>
+      <div class="page-sim-cards">
+        <div class="page-sim-card">
+          <div class="page-sim-bar w80"></div>
+          <div class="page-sim-lines">
+            <div class="page-sim-line w100"></div>
+            <div class="page-sim-line w75"></div>
+          </div>
+        </div>
+        <div class="page-sim-card">
+          <div class="page-sim-bar w60"></div>
+          <div class="page-sim-lines">
+            <div class="page-sim-line w90"></div>
+            <div class="page-sim-line w100"></div>
+            <div class="page-sim-line w55"></div>
+          </div>
+        </div>
+        <div class="page-sim-card">
+          <div class="page-sim-bar w45"></div>
+          <div class="page-sim-lines">
+            <div class="page-sim-line w100"></div>
+            <div class="page-sim-line w75"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State switcher panel -->
+    <div
+      class="state-panel"
+      role="complementary"
+      aria-label="Demo state switcher"
+    >
+      <h3>Preview State</h3>
+      <button
+        class="state-btn"
+        data-state="loaded"
+        onclick="setDemoState('loaded')"
+      >
+        Loaded
+      </button>
+      <button
+        class="state-btn"
+        data-state="loading"
+        onclick="setDemoState('loading')"
+      >
+        Loading
+      </button>
+      <button
+        class="state-btn"
+        data-state="empty"
+        onclick="setDemoState('empty')"
+      >
+        Empty groups
+      </button>
+      <button
+        class="state-btn"
+        data-state="auth"
+        onclick="setDemoState('auth')"
+      >
+        Auth required
+      </button>
+      <button
+        class="state-btn"
+        data-state="error"
+        onclick="setDemoState('error')"
+      >
+        Error
+      </button>
+    </div>
+
+    <!-- FAB root — in production, injected by access-content-script.js -->
+    <div
+      id="reway-fab-root"
+      role="region"
+      aria-label="Reway bookmarks launcher"
+    ></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

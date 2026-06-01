@@ -1,0 +1,745 @@
+/* Reway FAB Access Demo */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+  font-family: "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --page-bg: oklch(0.94 0 0);
+  --page-surface: oklch(0.99 0 0);
+  --page-text: oklch(0.22 0 0);
+  --page-muted: oklch(0.48 0 0);
+  --page-border: oklch(0.88 0 0);
+
+  --reway-bg: oklch(0.18 0 0);
+  --reway-surface: oklch(0.22 0 0);
+  --reway-raised: oklch(0.255 0 0);
+  --reway-muted: oklch(0.30 0 0);
+  --reway-text: oklch(0.98 0 0);
+  --reway-subtle: oklch(0.68 0 0);
+  --reway-dim: oklch(0.52 0 0);
+  --reway-border: color-mix(in oklab, white, transparent 94%);
+  --reway-border-strong: color-mix(in oklab, white, transparent 88%);
+  --reway-focus: color-mix(in oklab, white, transparent 35%);
+  --reway-accent: oklch(0.78 0.10 205);
+  --reway-danger: oklch(0.66 0.18 28);
+
+  --fab-size: 44px;
+  --control-height: 38px;
+  --surface-padding: 6px;
+  --item-radius: 16px;
+  --surface-radius: 22px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --duration-fast: 140ms;
+  --duration-base: 180ms;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--page-text);
+  background:
+    radial-gradient(circle at top left, color-mix(in oklab, var(--reway-accent), transparent 84%), transparent 30rem),
+    var(--page-bg);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page-sim {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 64px 32px;
+}
+
+.page-sim-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.page-sim-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, oklch(0.28 0 0), oklch(0.42 0 0));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4);
+}
+
+.page-sim-nav {
+  display: flex;
+  gap: 24px;
+  margin-left: auto;
+}
+
+.page-sim-nav span,
+.page-sim-hero p {
+  color: var(--page-muted);
+}
+
+.page-sim-nav span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.page-sim-hero {
+  margin-bottom: 48px;
+}
+
+.page-sim-hero h1 {
+  max-width: 12ch;
+  margin: 0 0 12px;
+  font-size: 32px;
+  line-height: 1.08;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.page-sim-hero p {
+  max-width: 56ch;
+  margin: 0;
+  font-size: 14px;
+  text-wrap: pretty;
+}
+
+.page-sim-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-sim-card {
+  min-height: 132px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--page-surface);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.05),
+    0 18px 44px -32px rgb(0 0 0 / 0.28);
+}
+
+.page-sim-bar,
+.page-sim-line {
+  border-radius: 999px;
+  background: oklch(0.88 0 0);
+}
+
+.page-sim-bar {
+  height: 10px;
+  margin-bottom: 14px;
+}
+
+.page-sim-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page-sim-line {
+  height: 8px;
+  background: oklch(0.92 0 0);
+}
+
+.w60 { width: 60%; }
+.w80 { width: 80%; }
+.w45 { width: 45%; }
+.w100 { width: 100%; }
+.w90 { width: 90%; }
+.w75 { width: 75%; }
+.w55 { width: 55%; }
+
+.state-panel {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 9000;
+  width: 176px;
+  padding: 8px;
+  border-radius: 18px;
+  color: var(--reway-text);
+  background: color-mix(in oklab, var(--reway-bg), transparent 4%);
+  box-shadow:
+    inset 0 0 0 1px var(--reway-border),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04),
+    0 18px 48px -28px rgb(0 0 0 / 0.55);
+}
+
+.state-panel h3 {
+  margin: 3px 8px 8px;
+  color: var(--reway-dim);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.state-btn {
+  width: 100%;
+  min-height: 34px;
+  justify-content: flex-start;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--reway-subtle);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.state-btn:hover {
+  color: var(--reway-text);
+  background: color-mix(in oklab, var(--reway-muted), transparent 30%);
+}
+
+.state-btn.active {
+  color: var(--reway-text);
+  background: var(--reway-raised);
+  box-shadow: inset 0 0 0 1px var(--reway-border);
+}
+
+#reway-fab-root {
+  position: fixed;
+  z-index: 99999;
+  right: 28px;
+  bottom: 28px;
+  user-select: none;
+}
+
+.reway-fab {
+  position: relative;
+  display: flex;
+  width: var(--fab-size);
+  height: var(--fab-size);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: var(--reway-text);
+  background: var(--reway-bg);
+  cursor: grab;
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1px var(--reway-border),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04),
+    0 16px 38px -18px rgb(0 0 0 / 0.75);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.reway-fab::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--reway-accent), transparent 86%);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.reway-fab-icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 19px;
+  height: 19px;
+  pointer-events: none;
+}
+
+.reway-fab-icon svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reway-fab:hover {
+    background: var(--reway-surface);
+    box-shadow:
+      inset 0 0 0 1px var(--reway-border-strong),
+      inset 0 0 0 1px rgb(255 255 255 / 0.05),
+      0 18px 44px -18px rgb(0 0 0 / 0.78);
+  }
+
+  .reway-fab:hover::before,
+  .reway-fab.menu-open::before {
+    opacity: 1;
+  }
+}
+
+.reway-fab:active,
+.state-btn:active,
+.reway-group-btn:active,
+.reway-bm-link:active,
+.reway-auth-btn:active,
+.reway-retry-btn:active {
+  transform: scale(0.96);
+}
+
+.reway-fab:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px var(--reway-border-strong),
+    0 0 0 3px color-mix(in oklab, var(--reway-focus), transparent 20%),
+    0 18px 44px -18px rgb(0 0 0 / 0.78);
+}
+
+.reway-fab.is-dragging {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.reway-fab.menu-open {
+  background: var(--reway-surface);
+  box-shadow:
+    inset 0 0 0 1px var(--reway-border-strong),
+    inset 0 0 0 1px rgb(255 255 255 / 0.05),
+    0 18px 44px -18px rgb(0 0 0 / 0.78);
+}
+
+.reway-menu-wrap {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--fab-size) + 10px);
+  pointer-events: none;
+}
+
+.reway-menu-wrap.pos-below {
+  top: calc(var(--fab-size) + 10px);
+  bottom: auto;
+}
+
+.reway-menu-wrap.pos-right {
+  right: auto;
+  left: 0;
+}
+
+.reway-groups-menu,
+.reway-bookmarks-menu {
+  overflow: hidden;
+  border-radius: var(--surface-radius);
+  color: var(--reway-text);
+  background: color-mix(in oklab, var(--reway-bg), transparent 3%);
+  box-shadow:
+    inset 0 0 0 1px var(--reway-border),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04),
+    0 24px 70px -30px rgb(0 0 0 / 0.78);
+}
+
+.reway-groups-menu {
+  width: 238px;
+  padding: var(--surface-padding);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px) scale(0.97);
+  transform-origin: bottom right;
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+}
+
+.reway-groups-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.reway-menu-wrap.pos-right .reway-groups-menu {
+  transform-origin: bottom left;
+}
+
+.reway-menu-wrap.pos-below .reway-groups-menu {
+  transform-origin: top right;
+}
+
+.reway-menu-wrap.pos-below.pos-right .reway-groups-menu {
+  transform-origin: top left;
+}
+
+.reway-menu-header,
+.reway-bookmarks-header {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.reway-menu-logo {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  color: var(--reway-accent);
+}
+
+.reway-menu-title,
+.reway-bm-grp-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--reway-dim);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.reway-groups-list,
+.reway-bookmarks-list {
+  max-height: 330px;
+  margin: 0;
+  padding: 4px 0 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-color: color-mix(in oklab, var(--reway-subtle), transparent 72%) transparent;
+  scrollbar-width: thin;
+}
+
+.reway-groups-list::-webkit-scrollbar,
+.reway-bookmarks-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.reway-groups-list::-webkit-scrollbar-thumb,
+.reway-bookmarks-list::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--reway-subtle), transparent 72%);
+  background-clip: padding-box;
+}
+
+.reway-group-btn,
+.reway-bm-link {
+  display: flex;
+  width: 100%;
+  min-height: var(--control-height);
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: var(--item-radius);
+  color: var(--reway-subtle);
+  background: transparent;
+  outline: none;
+  text-decoration: none;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.reway-group-btn {
+  justify-content: flex-start;
+  padding: 0 8px 0 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.reway-group-btn:hover,
+.reway-group-btn:focus-visible,
+.reway-group-btn.is-active,
+.reway-bm-link:hover,
+.reway-bm-link:focus-visible {
+  color: var(--reway-text);
+  background: var(--reway-raised);
+  box-shadow: inset 0 0 0 1px var(--reway-border);
+}
+
+.reway-group-marker,
+.reway-bm-grp-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--group-color), white 18%), var(--group-color));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.18),
+    0 6px 14px -8px var(--group-color);
+}
+
+.reway-group-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reway-group-count {
+  min-width: 24px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: var(--reway-dim);
+  background: color-mix(in oklab, var(--reway-muted), transparent 25%);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: center;
+}
+
+.reway-group-chevron {
+  display: flex;
+  width: 13px;
+  height: 13px;
+  color: var(--reway-dim);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.reway-group-btn:hover .reway-group-chevron,
+.reway-group-btn.is-active .reway-group-chevron {
+  color: var(--reway-subtle);
+  transform: translateX(1px);
+}
+
+.reway-bookmarks-menu {
+  position: fixed;
+  z-index: 99998;
+  width: 292px;
+  padding: var(--surface-padding);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px) scale(0.97);
+  transform-origin: left center;
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+}
+
+.reway-bookmarks-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.reway-bookmarks-menu.flip-left {
+  transform: translateX(-4px) scale(0.97);
+  transform-origin: right center;
+}
+
+.reway-bookmarks-menu.open.flip-left {
+  transform: translateX(0) scale(1);
+}
+
+.reway-bm-link {
+  padding: 5px 8px;
+}
+
+.reway-bm-favicon,
+.reway-bm-favicon-fb {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 7px;
+  background: var(--reway-muted);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.10);
+}
+
+.reway-bm-favicon {
+  object-fit: contain;
+}
+
+.reway-bm-favicon-fb {
+  align-items: center;
+  justify-content: center;
+  color: var(--reway-subtle);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.reway-bm-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.reway-bm-title,
+.reway-bm-domain {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reway-bm-title {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.reway-bm-domain {
+  margin-top: 2px;
+  color: var(--reway-dim);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.reway-state-view {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 18px 16px 20px;
+  text-align: center;
+}
+
+.reway-state-ico {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  color: var(--reway-dim);
+}
+
+.reway-state-ttl {
+  color: var(--reway-text);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.reway-state-desc {
+  max-width: 24ch;
+  color: var(--reway-dim);
+  font-size: 12px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.reway-auth-btn,
+.reway-retry-btn {
+  min-height: 34px;
+  margin-top: 2px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 13px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.reway-auth-btn {
+  color: var(--reway-bg);
+  background: var(--reway-text);
+}
+
+.reway-retry-btn {
+  color: var(--reway-text);
+  background: var(--reway-raised);
+  box-shadow: inset 0 0 0 1px var(--reway-border);
+}
+
+.reway-skel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.reway-skel-row {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 10px;
+}
+
+.reway-skel {
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--reway-muted), transparent 10%) 0%,
+    color-mix(in oklab, var(--reway-subtle), transparent 78%) 50%,
+    color-mix(in oklab, var(--reway-muted), transparent 10%) 100%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.reway-skel-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+}
+
+.reway-skel-text {
+  height: 10px;
+  flex: 1;
+}
+
+.reway-skel-badge {
+  width: 28px;
+  height: 16px;
+}
+
+@keyframes shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+@media (max-width: 720px) {
+  .page-sim {
+    padding: 92px 20px 40px;
+  }
+
+  .page-sim-nav {
+    display: none;
+  }
+
+  .page-sim-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .state-panel {
+    width: calc(100vw - 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
