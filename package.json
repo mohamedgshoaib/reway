@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:webpack": "next dev --webpack",
-    "dev:webpack:3001": "next dev --webpack -p 3001",
+    "dev:trace": "powershell -NoProfile -Command \"$env:NEXT_TURBOPACK_TRACING='1'; next dev\"",
+    "trace:turbopack": "next internal trace .next/dev/trace-turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "oxlint",

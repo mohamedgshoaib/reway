@@ -66,6 +66,10 @@ Reway fixes this by putting everything in one place with fast search and clear v
 4. Database: Run `pnpm run db:push` to set up the tables.
 5. Development: Run `pnpm run dev` to start the local server.
 
+### Development Bundler
+
+Next.js 16 uses Turbopack by default for `pnpm dev` and `pnpm build`. If Turbopack hits a panic, memory issue, or severe slowdown, stop the existing dev server, run `pnpm dev:trace`, reproduce the issue, stop the server, then inspect the trace with `pnpm trace:turbopack`.
+
 ## Project Structure
 
 - `app/`: The main pages and API logic.
