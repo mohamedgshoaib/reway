@@ -132,7 +132,8 @@ Execution waits for explicit user approval. Supabase diagnostics may read from t
 | Re-analyze ninth skill | `done` | Re-analysis created at `supabase-scale-reliability/analysis-pass-2.md`; dashboard route error UI is confirmed safe, worker read/preflight transport alignment remains secondary, and bookmark-write retry remains unsafe without idempotency. |
 | Final report ninth skill | `done` | Final reliability report created at `supabase-scale-reliability/report-final-reliability.md`; execution plan recorded at `supabase-scale-reliability/execution-reliability.md` with dashboard route error UI as the primary approval-gated candidate. |
 | Execute ninth skill | `done` | Added `app/dashboard/error.tsx` and verified with `pnpm typecheck` and `pnpm build`; no Supabase state change was made. |
-| Close ninth skill execution | `done` | Supabase reliability-patterns phase is closed after the primary dashboard recovery candidate was executed; worker read/preflight transport alignment remains optional and unapplied. |
+| Follow-up ninth skill patch | `done` | Aligned worker read/preflight transport in `extension/background.js` with shared popup transport behavior and verified with `pnpm typecheck` and `pnpm build`. |
+| Close ninth skill execution | `done` | Supabase reliability-patterns phase is closed after the dashboard recovery candidate and bounded worker read/preflight follow-up were both executed. |
 
 ## Execution Rules
 

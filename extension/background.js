@@ -1,13 +1,6 @@
-const DEFAULT_BASE_URL = "https://www.reway.page"
+import { apiFetch, getSettings } from "./js/api.js"
 
 const REWAY_DEBUG = false
-
-async function getSettings() {
-  const { rewayBaseUrl } = await chrome.storage.local.get(["rewayBaseUrl"])
-  return {
-    baseUrl: rewayBaseUrl || DEFAULT_BASE_URL,
-  }
-}
 
 const rewayWorkerLogSeen = new Map()
 
@@ -190,17 +183,8 @@ async function handleGrabbedLinksMessage(message) {
   return null
 }
 
-async function fetchExtensionGroups(baseUrl) {
-  const groupsResponse = await fetch(`${baseUrl}/api/extension/groups`, {
-    credentials: "include",
-  })
-
-  if (!groupsResponse.ok) {
-    console.error("Failed to fetch groups:", groupsResponse.status)
-    throw new Error("Failed to fetch groups")
-  }
-
-  return groupsResponse.json()
+async function fetchExtensionGroups() {
+  return apiFetch("/api/extension/groups")
 }
 
 async function resolveXBookmarksGroup(baseUrl, groupsData) {
@@ -298,7 +282,7 @@ async function handleTwitterBookmark(message, sendResponse) {
       console.log("Fetching groups...")
     }
 
-    const groupsData = await fetchExtensionGroups(settings.baseUrl)
+    const groupsData = await fetchExtensionGroups()
     if (REWAY_DEBUG) console.log("Groups fetched:", groupsData)
 
     const xBookmarksGroup = await resolveXBookmarksGroup(settings.baseUrl, groupsData)
@@ -323,21 +307,14 @@ async function handleTwitterBookmark(message, sendResponse) {
   }
 }
 
-async function fetchGroupBookmarkUrls(baseUrl, groupId) {
-  const url = new URL(`${baseUrl}/api/extension/bookmarks`)
+async function fetchGroupBookmarkUrls(groupId) {
+  const params = new URLSearchParams()
   if (groupId) {
-    url.searchParams.set("groupId", groupId)
+    params.set("groupId", groupId)
   }
 
-  const response = await fetch(url.toString(), {
-    credentials: "include",
-  })
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch bookmarks")
-  }
-
-  const data = await response.json()
+  const query = params.size > 0 ? `?${params.toString()}` : ""
+  const data = await apiFetch(`/api/extension/bookmarks${query}`)
   const bookmarks = data.bookmarks || []
   return normalizeHttpUrls(bookmarks.map((bookmark) => bookmark.url).filter(Boolean))
 }
@@ -365,7 +342,7 @@ async function handleOpenGroup(message, sender, sendResponse) {
       return
     }
 
-    const bookmarkUrls = await fetchGroupBookmarkUrls(settings.baseUrl, message.groupId)
+    const bookmarkUrls = await fetchGroupBookmarkUrls(message.groupId)
     await openUrlsInBackgroundTabs(bookmarkUrls)
     sendResponse({ ok: true, count: bookmarkUrls.length })
   } catch (error) {

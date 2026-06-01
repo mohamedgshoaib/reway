@@ -41,9 +41,9 @@ When dashboard auth or read dependencies fail during startup, the user currently
 - no auth or mutation behavior changes
 - immediate user-facing improvement in a real outage mode
 
-### P2 — Worker read/preflight transport alignment is plausible but optional
+### P2 — Worker read/preflight transport alignment was a valid bounded follow-up
 
-**Status:** secondary candidate
+**Status:** executed follow-up
 
 **Evidence**
 
@@ -59,15 +59,21 @@ When dashboard auth or read dependencies fail during startup, the user currently
 
 The worker currently has a weaker transport seam than the popup for read and preflight operations.
 
-**Why it is not the first execution item**
+**Why it was not the first execution item**
 
 - it is smaller-value than the dashboard route error UI
 - it needs careful scoping so we only touch read/preflight requests
 - it must not blur into write retry or create ambiguous transport behavior for bookmark creation
 
-**Execution rule if revisited**
+**Executed scope**
 
-Only include worker operations that are read-only or preflight-like. Do not extend the alignment patch into bookmark creation requests in this phase.
+- `extension/background.js` now routes read/preflight worker requests through the shared popup transport helper
+- covered paths:
+  - `fetchExtensionGroups()`
+  - `fetchGroupBookmarkUrls(groupId)`
+- preserved boundary:
+  - no bookmark creation request changes
+  - no retry semantics added to write paths
 
 ### P1 — Blind retry for extension bookmark writes remains explicitly rejected
 
@@ -127,7 +133,7 @@ Do not add custom retry wrappers around dashboard SSR reads in this phase.
    - `pnpm typecheck`
    - `pnpm build`
 3. Update execution doc, tracker, and session note.
-4. Revisit worker read/preflight transport alignment only if you want a second, smaller follow-up after the dashboard error boundary is complete.
+4. No additional execution candidate remains in this phase.
 
 ## Close Criteria
 
@@ -136,4 +142,4 @@ The `supabase-reliability-patterns` phase can close after:
 - the dashboard route error boundary is either approved, executed, and verified; or
 - explicitly declined and documented
 
-The worker transport alignment item is optional. If we do not execute it, the phase can still close cleanly once the dashboard candidate is handled and the non-goals remain documented.
+The main dashboard recovery candidate and the bounded worker read/preflight follow-up are both complete. The remaining non-goals stay out of scope unless a separate future task reopens them deliberately.

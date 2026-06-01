@@ -4,7 +4,7 @@
 
 `executed`
 
-## Executed Candidate
+## Executed Candidates
 
 ### Candidate 1 — Dashboard route error boundary
 
@@ -51,16 +51,30 @@
 
 ### Candidate 2 — Worker read/preflight transport alignment
 
-This remains optional and was not executed in this phase.
+**Target**
 
-Safe boundary:
+- `extension/background.js`
+
+**Implemented scope**
+
+- aligned worker read/preflight requests with the shared popup transport helper
+- moved `fetchExtensionGroups()` onto `apiFetch("/api/extension/groups")`
+- moved `fetchGroupBookmarkUrls(groupId)` onto `apiFetch("/api/extension/bookmarks...")`
+- inherited localhost fallback, structured error parsing, and cached-group clearing on `401`
+
+**Safe boundary preserved**
 
 - read-only or preflight-like worker requests only
 
-Unsafe boundary:
+**Unsafe boundary preserved**
 
 - do not include bookmark creation requests
 
+**Verification**
+
+- `pnpm typecheck`
+- `pnpm build`
+
 ## Next Step
 
-The primary reliability candidate is complete. The phase can close cleanly unless the optional worker read/preflight alignment is explicitly reopened.
+The approved reliability follow-up is complete. The phase can stay closed unless a new task explicitly reopens bookmark-write reliability semantics.

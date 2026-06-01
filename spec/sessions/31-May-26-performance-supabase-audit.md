@@ -28,7 +28,8 @@
 - Completed first-pass `supabase-reliability-patterns` reporting: dashboard route-level outage UI is the first execution candidate, background transport hardening remains for re-analysis, and blind extension bookmark-write retry is explicitly rejected under the duplicate-bookmarks-allowed rule.
 - Completed `supabase-reliability-patterns` re-analysis: official Next.js route-segment `error.tsx` confirms the dashboard recovery path, worker read/preflight transport alignment remains potentially safe, and bookmark-write retry/offline replay remain out of scope without an idempotency contract.
 - Completed final `supabase-reliability-patterns` reporting: `app/dashboard/error.tsx` is the primary approval-gated execution candidate, worker read/preflight transport alignment is optional and secondary, and write retry/offline replay/circuit-breaker work remain explicitly out of scope.
-- Executed and verified `supabase-reliability-patterns`: added `app/dashboard/error.tsx` for dashboard-specific startup failure recovery, matched the existing app error pattern, preserved dashboard palette awareness, and closed the phase without reopening the optional worker transport follow-up.
+- Executed and verified `supabase-reliability-patterns`: added `app/dashboard/error.tsx` for dashboard-specific startup failure recovery, matched the existing app error pattern, preserved dashboard palette awareness, and closed the main reliability candidate cleanly.
+- Added the bounded worker follow-up anyway: `extension/background.js` now routes read/preflight group and bookmark-list fetches through the shared popup transport helper, while bookmark-write retry semantics remain untouched.
 
 ---
 
