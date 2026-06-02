@@ -103,8 +103,13 @@ export async function GET(request: Request) {
     const userId = auth.userId
     const { searchParams } = new URL(request.url)
     const groupId = searchParams.get("groupId")
+    const limitParam = searchParams.get("limit")
+    const limit =
+      limitParam === null
+        ? undefined
+        : Math.min(Math.max(Number.parseInt(limitParam, 10) || 0, 1), 500)
 
-    const { data, error } = await listBookmarksForExtension(supabaseAdmin, userId, groupId)
+    const { data, error } = await listBookmarksForExtension(supabaseAdmin, userId, groupId, limit)
 
     if (error) {
       console.error("Failed to fetch bookmarks:", error)

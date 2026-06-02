@@ -3,6 +3,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import { isNoGroupId } from "@/lib/system-groups";
 
 type LibrarySupabaseClient = SupabaseClient<Database>;
 
@@ -14,17 +15,29 @@ export const DASHBOARD_BOOKMARK_DETAIL_SELECT =
 
 const EXTENSION_BOOKMARK_SELECT =
   "id, url, title, domain, favicon_url, group_id, created_at, order_index, rank";
+const EXTENSION_BOOKMARK_SELECT_WITHOUT_RANK =
+  "id, url, title, domain, favicon_url, group_id, created_at, order_index";
 
 const DASHBOARD_GROUP_SELECT =
   "id,name,icon,color,user_id,created_at,order_index,rank,hide_from_all_bookmarks,show_in_fab";
 const EXTENSION_GROUP_SELECT =
   "id, name, icon, color, order_index, rank, created_at, show_in_fab";
+const LEGACY_EXTENSION_NO_GROUP_ID = "none";
 
 function applyUserScope<T extends { eq: (column: string, value: string) => T }>(
   query: T,
   userId?: string,
 ) {
   return userId ? query.eq("user_id", userId) : query;
+}
+
+function isMissingRankColumnError(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const record = error as { code?: unknown; message?: unknown };
+  return (
+    record.code === "42703" &&
+    String(record.message || "").toLowerCase().includes("rank")
+  );
 }
 
 export async function listBookmarksForDashboard(
@@ -55,25 +68,108 @@ export async function listBookmarksForExtension(
   supabase: LibrarySupabaseClient,
   userId: string,
   groupId?: string | null,
+  limit?: number,
+) {
+  const rankedResult = await listBookmarksForExtensionWithRank(
+    supabase,
+    userId,
+    groupId,
+    limit,
+  );
+  if (!isMissingRankColumnError(rankedResult.error)) {
+    return rankedResult;
+  }
+
+  return listBookmarksForExtensionWithoutRank(supabase, userId, groupId, limit);
+}
+
+function applyExtensionBookmarkGroupFilter<
+  T extends {
+    eq: (column: string, value: string) => T;
+    is: (column: string, value: null) => T;
+  },
+>(query: T, groupId?: string | null) {
+  if (isNoGroupId(groupId) || groupId === LEGACY_EXTENSION_NO_GROUP_ID) {
+    return query.is("group_id", null);
+  }
+
+  if (groupId && groupId !== "all") {
+    return query.eq("group_id", groupId);
+  }
+
+  return query;
+}
+
+function listBookmarksForExtensionWithRank(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+  groupId?: string | null,
+  limit?: number,
 ) {
   let query = applyUserScope(
     supabase.from("bookmarks").select(EXTENSION_BOOKMARK_SELECT),
     userId,
   );
 
-  if (groupId === "none") {
-    query = query.is("group_id", null);
-  } else if (groupId && groupId !== "all") {
-    query = query.eq("group_id", groupId);
-  }
-
-  return query
+  query = applyExtensionBookmarkGroupFilter(query, groupId)
     .order("rank", { ascending: true, nullsFirst: false })
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: false });
+
+  if (typeof limit === "number") {
+    query = query.limit(limit);
+  }
+
+  return query;
+}
+
+function listBookmarksForExtensionWithoutRank(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+  groupId?: string | null,
+  limit?: number,
+) {
+  let query = applyUserScope(
+    supabase.from("bookmarks").select(EXTENSION_BOOKMARK_SELECT_WITHOUT_RANK),
+    userId,
+  );
+
+  query = applyExtensionBookmarkGroupFilter(query, groupId)
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (typeof limit === "number") {
+    query = query.limit(limit);
+  }
+
+  return query;
 }
 
 export async function searchBookmarksForExtension(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+  searchQuery: string,
+  limit: number,
+) {
+  const rankedResult = await searchBookmarksForExtensionWithRank(
+    supabase,
+    userId,
+    searchQuery,
+    limit,
+  );
+  if (!isMissingRankColumnError(rankedResult.error)) {
+    return rankedResult;
+  }
+
+  return searchBookmarksForExtensionWithoutRank(
+    supabase,
+    userId,
+    searchQuery,
+    limit,
+  );
+}
+
+async function searchBookmarksForExtensionWithRank(
   supabase: LibrarySupabaseClient,
   userId: string,
   searchQuery: string,
@@ -90,6 +186,47 @@ export async function searchBookmarksForExtension(
       )
         .ilike(column, pattern)
         .order("rank", { ascending: true, nullsFirst: false })
+        .order("order_index", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(limit),
+    ),
+  );
+
+  const error = results.find((result) => result.error)?.error;
+  if (error) {
+    return { data: null, error };
+  }
+
+  const seen = new Set<string>();
+  const data = results
+    .flatMap((result) => result.data ?? [])
+    .filter((bookmark) => {
+      if (seen.has(bookmark.id)) return false;
+      seen.add(bookmark.id);
+      return true;
+    });
+
+  return { data: data.slice(0, limit), error: null };
+}
+
+async function searchBookmarksForExtensionWithoutRank(
+  supabase: LibrarySupabaseClient,
+  userId: string,
+  searchQuery: string,
+  limit: number,
+) {
+  const pattern = `%${searchQuery.replace(/[\\%_]/g, "\\$&")}%`;
+  const columns = ["title", "url", "domain"] as const;
+
+  const results = await Promise.all(
+    columns.map((column) =>
+      applyUserScope(
+        supabase
+          .from("bookmarks")
+          .select(EXTENSION_BOOKMARK_SELECT_WITHOUT_RANK),
+        userId,
+      )
+        .ilike(column, pattern)
         .order("order_index", { ascending: true })
         .order("created_at", { ascending: false })
         .limit(limit),

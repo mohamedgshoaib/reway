@@ -4,17 +4,24 @@ const EDGE_MARGIN = 8;
 const HOVER_OPEN_DELAY_MS = 150;
 const HOVER_CLOSE_DELAY_MS = 220;
 const SEARCH_DELAY_MS = 280;
+const MENU_OPEN_SETTLE_MS = 220;
 const MIN_VIEWPORT_WIDTH = 720;
 const MIN_VIEWPORT_HEIGHT = 420;
+const MENU_WIDTH = 252;
+const MENU_MAX_HEIGHT = 600;
+const MENU_GAP = 10;
+const MENU_VIEWPORT_GAP = 8;
 const SUBMENU_SAFE_TRIANGLE_PADDING = 12;
 const SUBMENU_WIDTH = 300;
 const SUBMENU_VIEWPORT_GAP = 8;
 const SUBMENU_EDGE_GAP = 6;
 const SUBMENU_ANCHOR_RISE = 22;
 const DEFAULT_GROUP_COLOR = "#a7adb6";
-const NO_GROUP_ID = "none";
+const NO_GROUP_ID = "no-group";
 const ACCESS_COMMAND_KEY = "rewayAccessCommand";
-const GROUP_ICON_MANIFEST = globalThis.REWAY_GROUP_ICON_MANIFEST || {};
+const GROUP_ICON_MANIFEST_PATH = "js/group-icon-manifest.js";
+const GROUP_ICON_MANIFEST_ASSIGNMENT =
+  "globalThis.REWAY_GROUP_ICON_MANIFEST = ";
 
 const ICONS = {
   logo: `<svg viewBox="0 0 512 512" aria-hidden="true"><circle cx="256" cy="256" r="256" fill="#1a1a1a"/><g transform="matrix(12.135672 0 0 12.135672 110.37194 110.37192)"><path fill="#ffffff" d="M4 17.9808V9.70753C4 6.07416 4 4.25748 5.17157 3.12874C6.34315 2 8.22876 2 12 2C15.7712 2 17.6569 2 18.8284 3.12874C20 4.25748 20 6.07416 20 9.70753V17.9808C20 20.2867 20 21.4396 19.2272 21.8523C17.7305 22.6514 14.9232 19.9852 13.59 19.1824C12.8168 18.7168 12.4302 18.484 12 18.484C11.5698 18.484 11.1832 18.7168 10.41 19.1824C9.0768 19.9852 6.26947 22.6514 4.77285 21.8523C4 21.4396 4 20.2867 4 17.9808Z"/></g></svg>`,
@@ -43,6 +50,8 @@ const state = {
   activeList: "groups",
   suppressHoverUntil: 0,
   activeRequestId: 0,
+  pendingOpenGroup: null,
+  menuSettleUntil: 0,
 };
 
 let host;
@@ -57,9 +66,13 @@ let dragState = null;
 let pendingQuickAccessOpen = false;
 let ignoreGroupListScrollUntil = 0;
 let menuResizeTimer = 0;
+let deferredPanelTimer = 0;
+let dragFrame = 0;
+let lifecycleController = null;
+let groupIconManifest = globalThis.REWAY_GROUP_ICON_MANIFEST || null;
+let groupIconManifestPromise = null;
 
 chrome.runtime.onMessage.addListener(handleRuntimeMessage);
-window.addEventListener("keydown", handleGlobalKeyDown, true);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (
     (area !== "session" && area !== "local") ||
@@ -73,9 +86,15 @@ chrome.storage.onChanged.addListener((changes, area) => {
     handleQuickAccessCommand();
   }
 });
-boot();
+void boot().catch((error) => {
+  if (isInvalidExtensionContextError(error)) {
+    cleanupQuickAccess();
+  }
+});
 
 function handleGlobalKeyDown(event) {
+  if (!refs.fab || !ensureLiveExtensionContext()) return;
+
   if (isQuickAccessKeyboardEvent(event)) {
     event.preventDefault();
     event.stopPropagation();
@@ -185,7 +204,7 @@ function isSearchEditingKey(key) {
 }
 
 async function boot() {
-  if (!isEligiblePage()) return;
+  if (!isEligiblePage() || !ensureLiveExtensionContext()) return;
 
   const settings = await readSettings();
   if (
@@ -199,15 +218,15 @@ async function boot() {
   state.position = settings.position;
 
   inject();
-  host.hidden = true;
   await applyStyles();
   applyInitialPosition();
-  host.hidden = false;
+  revealHost();
   bindEvents();
   flushPendingQuickAccessCommand();
 }
 
 function handleQuickAccessCommand() {
+  if (!ensureLiveExtensionContext()) return;
   if (!document.hasFocus()) return;
 
   if (!refs.fab) {
@@ -292,6 +311,7 @@ function isRewayOrigin(baseUrl) {
 function inject() {
   host = document.createElement("div");
   host.id = ROOT_ID;
+  host.style.setProperty("display", "none", "important");
   document.documentElement.append(host);
   shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = `
@@ -303,13 +323,13 @@ function inject() {
         <p class="intro-title">Reway quick access</p>
         <p class="intro-copy">Hover to open saved links</p>
       </div>
-      <section class="menu" role="menu" aria-label="Reway quick access">
+      <section class="menu" role="dialog" aria-label="Reway quick access">
         <div class="panel"></div>
         <div class="search-wrap">
           <input class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search bookmarks" aria-label="Search bookmarks" />
         </div>
       </section>
-      <section class="submenu" role="menu" aria-label="Group bookmarks"></section>
+      <section class="submenu" role="region" aria-label="Group bookmarks"></section>
     </div>
   `;
   refs = {
@@ -323,6 +343,12 @@ function inject() {
   };
 }
 
+function revealHost() {
+  const node = host;
+  if (!node?.isConnected) return;
+  node.style.removeProperty("display");
+}
+
 async function applyStyles() {
   const style = document.createElement("style");
   try {
@@ -333,6 +359,7 @@ async function applyStyles() {
   } catch {
     style.textContent = `.root{position:fixed;z-index:2147483647}.fab{width:44px;height:44px;border-radius:999px}`;
   }
+  if (!shadow) return;
   shadow.prepend(style);
 }
 
@@ -359,34 +386,46 @@ function clampPosition(position) {
 }
 
 function setPosition(position, persist = true) {
+  if (!refs.root) return;
   state.position = clampPosition(position);
   refs.root.style.left = `${state.position.x}px`;
   refs.root.style.top = `${state.position.y}px`;
   if (persist) {
-    void chrome.storage.local.set({ rewayAccessFabPosition: state.position });
+    void safeStorageLocalSet({ rewayAccessFabPosition: state.position });
   }
 }
 
 function bindEvents() {
-  refs.root.addEventListener("mouseenter", handlePointerEnter);
-  refs.root.addEventListener("mouseleave", handlePointerLeave);
-  refs.menu.addEventListener("mouseenter", () => clearTimeout(closeTimer));
-  refs.menu.addEventListener("mouseleave", scheduleClose);
+  lifecycleController?.abort();
+  lifecycleController = new AbortController();
+  const { signal } = lifecycleController;
+
+  window.addEventListener("keydown", handleGlobalKeyDown, {
+    capture: true,
+    signal,
+  });
+  refs.root.addEventListener("mouseenter", handlePointerEnter, { signal });
+  refs.root.addEventListener("mouseleave", handlePointerLeave, { signal });
+  refs.menu.addEventListener("mouseenter", () => clearTimeout(closeTimer), {
+    signal,
+  });
+  refs.menu.addEventListener("mouseleave", scheduleClose, { signal });
   refs.submenu.addEventListener("mouseenter", () => {
     clearTimeout(closeTimer);
     clearTimeout(submenuCloseTimer);
-  });
+  }, { signal });
   refs.submenu.addEventListener("mouseleave", () => {
     submenuCloseTimer = setTimeout(closeSubmenu, HOVER_CLOSE_DELAY_MS);
     scheduleClose();
-  });
-  refs.fab.addEventListener("pointerdown", startDrag);
+  }, { signal });
+  refs.fab.addEventListener("pointerdown", startDrag, { signal });
   refs.fab.addEventListener("click", (event) => {
     event.preventDefault();
-  });
-  refs.search.addEventListener("input", handleSearchInput);
-  refs.search.addEventListener("keydown", handleSearchKeyDown);
-  window.addEventListener("resize", handleResize);
+  }, { signal });
+  refs.search.addEventListener("input", handleSearchInput, { signal });
+  refs.search.addEventListener("keydown", handleSearchKeyDown, { signal });
+  refs.search.addEventListener("blur", handleSearchBlur, { signal });
+  window.addEventListener("resize", handleResize, { signal });
 }
 
 function handlePointerEnter() {
@@ -400,38 +439,66 @@ function handlePointerEnter() {
 
 function handlePointerLeave() {
   clearTimeout(openTimer);
-  if (!refs.menu.matches(":hover") && !refs.submenu.matches(":hover")) {
+  if (
+    !isSearchEngaged() &&
+    !refs.menu?.matches(":hover") &&
+    !refs.submenu?.matches(":hover")
+  ) {
     scheduleClose();
   }
 }
 
 function scheduleClose() {
   clearTimeout(closeTimer);
+  if (isSearchEngaged()) return;
   closeTimer = setTimeout(() => {
+    if (isSearchEngaged()) return;
     if (
-      !refs.root.matches(":hover") &&
-      !refs.menu.matches(":hover") &&
-      !refs.submenu.matches(":hover")
+      !refs.root?.matches(":hover") &&
+      !refs.menu?.matches(":hover") &&
+      !refs.submenu?.matches(":hover")
     ) {
       closeMenu();
     }
   }, HOVER_CLOSE_DELAY_MS);
 }
 
+function isSearchEngaged() {
+  return Boolean(
+    refs.search?.matches(":focus") ||
+      (state.menuOpen && state.searchQuery.length > 0),
+  );
+}
+
+function maybeCloseAfterSearchDisengaged() {
+  if (!state.menuOpen || isSearchEngaged()) return;
+  if (
+    !refs.root?.matches(":hover") &&
+    !refs.menu?.matches(":hover") &&
+    !refs.submenu?.matches(":hover")
+  ) {
+    scheduleClose();
+  }
+}
+
 function openMenu({ focusSearch }) {
   dismissIntro();
   clearTimeout(openTimer);
   clearTimeout(closeTimer);
+  const wasOpen = state.menuOpen;
   state.menuOpen = true;
+  if (!wasOpen) {
+    state.menuSettleUntil = Date.now() + MENU_OPEN_SETTLE_MS;
+  }
   state.keyboardMode = Boolean(focusSearch);
   state.activeList = "groups";
   state.activeIndex = 0;
-  positionMenus();
   refs.root.dataset.menuOpen = "true";
   refs.root.dataset.keyboardMode = String(state.keyboardMode);
   refs.fab.dataset.open = "true";
   refs.fab.setAttribute("aria-expanded", "true");
   renderPanel();
+  positionMenus();
   if (state.groupsStatus === "idle") {
     void loadGroups();
   }
@@ -441,13 +508,17 @@ function openMenu({ focusSearch }) {
 }
 
 function closeMenu() {
+  if (!refs.root || !refs.search || !refs.fab || !refs.menu) return;
   clearTimeout(menuResizeTimer);
+  clearTimeout(deferredPanelTimer);
   state.menuOpen = false;
   state.keyboardMode = false;
   state.searchQuery = "";
   state.activeGroupId = null;
+  state.pendingOpenGroup = null;
   state.activeIndex = 0;
   state.activeList = "groups";
+  state.menuSettleUntil = 0;
   refs.search.value = "";
   refs.root.dataset.menuOpen = "false";
   refs.root.dataset.keyboardMode = "false";
@@ -460,13 +531,73 @@ function closeMenu() {
 }
 
 function positionMenus() {
+  if (!refs.root || !refs.menu) return;
   const rect = refs.root.getBoundingClientRect();
-  refs.root.dataset.menuX = rect.left < 280 ? "right" : "left";
-  refs.root.dataset.menuY = rect.top < 360 ? "below" : "above";
+  const layout = getViewportAwareMenuLayout(rect);
+  refs.root.dataset.menuX = layout.x;
+  refs.root.dataset.menuY = layout.y;
+  refs.menu.style.setProperty("--menu-left", `${layout.left}px`);
+  refs.menu.style.setProperty("--menu-top", `${layout.top}px`);
+  refs.menu.style.setProperty("--menu-max-height", `${layout.maxHeight}px`);
   positionSubmenu();
 }
 
+function getViewportAwareMenuLayout(anchorRect) {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const menuWidth = Math.min(
+    MENU_WIDTH,
+    viewportWidth - MENU_VIEWPORT_GAP * 2,
+  );
+  const availableAbove = Math.max(
+    0,
+    anchorRect.top - MENU_GAP - MENU_VIEWPORT_GAP,
+  );
+  const availableBelow = Math.max(
+    0,
+    viewportHeight - anchorRect.bottom - MENU_GAP - MENU_VIEWPORT_GAP,
+  );
+  const openBelow = availableBelow >= availableAbove;
+  const availableHeight = openBelow ? availableBelow : availableAbove;
+  const maxHeight = Math.max(
+    180,
+    Math.min(MENU_MAX_HEIGHT, availableHeight, viewportHeight - MENU_VIEWPORT_GAP * 2),
+  );
+  const measuredHeight = refs.menu?.scrollHeight
+    ? Math.min(refs.menu.scrollHeight, maxHeight)
+    : maxHeight;
+  const unclampedLeft =
+    anchorRect.right - menuWidth >= MENU_VIEWPORT_GAP
+      ? anchorRect.right - menuWidth
+      : anchorRect.left;
+  const left = clampNumber(
+    unclampedLeft,
+    MENU_VIEWPORT_GAP,
+    viewportWidth - menuWidth - MENU_VIEWPORT_GAP,
+  );
+  const top = openBelow
+    ? anchorRect.bottom + MENU_GAP
+    : anchorRect.top - MENU_GAP - measuredHeight;
+
+  return {
+    x: anchorRect.right - menuWidth >= MENU_VIEWPORT_GAP ? "left" : "right",
+    y: openBelow ? "below" : "above",
+    left,
+    top: clampNumber(
+      top,
+      MENU_VIEWPORT_GAP,
+      viewportHeight - measuredHeight - MENU_VIEWPORT_GAP,
+    ),
+    maxHeight,
+  };
+}
+
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function handleResize() {
+  if (!host || !refs.root) return;
   setPosition(
     state.position || {
       x: window.innerWidth - FAB_SIZE - 28,
@@ -474,10 +605,10 @@ function handleResize() {
     },
   );
   if (!hasDesktopViewport()) {
-    host.hidden = true;
+    host?.style?.setProperty("display", "none", "important");
     return;
   }
-  host.hidden = false;
+  revealHost();
   if (state.menuOpen) {
     positionMenus();
   }
@@ -488,7 +619,7 @@ function dismissIntro() {
   state.introSeen = true;
   clearTimeout(introTimer);
   refs.intro.dataset.open = "false";
-  void chrome.storage.local.set({ rewayAccessFabIntroSeen: true });
+  void safeStorageLocalSet({ rewayAccessFabIntroSeen: true });
 }
 
 function startDrag(event) {
@@ -499,9 +630,14 @@ function startDrag(event) {
     pointerId: event.pointerId,
     originX: event.clientX,
     originY: event.clientY,
+    baseX: state.position.x,
+    baseY: state.position.y,
     offsetX: event.clientX - rootRect.left,
     offsetY: event.clientY - rootRect.top,
+    nextX: state.position.x,
+    nextY: state.position.y,
     moved: false,
+    closedMenu: false,
   };
   refs.fab.setPointerCapture(event.pointerId);
   refs.fab.addEventListener("pointermove", moveDrag);
@@ -514,28 +650,69 @@ function moveDrag(event) {
   const dx = event.clientX - dragState.originX;
   const dy = event.clientY - dragState.originY;
   if (!dragState.moved && Math.hypot(dx, dy) < 5) return;
-  dragState.moved = true;
-  refs.fab.dataset.dragging = "true";
+
+  if (!dragState.moved) {
+    dragState.moved = true;
+    refs.fab.dataset.dragging = "true";
+  }
+
   state.suppressHoverUntil = Date.now() + 350;
-  closeMenu();
-  setPosition(
-    {
-      x: event.clientX - dragState.offsetX,
-      y: event.clientY - dragState.offsetY,
-    },
-    false,
-  );
+  if (!dragState.closedMenu) {
+    dragState.closedMenu = true;
+    closeMenu();
+  }
+
+  const next = clampPosition({
+    x: event.clientX - dragState.offsetX,
+    y: event.clientY - dragState.offsetY,
+  });
+  dragState.nextX = next.x;
+  dragState.nextY = next.y;
+  scheduleDragFrame();
+}
+
+function scheduleDragFrame() {
+  if (dragFrame) return;
+  dragFrame = requestAnimationFrame(() => {
+    dragFrame = 0;
+    const fab = refs.fab;
+    if (!dragState || !fab) return;
+    const dx = dragState.nextX - dragState.baseX;
+    const dy = dragState.nextY - dragState.baseY;
+    fab.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+  });
 }
 
 function endDrag(event) {
   if (!dragState || event.pointerId !== dragState.pointerId) return;
-  refs.fab.releasePointerCapture(event.pointerId);
-  refs.fab.removeEventListener("pointermove", moveDrag);
-  refs.fab.removeEventListener("pointerup", endDrag);
-  refs.fab.removeEventListener("pointercancel", endDrag);
-  refs.fab.dataset.dragging = "false";
+  const fab = refs.fab;
+  if (!fab) {
+    dragState = null;
+    return;
+  }
+  if (dragFrame) {
+    cancelAnimationFrame(dragFrame);
+    dragFrame = 0;
+  }
+  const finalPosition = {
+    x: dragState.nextX,
+    y: dragState.nextY,
+  };
+  fab.releasePointerCapture(event.pointerId);
+  fab.removeEventListener("pointermove", moveDrag);
+  fab.removeEventListener("pointerup", endDrag);
+  fab.removeEventListener("pointercancel", endDrag);
   if (dragState.moved) {
-    setPosition(state.position, true);
+    fab.style.transform = "translate3d(0, 0, 0)";
+    setPosition(finalPosition, true);
+    requestAnimationFrame(() => {
+      if (!fab.isConnected) return;
+      fab.style.transform = "";
+      fab.dataset.dragging = "false";
+    });
+  } else {
+    fab.style.transform = "";
+    fab.dataset.dragging = "false";
   }
   dragState = null;
 }
@@ -545,12 +722,13 @@ async function loadGroups() {
   renderPanel();
   try {
     const response = await sendMessage({ type: "rewayAccessGetGroups" });
+    await ensureGroupIconManifest();
     state.groups = normalizeGroups(response?.groups || []);
     state.groupsStatus = "ready";
   } catch (error) {
     state.groupsStatus = error?.status === 401 ? "auth" : "error";
   }
-  renderPanel();
+  renderPanelAfterMenuSettle();
 }
 
 function normalizeGroups(groups) {
@@ -698,6 +876,7 @@ function handleSearchInput() {
     state.searchStatus = "idle";
     state.searchResults = [];
     renderPanel();
+    requestAnimationFrame(maybeCloseAfterSearchDisengaged);
     return;
   }
   state.searchStatus = "loading";
@@ -721,6 +900,10 @@ async function runSearch() {
     state.searchStatus = error?.status === 401 ? "auth" : "error";
   }
   renderPanel();
+}
+
+function handleSearchBlur() {
+  requestAnimationFrame(maybeCloseAfterSearchDisengaged);
 }
 
 function renderPanel() {
@@ -773,11 +956,9 @@ function renderPanel() {
 
   const list = document.createElement("ul");
   list.className = "list";
-  list.setAttribute("role", "menu");
   state.groups.forEach((group, index) => {
     const item = document.createElement("li");
     item.className = "group-row";
-    item.setAttribute("role", "none");
     const surface = document.createElement("div");
     surface.className = "group-row-surface";
     const isActive = isGroupActive(group.id, index);
@@ -882,7 +1063,8 @@ function updatePanelContent(update) {
   const shouldAnimate =
     state.menuOpen &&
     refs.menu &&
-    refs.root.dataset.keyboardMode !== "true";
+    refs.root.dataset.keyboardMode !== "true" &&
+    Date.now() >= state.menuSettleUntil;
   const beforeHeight = shouldAnimate ? refs.menu.getBoundingClientRect().height : 0;
 
   update();
@@ -890,21 +1072,51 @@ function updatePanelContent(update) {
   if (shouldAnimate) {
     animateMenuHeightFrom(beforeHeight);
   }
+  syncMenuPosition();
+}
+
+function renderPanelAfterMenuSettle() {
+  clearTimeout(deferredPanelTimer);
+  const delay = Math.max(0, state.menuSettleUntil - Date.now());
+  if (!state.menuOpen || delay === 0) {
+    renderPanel();
+    syncMenuPosition();
+    return;
+  }
+
+  deferredPanelTimer = setTimeout(() => {
+    if (!state.menuOpen) return;
+    renderPanel();
+    syncMenuPosition();
+  }, delay);
+}
+
+function syncMenuPosition() {
+  if (!state.menuOpen || !refs.root || !refs.menu) return;
+  positionMenus();
+  requestAnimationFrame(() => {
+    if (state.menuOpen && refs.root && refs.menu) {
+      positionMenus();
+    }
+  });
 }
 
 function animateMenuHeightFrom(beforeHeight) {
-  const afterHeight = refs.menu.getBoundingClientRect().height;
+  const menu = refs.menu;
+  if (!menu) return;
+  const afterHeight = menu.getBoundingClientRect().height;
   if (Math.abs(afterHeight - beforeHeight) < 1) return;
 
   clearTimeout(menuResizeTimer);
-  refs.menu.style.overflow = "hidden";
-  refs.menu.style.height = `${beforeHeight}px`;
-  refs.menu.getBoundingClientRect();
-  refs.menu.style.height = `${afterHeight}px`;
+  menu.style.overflow = "hidden";
+  menu.style.height = `${beforeHeight}px`;
+  menu.getBoundingClientRect();
+  menu.style.height = `${afterHeight}px`;
 
   menuResizeTimer = setTimeout(() => {
-    refs.menu.style.height = "";
-    refs.menu.style.overflow = "";
+    if (!menu.isConnected) return;
+    menu.style.height = "";
+    menu.style.overflow = "";
   }, 220);
 }
 
@@ -964,6 +1176,13 @@ function renderSearchResults() {
 
 function renderSubmenu() {
   if (!state.activeGroupId) return;
+  if (state.pendingOpenGroup?.group.id === state.activeGroupId) {
+    renderOpenGroupConfirmation(
+      state.pendingOpenGroup.group,
+      state.pendingOpenGroup.bookmarks,
+    );
+    return;
+  }
   const group = state.groups.find((item) => item.id === state.activeGroupId);
   if (!group) return;
   const status = state.bookmarksStatusByGroup.get(group.id) || "idle";
@@ -1014,10 +1233,8 @@ function renderSubmenu() {
 function renderBookmarkList(bookmarks, source) {
   const list = document.createElement("ul");
   list.className = "list";
-  list.setAttribute("role", "menu");
   bookmarks.forEach((bookmark, index) => {
     const item = document.createElement("li");
-    item.setAttribute("role", "none");
     const button = document.createElement("button");
     button.type = "button";
     button.className = "bookmark-button";
@@ -1103,9 +1320,34 @@ function renderGroupIconChip(group, options = {}) {
     ? `group-icon ${options.className}`
     : "group-icon";
   const entry =
-    GROUP_ICON_MANIFEST[group.icon] || GROUP_ICON_MANIFEST.fallback || null;
+    groupIconManifest?.[group.icon] || groupIconManifest?.fallback || null;
   const iconMarkup = entry ? renderGroupSvg(entry) : `<span class="group-icon-dot"></span>`;
   return `<span class="${className}" style="--group-color:${escapeAttribute(group.color)}">${iconMarkup}</span>`;
+}
+
+async function ensureGroupIconManifest() {
+  if (groupIconManifest) return groupIconManifest;
+  if (groupIconManifestPromise) return groupIconManifestPromise;
+
+  groupIconManifestPromise = loadGroupIconManifest();
+  groupIconManifest = await groupIconManifestPromise;
+  return groupIconManifest;
+}
+
+async function loadGroupIconManifest() {
+  try {
+    const text = await fetch(chrome.runtime.getURL(GROUP_ICON_MANIFEST_PATH)).then(
+      (response) => response.text(),
+    );
+    const start = text.indexOf(GROUP_ICON_MANIFEST_ASSIGNMENT);
+    const end = text.lastIndexOf(";");
+    if (start === -1 || end === -1 || end <= start) return {};
+    return JSON.parse(
+      text.slice(start + GROUP_ICON_MANIFEST_ASSIGNMENT.length, end),
+    );
+  } catch {
+    return {};
+  }
 }
 
 function renderGroupSvg(entry) {
@@ -1157,7 +1399,7 @@ function activateGroup(groupId, index, options = {}) {
 }
 
 function positionSubmenu() {
-  if (!state.activeGroupId || !state.menuOpen) return;
+  if (!state.activeGroupId || !state.menuOpen || !refs.panel || !refs.menu || !refs.submenu) return;
   const activeRow = refs.panel.querySelector(
     `[data-group-id="${cssEscape(state.activeGroupId)}"]`,
   );
@@ -1192,9 +1434,10 @@ function positionSubmenu() {
 }
 
 function syncSubmenuPosition() {
+  if (!refs.submenu) return;
   positionSubmenu();
   requestAnimationFrame(() => {
-    if (!state.menuOpen || refs.submenu.dataset.open !== "true") return;
+    if (!state.menuOpen || refs.submenu?.dataset.open !== "true") return;
     positionSubmenu();
   });
 }
@@ -1268,6 +1511,7 @@ function isPointInPolygon(point, polygon) {
 
 function closeSubmenu() {
   const previousGroupId = state.activeGroupId;
+  state.pendingOpenGroup = null;
   if (state.activeList === "group") {
     const groupIndex = state.groups.findIndex(
       (group) => group.id === previousGroupId,
@@ -1423,11 +1667,49 @@ async function confirmAndOpenGroup(group) {
   }
   const count = bookmarks.length;
   if (count === 0) return;
-  if (!window.confirm(`Open ${count} tabs?`)) return;
+  state.pendingOpenGroup = { group, bookmarks };
+  state.activeGroupId = group.id;
+  refs.submenu.dataset.open = "true";
+  renderOpenGroupConfirmation(group, bookmarks);
+}
+
+function renderOpenGroupConfirmation(group, bookmarks) {
+  const count = bookmarks.length;
+  const node = htmlToNode(`
+    <div class="confirm-open-group" role="group" aria-label="Open group confirmation">
+      <div class="confirm-open-title">Open ${count} tabs?</div>
+      <div class="confirm-open-copy">${escapeHtml(group.name)} has ${count} saved ${count === 1 ? "link" : "links"}.</div>
+      <div class="confirm-open-actions">
+        <button class="confirm-open-button" type="button" data-confirm-action="cancel">Cancel</button>
+        <button class="confirm-open-button confirm-open-button-primary" type="button" data-confirm-action="open">Open</button>
+      </div>
+    </div>
+  `);
+
+  node
+    .querySelector('[data-confirm-action="cancel"]')
+    ?.addEventListener("click", () => {
+      state.pendingOpenGroup = null;
+      renderSubmenu();
+    });
+  node
+    .querySelector('[data-confirm-action="open"]')
+    ?.addEventListener("click", () => {
+      void openConfirmedGroup();
+    });
+
+  refs.submenu.replaceChildren(node);
+  syncSubmenuPosition();
+}
+
+async function openConfirmedGroup() {
+  const pending = state.pendingOpenGroup;
+  if (!pending) return;
+  state.pendingOpenGroup = null;
   await sendMessage({
     type: "rewayAccessOpenGroup",
-    groupId: group.id,
-    urls: bookmarks.map((bookmark) => bookmark.url),
+    groupId: pending.group.id,
+    urls: pending.bookmarks.map((bookmark) => bookmark.url),
   });
   closeMenu();
 }
@@ -1443,7 +1725,11 @@ function handleRuntimeMessage(message) {
   if (message?.type === "rewayAccessGroupsUpdated") {
     state.groups = normalizeGroups(message.groups || []);
     state.groupsStatus = "ready";
-    renderPanel();
+    if (groupIconManifest) {
+      renderPanel();
+    } else {
+      void ensureGroupIconManifest().then(renderPanel);
+    }
   }
 
   if (message?.type === "rewayAccessBookmarksUpdated") {
@@ -1465,21 +1751,102 @@ function handleRuntimeMessage(message) {
 
 function sendMessage(message) {
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(message, (response) => {
-      const runtimeError = chrome.runtime.lastError;
-      if (runtimeError) {
-        reject(new Error(runtimeError.message));
-        return;
+    if (!ensureLiveExtensionContext()) {
+      reject(new Error("Extension context invalidated"));
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        const runtimeError = chrome.runtime.lastError;
+        if (runtimeError) {
+          const error = new Error(runtimeError.message);
+          if (isInvalidExtensionContextError(error)) {
+            cleanupQuickAccess();
+          }
+          reject(error);
+          return;
+        }
+        if (response?.ok === false || response?.success === false) {
+          const error = new Error(response.error || "Request failed");
+          error.status = response.status;
+          reject(error);
+          return;
+        }
+        resolve(response);
+      });
+    } catch (error) {
+      if (isInvalidExtensionContextError(error)) {
+        cleanupQuickAccess();
       }
-      if (response?.ok === false || response?.success === false) {
-        const error = new Error(response.error || "Request failed");
-        error.status = response.status;
-        reject(error);
-        return;
-      }
-      resolve(response);
-    });
+      reject(error);
+    }
   });
+}
+
+async function safeStorageLocalSet(value) {
+  if (!ensureLiveExtensionContext()) return;
+  try {
+    await chrome.storage.local.set(value);
+  } catch (error) {
+    if (isInvalidExtensionContextError(error)) {
+      cleanupQuickAccess();
+    }
+  }
+}
+
+function ensureLiveExtensionContext() {
+  if (isExtensionContextValid()) return true;
+  cleanupQuickAccess();
+  return false;
+}
+
+function isExtensionContextValid() {
+  try {
+    return Boolean(chrome.runtime?.id);
+  } catch {
+    return false;
+  }
+}
+
+function isInvalidExtensionContextError(error) {
+  return String(error?.message || error)
+    .toLowerCase()
+    .includes("extension context invalidated");
+}
+
+function cleanupQuickAccess() {
+  clearTimeout(openTimer);
+  clearTimeout(closeTimer);
+  clearTimeout(submenuCloseTimer);
+  clearTimeout(searchTimer);
+  clearTimeout(introTimer);
+  clearTimeout(menuResizeTimer);
+  clearTimeout(deferredPanelTimer);
+  if (dragFrame) {
+    cancelAnimationFrame(dragFrame);
+    dragFrame = 0;
+  }
+
+  lifecycleController?.abort();
+  lifecycleController = null;
+
+  const fab = refs.fab;
+  if (fab) {
+    fab.style.transform = "";
+    fab.dataset.dragging = "false";
+    fab.removeEventListener("pointermove", moveDrag);
+    fab.removeEventListener("pointerup", endDrag);
+    fab.removeEventListener("pointercancel", endDrag);
+  }
+
+  dragState = null;
+  pendingQuickAccessOpen = false;
+  state.menuOpen = false;
+  refs = {};
+  shadow = null;
+  host?.remove();
+  host = null;
 }
 
 function isHttpUrl(url) {

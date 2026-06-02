@@ -54,14 +54,14 @@
     },
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["js/group-icon-manifest.js", "access-content-script.js"],
+      "js": ["access-content-script.js"],
       "run_at": "document_idle",
       "all_frames": false
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["access-content.css"],
+      "resources": ["access-content.css", "js/group-icon-manifest.js"],
       "matches": ["http://*/*", "https://*/*"]
     }
   ]

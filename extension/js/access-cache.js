@@ -3,6 +3,7 @@ export const ACCESS_CACHE_TTL_MS = 5 * 60 * 1000
 const GROUP_CACHE_KEYS = ["rewayGroups", "rewayGroupsFetchedAt"]
 export const BOOKMARK_CACHE_KEY = "rewayAccessBookmarksByGroup"
 const MAX_BOOKMARK_GROUP_CACHE_ENTRIES = 30
+const NO_GROUP_ID = "no-group"
 
 function getNow() {
   return Date.now()
@@ -13,7 +14,7 @@ function isFreshTimestamp(timestamp) {
 }
 
 function getBookmarkCacheKey(groupId) {
-  return groupId || "none"
+  return groupId || NO_GROUP_ID
 }
 
 function isQuotaError(error) {

@@ -9,6 +9,8 @@ import { apiFetch, getSettings } from "./js/api.js";
 
 const REWAY_DEBUG = false;
 const ACCESS_COMMAND_KEY = "rewayAccessCommand";
+const SEARCH_FALLBACK_BOOKMARK_LIMIT = 500;
+const NO_GROUP_ID = "no-group";
 
 const rewayWorkerLogSeen = new Map();
 let accessCommandStorageReady = null;
@@ -20,6 +22,15 @@ function rewayErrorOnce(key, ...args) {
   if (now - last < 60_000) return;
   rewayWorkerLogSeen.set(key, now);
   console.error(...args);
+}
+
+function summarizeError(error) {
+  return {
+    message: String(error?.message || error || "Failed"),
+    status: error?.status,
+    url: error?.url,
+    data: error?.data,
+  };
 }
 
 function rewayWarnOnce(key, ...args) {
@@ -184,7 +195,7 @@ function respondAsync(sendResponse, handler) {
       rewayErrorOnce(
         "worker-handler-failed",
         "Background handler failed:",
-        error,
+        summarizeError(error),
       );
       sendResponse({
         success: false,
@@ -316,12 +327,19 @@ async function getAccessGroups(tabId) {
   return { ok: true, groups, stale: false };
 }
 
-async function fetchAccessBookmarks(groupId) {
+async function fetchAccessBookmarks(groupId, options = {}) {
+  const { limit, cache = true } = options;
+  const cacheKey = groupId || NO_GROUP_ID;
   const params = new URLSearchParams();
-  params.set("groupId", groupId || "none");
+  params.set("groupId", cacheKey);
+  if (Number.isFinite(limit)) {
+    params.set("limit", String(limit));
+  }
   const data = await apiFetch(`/api/extension/bookmarks?${params.toString()}`);
   const bookmarks = Array.isArray(data.bookmarks) ? data.bookmarks : [];
-  await writeCachedBookmarks(groupId || "none", bookmarks);
+  if (cache) {
+    await writeCachedBookmarks(cacheKey, bookmarks);
+  }
   return bookmarks;
 }
 
@@ -332,7 +350,7 @@ async function refreshAccessBookmarks(groupId, tabId) {
       try {
         await chrome.tabs.sendMessage(tabId, {
           type: "rewayAccessBookmarksUpdated",
-          groupId: groupId || "none",
+          groupId: groupId || NO_GROUP_ID,
           bookmarks,
         });
       } catch {
@@ -341,7 +359,7 @@ async function refreshAccessBookmarks(groupId, tabId) {
     }
   } catch (error) {
     rewayWarnOnce(
-      `access-bookmarks-refresh-failed:${groupId || "none"}:${error?.status || error?.message || "failed"}`,
+      `access-bookmarks-refresh-failed:${groupId || NO_GROUP_ID}:${error?.status || error?.message || "failed"}`,
       "Access bookmarks refresh failed:",
       error,
     );
@@ -349,7 +367,7 @@ async function refreshAccessBookmarks(groupId, tabId) {
 }
 
 async function getAccessBookmarks(groupId, tabId) {
-  const cacheKey = groupId || "none";
+  const cacheKey = groupId || NO_GROUP_ID;
   const cached = await readCachedBookmarks(cacheKey);
   if (cached.bookmarks.length > 0) {
     await touchBookmarkCache(cacheKey);
@@ -383,15 +401,18 @@ async function searchAccessBookmarks(query, limit) {
   } catch (error) {
     if (error?.status !== 404) throw error;
 
-    const fallback = await getAccessBookmarks("all");
+    const fallbackBookmarks = await fetchAccessBookmarks("all", {
+      limit: SEARCH_FALLBACK_BOOKMARK_LIMIT,
+      cache: false,
+    });
     return {
       ok: true,
       bookmarks: filterBookmarksLocally(
-        fallback.bookmarks,
+        fallbackBookmarks,
         normalizedQuery,
         maxResults,
       ),
-      stale: fallback.stale,
+      fallback: true,
     };
   }
 
@@ -450,7 +471,7 @@ async function handleAccessMessage(message, sender) {
   }
 
   if (message?.type === "rewayAccessGetGroupBookmarks") {
-    return getAccessBookmarks(message.groupId || "none", tabId);
+    return getAccessBookmarks(message.groupId || NO_GROUP_ID, tabId);
   }
 
   if (message?.type === "rewayAccessSearchBookmarks") {
@@ -467,7 +488,7 @@ async function handleAccessMessage(message, sender) {
     const urls = Array.isArray(message.urls)
       ? normalizeHttpUrls(message.urls, 100)
       : normalizeHttpUrls(
-          (await fetchAccessBookmarks(message.groupId || "none")).map(
+          (await fetchAccessBookmarks(message.groupId || NO_GROUP_ID)).map(
             (b) => b.url,
           ),
           100,
@@ -537,7 +558,8 @@ async function resolveXBookmarksGroup(baseUrl, groupsData) {
   });
 
   if (!createGroupResponse.ok) {
-    console.error(
+    rewayWarnOnce(
+      `x-group-create-failed:${createGroupResponse.status}`,
       "Failed to create X Bookmarks group:",
       createGroupResponse.status,
     );
@@ -583,10 +605,11 @@ async function createTwitterBookmark(baseUrl, groupId, message) {
   });
 
   if (!bookmarkResponse.ok) {
-    console.error(
+    rewayWarnOnce(
+      `twitter-bookmark-create-failed:${bookmarkResponse.status}`,
       "Failed to create bookmark:",
       bookmarkResponse.status,
-      await bookmarkResponse.text(),
+      await summarizeResponse(bookmarkResponse),
     );
     throw new Error("Failed to create bookmark");
   }
@@ -599,6 +622,14 @@ async function isTwitterAutoCaptureEnabled() {
     "rewayXAutoCaptureEnabled",
   );
   return rewayXAutoCaptureEnabled !== false;
+}
+
+async function summarizeResponse(response) {
+  try {
+    return String(await response.text()).replace(/\s+/g, " ").slice(0, 240);
+  } catch {
+    return "";
+  }
 }
 
 async function handleTwitterBookmark(message, sendResponse) {
