@@ -141,6 +141,7 @@ rewayAccessBookmarksByGroup: {
 - Ignore `hide_from_all_bookmarks`; it is dashboard-specific.
 - Group rows do not show bookmark counts.
 - Bookmark rows show favicon, title, and domain only.
+- Bookmark favicon rendering tries stored favicon data first, then Google S2 for public domains, then a deterministic letter tile fallback.
 - No full URL in rows.
 - Group bookmark submenus show all bookmarks for that group, no pagination/cap.
 - `No Group` needs explicit API support: `groupId=none` maps to `group_id IS NULL`.
@@ -177,6 +178,10 @@ rewayAccessBookmarksByGroup: {
 - No snapping to edges.
 - Direction-aware positioning uses `getBoundingClientRect`.
 - Menu/submenu flip based on available viewport room.
+- Group-hover submenus use a small upward anchor bias so the first bookmarks are closer to the pointer path.
+- Submenu positioning uses a fixed intended submenu width and constant menu gap; it must not depend on the currently transformed submenu rect.
+- A safe pointer corridor prevents accidental group switching while moving diagonally from a group row into its submenu.
+- Hidden scrollbars are allowed in FAB lists only when paired with truthful top/bottom scroll cues and scroll-mask fade.
 
 ### Keyboard
 
@@ -217,15 +222,21 @@ rewayAccessBookmarksByGroup: {
 - Fixed Reway extension theme for now.
 - No dashboard palette sync in this feature.
 - Production FAB uses Shadow DOM.
-- Closed FAB is icon-only, using Reway icon.
+- Closed FAB is icon-only, using the Reway logo as the button itself.
 - Accessible label: `Open Reway quick access`.
 - No badge/count on closed FAB.
+- Closed FAB is slightly transparent/dimmer while idle and becomes fully visible on hover/open; no halo/ring/open glow is used.
 - No group counts in menu.
+- Group rows render the assigned dashboard Hugeicon as native inline SVG with no chip/background wrapper.
+- Menu and submenu headers are intentionally omitted; the FAB and active row already provide context.
+- FAB lists hide native scrollbars and use minimal top/bottom scroll indicators only when more content exists in that direction.
+- Row hover/active state uses color/background/inset ring only; no scale or horizontal movement on dense list items.
+- Main menu target height assumes about 10 groups for the average user.
 - One-time intro tooltip:
   - `Reway quick access`
   - `Hover to open saved links`
-  - auto-dismiss after 4-5 seconds
-  - mark seen after timeout or interaction
+  - must not auto-open on page load
+  - mark seen after interaction
   - no repeated pulse
 
 ## Implementation Chunks
@@ -299,10 +310,10 @@ Tasks:
 
 Suggested verification:
 
-- [ ] local extension load in Chrome
-- [ ] test normal website, localhost, Reway dashboard exclusion
-- [ ] test drag, resize clamp, search, auth, group hover, no group
-- [ ] test keyboard shortcut and arrows
+- [x] local extension load in Chrome
+- [x] test normal website, localhost, Reway dashboard exclusion
+- [x] test drag, resize clamp, search, auth, group hover, no group
+- [x] test keyboard shortcut and arrows
 
 ### Chunk 4 - Popup Settings
 
@@ -360,7 +371,7 @@ Suggested verification:
 
 - [x] `pnpm typecheck`
 - [x] targeted `oxlint`
-- [ ] manual Chrome extension smoke test
+- [x] manual Chrome extension smoke test
 
 ## Progress Tracker
 
@@ -370,10 +381,10 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`.
 | --- | --- | --- |
 | 1 - Data Model And API | done | Added `show_in_fab`, extension no-group reads, favicon/domain payload fields, capped search route, and extension-safe visit route CORS. Verified with `pnpm typecheck` and targeted `oxlint`; no live route smoke run. |
 | 2 - Background Access Layer | done | Added access cache helper, stale refresh messages, background API/open handlers, visit logging, and `open-quick-access` command routing. Verified syntax, manifest JSON, `pnpm typecheck`, and targeted `oxlint`; no manual extension smoke run. |
-| 3 - Content Script UI | done | Added Shadow DOM FAB/content CSS, desktop/page guards, hover/drag/menu/submenu/search/auth states, command-open keyboard mode, and bookmark/group-open messaging. Verified JS syntax, manifest JSON, targeted `oxlint`, and `pnpm typecheck`; no Chrome-loaded manual smoke run. |
+| 3 - Content Script UI | done | Added Shadow DOM FAB/content CSS, desktop/page guards, hover/drag/menu/submenu/search/auth states, command-open keyboard mode, bookmark/group-open messaging, generated Hugeicons group rendering, favicon fallback chain, hidden-scrollbar scroll cues, submenu safe corridor, and stable submenu anchoring. Verified JS syntax, manifest JSON, targeted `oxlint`, `pnpm typecheck`, and iterative Chrome-loaded manual validation. |
 | 4 - Popup Settings | done | Added local quick-access toggle, hidden-host draft editing, hostname normalization, save/cancel persistence, and refresh-on-next-page-load semantics. Verified JS syntax, targeted `oxlint`, and `pnpm typecheck`; no Chrome popup smoke run. |
 | 5 - Dashboard Group Visibility | done | Added extension quick-access visibility actions to dashboard group menus/context menus with optimistic user-scoped mutation and extension-specific copy. Verified `pnpm typecheck` and targeted `oxlint`; no live DB/FAB cache smoke run. |
-| 6 - Polish And Regression | done | Compared against refined prototype, reviewed extension UI/motion/permissions, preserved popup save and dashboard bridge separation, tightened keyboard command mode and active-row behavior. Verified `pnpm typecheck`, targeted `oxlint`, targeted `oxfmt --check`, extension JS syntax, manifest JSON, and `pnpm build`; no manual Chrome extension smoke run. |
+| 6 - Polish And Regression | done | Compared against refined prototype, reviewed extension UI/motion/permissions, preserved popup save and dashboard bridge separation, tightened keyboard command mode, active-row behavior, Reway logo FAB treatment, header removal, radius/sizing, search/menu height animation, submenu anchoring, and scroll affordances. Verified `pnpm typecheck`, targeted `oxlint`, targeted `oxfmt --check`, extension JS syntax, manifest JSON, `pnpm build`, and iterative Chrome-loaded manual validation. |
 
 ## Resume Protocol
 

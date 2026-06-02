@@ -6,13 +6,18 @@ const HOVER_CLOSE_DELAY_MS = 220;
 const SEARCH_DELAY_MS = 280;
 const MIN_VIEWPORT_WIDTH = 720;
 const MIN_VIEWPORT_HEIGHT = 420;
+const SUBMENU_SAFE_TRIANGLE_PADDING = 12;
+const SUBMENU_WIDTH = 300;
+const SUBMENU_VIEWPORT_GAP = 8;
+const SUBMENU_EDGE_GAP = 6;
+const SUBMENU_ANCHOR_RISE = 22;
 const DEFAULT_GROUP_COLOR = "#a7adb6";
 const NO_GROUP_ID = "none";
 const ACCESS_COMMAND_KEY = "rewayAccessCommand";
 const GROUP_ICON_MANIFEST = globalThis.REWAY_GROUP_ICON_MANIFEST || {};
 
 const ICONS = {
-  logo: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5Zm0 6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Zm0 6a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Z"/></svg>`,
+  logo: `<svg viewBox="0 0 512 512" aria-hidden="true"><circle cx="256" cy="256" r="256" fill="#1a1a1a"/><g transform="matrix(12.135672 0 0 12.135672 110.37194 110.37192)"><path fill="#ffffff" d="M4 17.9808V9.70753C4 6.07416 4 4.25748 5.17157 3.12874C6.34315 2 8.22876 2 12 2C15.7712 2 17.6569 2 18.8284 3.12874C20 4.25748 20 6.07416 20 9.70753V17.9808C20 20.2867 20 21.4396 19.2272 21.8523C17.7305 22.6514 14.9232 19.9852 13.59 19.1824C12.8168 18.7168 12.4302 18.484 12 18.484C11.5698 18.484 11.1832 18.7168 10.41 19.1824C9.0768 19.9852 6.26947 22.6514 4.77285 21.8523C4 21.4396 4 20.2867 4 17.9808Z"/></g></svg>`,
   bookmark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16Z"/></svg>`,
   external: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>`,
   lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
@@ -50,6 +55,8 @@ let searchTimer = 0;
 let introTimer = 0;
 let dragState = null;
 let pendingQuickAccessOpen = false;
+let ignoreGroupListScrollUntil = 0;
+let menuResizeTimer = 0;
 
 chrome.runtime.onMessage.addListener(handleRuntimeMessage);
 window.addEventListener("keydown", handleGlobalKeyDown, true);
@@ -290,17 +297,13 @@ function inject() {
   shadow.innerHTML = `
     <div class="root" data-menu-open="false" data-menu-x="left" data-menu-y="above">
       <button class="fab" type="button" aria-label="Open Reway quick access" aria-haspopup="menu" aria-expanded="false">
-        <span class="fab-icon">${ICONS.bookmark}</span>
+        <span class="fab-icon">${ICONS.logo}</span>
       </button>
       <div class="intro" role="status">
         <p class="intro-title">Reway quick access</p>
         <p class="intro-copy">Hover to open saved links</p>
       </div>
       <section class="menu" role="menu" aria-label="Reway quick access">
-        <div class="header">
-          <span class="logo">${ICONS.logo}</span>
-          <span class="title">Reway</span>
-        </div>
         <div class="panel"></div>
         <div class="search-wrap">
           <input class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search bookmarks" aria-label="Search bookmarks" />
@@ -438,6 +441,7 @@ function openMenu({ focusSearch }) {
 }
 
 function closeMenu() {
+  clearTimeout(menuResizeTimer);
   state.menuOpen = false;
   state.keyboardMode = false;
   state.searchQuery = "";
@@ -449,6 +453,8 @@ function closeMenu() {
   refs.root.dataset.keyboardMode = "false";
   refs.fab.dataset.open = "false";
   refs.fab.setAttribute("aria-expanded", "false");
+  refs.menu.style.height = "";
+  refs.menu.style.overflow = "";
   closeSubmenu();
   renderPanel();
 }
@@ -774,22 +780,23 @@ function renderPanel() {
     item.setAttribute("role", "none");
     const surface = document.createElement("div");
     surface.className = "group-row-surface";
-    surface.dataset.active = String(
-      state.activeList === "groups"
-        ? index === state.activeIndex
-        : group.id === state.activeGroupId,
-    );
+    const isActive = isGroupActive(group.id, index);
+    surface.dataset.active = String(isActive);
     const row = document.createElement("button");
     row.type = "button";
     row.className = "row-button";
     row.dataset.source = "groups";
     row.dataset.index = String(index);
     row.dataset.groupId = group.id;
-    row.dataset.active = surface.dataset.active;
+    row.dataset.active = String(isActive);
     row.style.setProperty("--group-color", group.color);
     row.innerHTML = `${renderGroupIconChip(group)}<span class="row-label"></span>`;
     row.querySelector(".row-label").textContent = group.name;
-    surface.addEventListener("mouseenter", () => activateGroup(group.id, index));
+    surface.addEventListener("mouseenter", (event) => {
+      if (!shouldDeferGroupActivation(event, group.id)) {
+        activateGroup(group.id, index);
+      }
+    });
     row.addEventListener("focus", () => activateGroup(group.id, index));
     row.addEventListener("click", () => activateGroup(group.id, index));
     const openGroupButton = document.createElement("button");
@@ -813,22 +820,111 @@ function renderPanel() {
     list.append(item);
   });
   list.addEventListener("scroll", handleGroupListScroll, { passive: true });
-  refs.panel.replaceChildren(list);
+  const scrollTop = getPanelListScrollTop();
+  updatePanelContent(() => {
+    refs.panel.replaceChildren(createScrollFrame(list));
+    restoreListScrollTop(list, scrollTop);
+  });
+}
+
+function getPanelListScrollTop() {
+  const list = refs.panel.querySelector(".list");
+  return list ? list.scrollTop : 0;
+}
+
+function restoreListScrollTop(list, scrollTop) {
+  if (!scrollTop) return;
+  ignoreGroupListScrollUntil = Date.now() + 120;
+  list.scrollTop = scrollTop;
+  requestAnimationFrame(() => {
+    if (refs.panel.contains(list)) {
+      ignoreGroupListScrollUntil = Date.now() + 120;
+      list.scrollTop = scrollTop;
+      updateScrollIndicators(list);
+    }
+  });
+}
+
+function createScrollFrame(list) {
+  const frame = document.createElement("div");
+  frame.className = "scroll-frame";
+  frame.dataset.scrollTop = "false";
+  frame.dataset.scrollBottom = "false";
+
+  const topCue = document.createElement("span");
+  topCue.className = "scroll-cue scroll-cue-top";
+  topCue.setAttribute("aria-hidden", "true");
+
+  const bottomCue = document.createElement("span");
+  bottomCue.className = "scroll-cue scroll-cue-bottom";
+  bottomCue.setAttribute("aria-hidden", "true");
+
+  list.addEventListener("scroll", () => updateScrollIndicators(list), {
+    passive: true,
+  });
+  frame.append(list, topCue, bottomCue);
+  requestAnimationFrame(() => updateScrollIndicators(list));
+  return frame;
+}
+
+function updateScrollIndicators(list) {
+  const frame = list.closest(".scroll-frame");
+  if (!frame) return;
+  const maxScrollTop = list.scrollHeight - list.clientHeight;
+  const canScroll = maxScrollTop > 1;
+  frame.dataset.scrollTop = String(canScroll && list.scrollTop > 1);
+  frame.dataset.scrollBottom = String(
+    canScroll && list.scrollTop < maxScrollTop - 1,
+  );
+}
+
+function updatePanelContent(update) {
+  const shouldAnimate =
+    state.menuOpen &&
+    refs.menu &&
+    refs.root.dataset.keyboardMode !== "true";
+  const beforeHeight = shouldAnimate ? refs.menu.getBoundingClientRect().height : 0;
+
+  update();
+
+  if (shouldAnimate) {
+    animateMenuHeightFrom(beforeHeight);
+  }
+}
+
+function animateMenuHeightFrom(beforeHeight) {
+  const afterHeight = refs.menu.getBoundingClientRect().height;
+  if (Math.abs(afterHeight - beforeHeight) < 1) return;
+
+  clearTimeout(menuResizeTimer);
+  refs.menu.style.overflow = "hidden";
+  refs.menu.style.height = `${beforeHeight}px`;
+  refs.menu.getBoundingClientRect();
+  refs.menu.style.height = `${afterHeight}px`;
+
+  menuResizeTimer = setTimeout(() => {
+    refs.menu.style.height = "";
+    refs.menu.style.overflow = "";
+  }, 220);
 }
 
 function renderSearchResults() {
   if (state.searchStatus === "loading") {
-    refs.panel.innerHTML = renderSkeleton();
+    updatePanelContent(() => {
+      refs.panel.innerHTML = renderSkeleton();
+    });
     return;
   }
 
   if (state.searchStatus === "auth") {
-    refs.panel.innerHTML = renderState(
-      ICONS.lock,
-      "Sign in required",
-      "Open Reway to search bookmarks.",
-      "Open Reway",
-    );
+    updatePanelContent(() => {
+      refs.panel.innerHTML = renderState(
+        ICONS.lock,
+        "Sign in required",
+        "Open Reway to search bookmarks.",
+        "Open Reway",
+      );
+    });
     refs.panel
       .querySelector(".state-action")
       ?.addEventListener("click", openLogin);
@@ -836,26 +932,34 @@ function renderSearchResults() {
   }
 
   if (state.searchStatus === "error") {
-    refs.panel.innerHTML = renderState(
-      ICONS.alert,
-      "Search failed",
-      "Try again in a moment.",
-      "",
-    );
+    updatePanelContent(() => {
+      refs.panel.innerHTML = renderState(
+        ICONS.alert,
+        "Search failed",
+        "Try again in a moment.",
+        "",
+      );
+    });
     return;
   }
 
   if (state.searchResults.length === 0) {
-    refs.panel.innerHTML = renderState(
-      ICONS.empty,
-      "No matches",
-      "Try a different bookmark title or domain.",
-      "",
-    );
+    updatePanelContent(() => {
+      refs.panel.innerHTML = renderState(
+        ICONS.empty,
+        "No matches",
+        "Try a different bookmark title or domain.",
+        "",
+      );
+    });
     return;
   }
 
-  refs.panel.replaceChildren(renderBookmarkList(state.searchResults, "search"));
+  updatePanelContent(() => {
+    refs.panel.replaceChildren(
+      createScrollFrame(renderBookmarkList(state.searchResults, "search")),
+    );
+  });
 }
 
 function renderSubmenu() {
@@ -865,21 +969,14 @@ function renderSubmenu() {
   const status = state.bookmarksStatusByGroup.get(group.id) || "idle";
   const bookmarks = state.bookmarksByGroup.get(group.id) || [];
 
-  const header = document.createElement("div");
-  header.className = "submenu-header";
-  header.innerHTML = `${renderGroupIconChip(group, {
-    className: "submenu-marker",
-  })}<span class="title"></span>`;
-  header.querySelector(".title").textContent = group.name;
-
   if (status === "loading" || status === "idle") {
-    refs.submenu.replaceChildren(header, htmlToNode(renderSkeleton()));
+    refs.submenu.replaceChildren(htmlToNode(renderSkeleton()));
+    syncSubmenuPosition();
     return;
   }
 
   if (status === "error") {
     refs.submenu.replaceChildren(
-      header,
       htmlToNode(
         renderState(
           ICONS.alert,
@@ -889,12 +986,12 @@ function renderSubmenu() {
         ),
       ),
     );
+    syncSubmenuPosition();
     return;
   }
 
   if (bookmarks.length === 0) {
     refs.submenu.replaceChildren(
-      header,
       htmlToNode(
         renderState(
           ICONS.empty,
@@ -904,10 +1001,14 @@ function renderSubmenu() {
         ),
       ),
     );
+    syncSubmenuPosition();
     return;
   }
 
-  refs.submenu.replaceChildren(header, renderBookmarkList(bookmarks, "group"));
+  refs.submenu.replaceChildren(
+    createScrollFrame(renderBookmarkList(bookmarks, "group")),
+  );
+  syncSubmenuPosition();
 }
 
 function renderBookmarkList(bookmarks, source) {
@@ -1047,7 +1148,6 @@ function activateGroup(groupId, index, options = {}) {
   state.activeList = options.focusBookmarks ? "group" : "groups";
   state.activeIndex = options.focusBookmarks ? 0 : index;
   updateActiveRows();
-  positionSubmenu();
   refs.submenu.dataset.open = "true";
   if (!state.bookmarksByGroup.has(groupId)) {
     void loadBookmarks(groupId);
@@ -1064,14 +1164,106 @@ function positionSubmenu() {
   if (!activeRow) return;
   const menuRect = refs.menu.getBoundingClientRect();
   const rowRect = activeRow.getBoundingClientRect();
-  const submenuWidth = 300;
-  const submenuHeight = Math.min(420, window.innerHeight - 16);
-  const shouldFlipLeft = window.innerWidth - menuRect.right < submenuWidth + 12;
+  const submenuRect = refs.submenu.getBoundingClientRect();
+  const submenuWidth = Math.min(
+    SUBMENU_WIDTH,
+    window.innerWidth - SUBMENU_VIEWPORT_GAP * 2,
+  );
+  const viewportBottom = window.innerHeight - SUBMENU_VIEWPORT_GAP;
+  const idealTop = Math.max(
+    SUBMENU_VIEWPORT_GAP,
+    rowRect.top - SUBMENU_ANCHOR_RISE,
+  );
+  const submenuHeight = Math.min(
+    refs.submenu.scrollHeight || submenuRect.height || 0,
+    window.innerHeight - SUBMENU_VIEWPORT_GAP * 2,
+  );
+  const shouldFlipLeft =
+    window.innerWidth - menuRect.right < submenuWidth + SUBMENU_EDGE_GAP * 2;
+
   refs.submenu.dataset.side = shouldFlipLeft ? "left" : "right";
   refs.submenu.style.left = shouldFlipLeft
-    ? `${Math.max(8, menuRect.left - submenuWidth - 6)}px`
-    : `${Math.min(window.innerWidth - submenuWidth - 8, menuRect.right + 6)}px`;
-  refs.submenu.style.top = `${Math.max(8, Math.min(window.innerHeight - submenuHeight - 8, rowRect.top))}px`;
+    ? `${Math.max(SUBMENU_VIEWPORT_GAP, menuRect.left - submenuWidth - SUBMENU_EDGE_GAP)}px`
+    : `${Math.min(window.innerWidth - submenuWidth - SUBMENU_VIEWPORT_GAP, menuRect.right + SUBMENU_EDGE_GAP)}px`;
+  refs.submenu.style.top = `${Math.max(
+    SUBMENU_VIEWPORT_GAP,
+    Math.min(viewportBottom - submenuHeight, idealTop),
+  )}px`;
+}
+
+function syncSubmenuPosition() {
+  positionSubmenu();
+  requestAnimationFrame(() => {
+    if (!state.menuOpen || refs.submenu.dataset.open !== "true") return;
+    positionSubmenu();
+  });
+}
+
+function shouldDeferGroupActivation(event, nextGroupId) {
+  if (
+    !state.activeGroupId ||
+    state.activeGroupId === nextGroupId ||
+    refs.submenu.dataset.open !== "true" ||
+    state.searchQuery.length >= 2
+  ) {
+    return false;
+  }
+
+  const activeRow = refs.panel.querySelector(
+    `[data-group-id="${cssEscape(state.activeGroupId)}"]`,
+  );
+  if (!activeRow) return false;
+
+  const rowRect = activeRow.getBoundingClientRect();
+  const submenuRect = refs.submenu.getBoundingClientRect();
+  return isPointInSubmenuSafeTriangle(
+    event.clientX,
+    event.clientY,
+    rowRect,
+    submenuRect,
+  );
+}
+
+function isPointInSubmenuSafeTriangle(x, y, rowRect, submenuRect) {
+  const pad = SUBMENU_SAFE_TRIANGLE_PADDING;
+  const submenuIsLeft = submenuRect.right <= rowRect.left;
+  const startX = submenuIsLeft ? rowRect.left : rowRect.right;
+  const endX = submenuIsLeft ? submenuRect.right : submenuRect.left;
+  const triangle = submenuIsLeft
+    ? [
+        { x: startX, y: rowRect.top - pad },
+        { x: startX, y: rowRect.bottom + pad },
+        { x: endX, y: submenuRect.top - pad },
+        { x: endX, y: submenuRect.bottom + pad },
+      ]
+    : [
+        { x: startX, y: rowRect.top - pad },
+        { x: endX, y: submenuRect.top - pad },
+        { x: endX, y: submenuRect.bottom + pad },
+        { x: startX, y: rowRect.bottom + pad },
+      ];
+
+  return isPointInPolygon({ x, y }, triangle);
+}
+
+function isPointInPolygon(point, polygon) {
+  let inside = false;
+  for (
+    let index = 0, previousIndex = polygon.length - 1;
+    index < polygon.length;
+    previousIndex = index, index += 1
+  ) {
+    const current = polygon[index];
+    const previous = polygon[previousIndex];
+    const intersects =
+      current.y > point.y !== previous.y > point.y &&
+      point.x <
+        ((previous.x - current.x) * (point.y - current.y)) /
+          (previous.y - current.y) +
+          current.x;
+    if (intersects) inside = !inside;
+  }
+  return inside;
 }
 
 function closeSubmenu() {
@@ -1097,8 +1289,11 @@ function closeSubmenuIfSearching() {
 function updateActiveRows() {
   shadow.querySelectorAll("[data-index]").forEach((node) => {
     let isActive;
-    if (node.dataset.source === "groups" && state.activeList === "group") {
-      isActive = node.dataset.groupId === state.activeGroupId;
+    if (
+      node.dataset.source === "groups" &&
+      state.searchQuery.length < 2
+    ) {
+      isActive = isGroupActive(node.dataset.groupId, Number(node.dataset.index));
       node.dataset.active = String(isActive);
       updateGroupSurfaceState(node, isActive);
       return;
@@ -1111,6 +1306,18 @@ function updateActiveRows() {
   });
 }
 
+function isGroupActive(groupId, index) {
+  if (state.searchQuery.length >= 2) {
+    return false;
+  }
+
+  if (state.activeGroupId) {
+    return groupId === state.activeGroupId;
+  }
+
+  return state.activeList === "groups" && index === state.activeIndex;
+}
+
 function updateGroupSurfaceState(node, isActive) {
   if (!node.classList?.contains("row-button")) return;
   const surface = node.closest(".group-row-surface");
@@ -1120,6 +1327,7 @@ function updateGroupSurfaceState(node, isActive) {
 }
 
 function handleGroupListScroll() {
+  if (Date.now() < ignoreGroupListScrollUntil) return;
   if (!state.activeGroupId || !state.menuOpen) return;
   closeSubmenu();
 }

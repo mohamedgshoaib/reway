@@ -3,24 +3,25 @@
   color-scheme: dark;
   --reway-bg: oklch(0.18 0 0);
   --reway-surface: oklch(0.22 0 0);
-  --reway-raised: oklch(0.255 0 0);
-  --reway-muted: oklch(0.31 0 0);
+  --reway-raised: oklch(0.25 0 0);
+  --reway-muted: oklch(0.28 0 0);
   --reway-text: oklch(0.98 0 0);
   --reway-subtle: oklch(0.72 0 0);
-  --reway-dim: oklch(0.53 0 0);
-  --reway-border: color-mix(in oklab, white, transparent 94%);
-  --reway-border-strong: color-mix(in oklab, white, transparent 88%);
+  --reway-dim: oklch(0.65 0 0);
+  --reway-border: color-mix(in oklab, var(--reway-text), transparent 95%);
+  --reway-border-strong: color-mix(in oklab, var(--reway-text), transparent 92%);
   --reway-accent: oklch(0.78 0.1 205);
   --fab-size: 44px;
   --control-height: 38px;
   --surface-padding: 6px;
-  --surface-radius: 22px;
-  --item-radius: 16px;
-  --group-row-padding: 3px;
+  --surface-radius: 20px;
+  --item-radius: calc(var(--surface-radius) - var(--surface-padding));
+  --group-row-padding: 4px;
   --group-row-inner-radius: calc(var(--item-radius) - var(--group-row-padding));
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --duration-fast: 140ms;
   --duration-base: 180ms;
+  --duration-fab: 200ms;
   font-family:
     Geist,
     ui-sans-serif,
@@ -47,6 +48,35 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+@property --scroll-mask-t-from {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@property --scroll-mask-b-from {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@keyframes scroll-mask-y-scroll {
+  0% {
+    --scroll-mask-t-from: 100%;
+  }
+  10%,
+  100% {
+    --scroll-mask-t-from: var(--scroll-mask-fade-from-t);
+  }
+  0%,
+  90% {
+    --scroll-mask-b-from: var(--scroll-mask-fade-from-b);
+  }
+  100% {
+    --scroll-mask-b-from: 100%;
+  }
+}
+
 .root {
   position: fixed;
   z-index: 2147483647;
@@ -70,38 +100,38 @@ button {
   border: 0;
   border-radius: 999px;
   color: var(--reway-text);
-  background: var(--reway-bg);
-  cursor: grab;
+  background: transparent;
+  cursor: pointer;
   outline: none;
-  box-shadow:
-    inset 0 0 0 1px var(--reway-border),
-    inset 0 0 0 1px rgb(255 255 255 / 0.04),
-    0 16px 38px -18px rgb(0 0 0 / 0.75);
+  opacity: 0.72;
+  filter: saturate(0.82) brightness(0.92);
+  box-shadow: none;
   transition:
-    background-color var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fab) var(--ease-out),
+    filter var(--duration-fab) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
 }
 
 .fab::before {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  border-radius: inherit;
-  background: color-mix(in oklab, var(--reway-accent), transparent 86%);
-  opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-out);
+  content: none;
 }
 
 .fab-icon {
   position: relative;
   display: flex;
-  width: 20px;
-  height: 20px;
+  width: var(--fab-size);
+  height: var(--fab-size);
   pointer-events: none;
 }
 
-.fab-icon svg,
+.fab-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+}
+
 .icon svg {
   display: block;
   width: 100%;
@@ -110,21 +140,15 @@ button {
 
 .fab:hover,
 .fab[data-open="true"] {
-  background: var(--reway-surface);
-  box-shadow:
-    inset 0 0 0 1px var(--reway-border-strong),
-    inset 0 0 0 1px rgb(255 255 255 / 0.05),
-    0 18px 44px -18px rgb(0 0 0 / 0.78);
+  opacity: 1;
+  filter: saturate(1) brightness(1);
 }
 
-.fab:hover::before,
-.fab[data-open="true"]::before {
-  opacity: 1;
+.fab[data-open="true"] {
+  box-shadow: none;
 }
 
 .fab:active,
-.row-button:active,
-.bookmark-button:active,
 .state-action:active,
 .group-open-button:active {
   transform: scale(0.96);
@@ -153,23 +177,33 @@ button {
   bottom: calc(var(--fab-size) + 10px);
   display: grid;
   width: 252px;
-  max-height: min(440px, calc(100vh - 24px));
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: min(600px, calc(100vh - 24px));
+  grid-template-rows: minmax(0, 1fr) auto;
   padding: var(--surface-padding);
   border-radius: var(--surface-radius);
   color: var(--reway-text);
-  background: color-mix(in oklab, var(--reway-bg), transparent 3%);
-  box-shadow:
-    inset 0 0 0 1px var(--reway-border),
-    inset 0 0 0 1px rgb(255 255 255 / 0.04),
-    0 24px 70px -30px rgb(0 0 0 / 0.78);
+  background: var(--reway-surface);
+  box-shadow: inset 0 0 0 1px var(--reway-border);
+  isolation: isolate;
   opacity: 0;
   pointer-events: none;
   transform: translateY(4px) scale(0.97);
   transform-origin: bottom right;
   transition:
     opacity var(--duration-base) var(--ease-out),
-    transform var(--duration-base) var(--ease-out);
+    transform var(--duration-base) var(--ease-out),
+    height var(--duration-base) var(--ease-out);
+}
+
+.menu::after,
+.submenu::after,
+.intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, white, transparent 95%);
+  pointer-events: none;
 }
 
 .root[data-menu-open="true"] .menu {
@@ -199,39 +233,12 @@ button {
   transform-origin: top left;
 }
 
-.header {
-  display: flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-}
-
-.logo {
-  display: flex;
-  width: 16px;
-  height: 16px;
-  color: var(--reway-accent);
-}
-
-.title {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--reway-dim);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .search-wrap {
   padding: 4px 0 0;
 }
 
 .root[data-menu-y="above"] .search-wrap {
-  grid-row: 3;
+  grid-row: 2;
   padding: 6px 0 0;
 }
 
@@ -240,18 +247,18 @@ button {
   padding: 0 0 6px;
 }
 
-.root[data-menu-y="below"] .header {
+.root[data-menu-y="below"] .panel {
   grid-row: 2;
 }
 
 .search-input {
   width: 100%;
-  height: 36px;
+  height: var(--control-height);
   padding: 0 12px;
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--item-radius);
   color: var(--reway-text);
-  background: var(--reway-raised);
+  background: color-mix(in oklab, var(--reway-raised), transparent 18%);
   outline: none;
   box-shadow: inset 0 0 0 1px var(--reway-border);
 }
@@ -266,24 +273,105 @@ button {
 }
 
 .list {
+  --scroll-mask-fade-from-t: calc(100% - 18px);
+  --scroll-mask-fade-from-b: calc(100% - 18px);
   max-height: 332px;
   margin: 0;
-  padding: 4px 0 0;
+  padding: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
-  scrollbar-color: color-mix(in oklab, var(--reway-subtle), transparent 72%) transparent;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-frame {
+  position: relative;
+  min-height: 0;
+}
+
+.panel > .scroll-frame > .list {
+  max-height: 488px;
+}
+
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  z-index: 1;
+  width: 18px;
+  height: 14px;
+  color: color-mix(in oklab, var(--reway-text), transparent 54%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.scroll-cue::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+}
+
+.scroll-cue-top {
+  top: 1px;
+}
+
+.scroll-cue-top::before {
+  top: 5px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.scroll-cue-bottom {
+  bottom: 1px;
+}
+
+.scroll-cue-bottom::before {
+  bottom: 5px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.scroll-frame[data-scroll-top="true"] .scroll-cue-top {
+  opacity: 1;
+  transform: translate(-50%, -1px);
+}
+
+.scroll-frame[data-scroll-bottom="true"] .scroll-cue-bottom {
+  opacity: 1;
+  transform: translate(-50%, 1px);
+}
+
+@supports (animation-timeline: scroll()) {
+  .list {
+    --scroll-mask-t: linear-gradient(
+      to top,
+      black,
+      black var(--scroll-mask-t-from),
+      transparent
+    );
+    --scroll-mask-b: linear-gradient(
+      to bottom,
+      black,
+      black var(--scroll-mask-b-from),
+      transparent
+    );
+    animation: scroll-mask-y-scroll linear;
+    animation-timeline: scroll(self block);
+    mask-image: var(--scroll-mask-t), var(--scroll-mask-b);
+    mask-composite: intersect;
+    -webkit-mask-image: var(--scroll-mask-t), var(--scroll-mask-b);
+    -webkit-mask-composite: source-in;
+  }
 }
 
 .list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.list::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--reway-subtle), transparent 72%);
-  background-clip: padding-box;
+  display: none;
 }
 
 .row-button,
@@ -292,7 +380,7 @@ button {
   width: 100%;
   min-height: var(--control-height);
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   border: 0;
   border-radius: var(--item-radius);
   color: var(--reway-subtle);
@@ -309,24 +397,24 @@ button {
 }
 
 .row-button {
-  padding: 0 7px;
+  padding: 0 8px;
 }
 
 .bookmark-button {
-  padding: 5px 8px;
+  padding: 0 8px;
 }
 
 .bookmark-button:hover,
 .bookmark-button[data-active="true"] {
   color: var(--reway-text);
-  background: var(--reway-raised);
+  background: color-mix(in oklab, var(--reway-raised), transparent 8%);
   box-shadow: inset 0 0 0 1px var(--reway-border);
 }
 
 .group-row-surface:hover,
 .group-row-surface[data-active="true"],
 .group-row-surface:focus-within {
-  background: var(--reway-raised);
+  background: color-mix(in oklab, var(--reway-raised), transparent 8%);
   box-shadow: inset 0 0 0 1px var(--reway-border);
 }
 
@@ -377,16 +465,17 @@ button {
   flex: 1;
   color: inherit;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .group-open-button {
   display: flex;
-  width: 26px;
-  height: 26px;
-  flex: 0 0 26px;
+  width: calc(var(--control-height) - (var(--group-row-padding) * 2));
+  height: calc(var(--control-height) - (var(--group-row-padding) * 2));
+  flex: 0 0 calc(var(--control-height) - (var(--group-row-padding) * 2));
   align-items: center;
   justify-content: center;
+  padding: 0;
   border: 0;
   border-radius: var(--group-row-inner-radius);
   color: var(--reway-dim);
@@ -398,6 +487,11 @@ button {
     background-color var(--duration-fast) var(--ease-out),
     opacity var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
+}
+
+.group-open-button svg {
+  width: 14px;
+  height: 14px;
 }
 
 .group-row-surface:hover .group-open-button,
@@ -420,7 +514,7 @@ button {
 .group-row-surface {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   min-height: var(--control-height);
   padding: var(--group-row-padding);
   border-radius: var(--item-radius);
@@ -446,18 +540,18 @@ button {
   padding: var(--surface-padding);
   border-radius: var(--surface-radius);
   color: var(--reway-text);
-  background: color-mix(in oklab, var(--reway-bg), transparent 3%);
-  box-shadow:
-    inset 0 0 0 1px var(--reway-border),
-    inset 0 0 0 1px rgb(255 255 255 / 0.04),
-    0 24px 70px -30px rgb(0 0 0 / 0.78);
+  background: var(--reway-surface);
+  box-shadow: inset 0 0 0 1px var(--reway-border);
+  isolation: isolate;
   opacity: 0;
   pointer-events: none;
   transform: translateX(4px) scale(0.97);
   transform-origin: left center;
   transition:
     opacity var(--duration-base) var(--ease-out),
-    transform var(--duration-base) var(--ease-out);
+    transform var(--duration-base) var(--ease-out),
+    top var(--duration-fast) var(--ease-out),
+    left var(--duration-fast) var(--ease-out);
 }
 
 .submenu[data-open="true"] {
@@ -473,14 +567,6 @@ button {
 
 .submenu[data-side="left"][data-open="true"] {
   transform: translateX(0) scale(1);
-}
-
-.submenu-header {
-  display: flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
 }
 
 .bookmark-favicon,
@@ -518,14 +604,14 @@ button {
   display: block;
   color: inherit;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
 }
 
 .bookmark-domain {
   display: block;
   margin-top: 2px;
-  color: var(--reway-dim);
+  color: color-mix(in oklab, var(--reway-dim), transparent 12%);
   font-size: 11px;
   line-height: 1.25;
 }
@@ -550,8 +636,8 @@ button {
 
 .state-title {
   color: var(--reway-text);
-  font-size: 13px;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .state-copy {
@@ -563,16 +649,16 @@ button {
 }
 
 .state-action {
-  min-height: 34px;
+  min-height: var(--control-height);
   margin-top: 2px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 0;
-  border-radius: 13px;
+  border-radius: var(--item-radius);
   color: var(--reway-bg);
   background: var(--reway-text);
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   transition:
     background-color var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
@@ -621,12 +707,11 @@ button {
   bottom: calc(var(--fab-size) + 10px);
   width: 190px;
   padding: 10px 12px;
-  border-radius: 18px;
+  border-radius: calc(var(--item-radius) + 2px);
   color: var(--reway-text);
-  background: color-mix(in oklab, var(--reway-bg), transparent 3%);
-  box-shadow:
-    inset 0 0 0 1px var(--reway-border),
-    0 18px 44px -22px rgb(0 0 0 / 0.72);
+  background: var(--reway-surface);
+  box-shadow: inset 0 0 0 1px var(--reway-border);
+  isolation: isolate;
   opacity: 0;
   pointer-events: none;
   transform: translateY(4px) scale(0.97);
@@ -642,15 +727,15 @@ button {
 
 .intro-title {
   margin: 0 0 2px;
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .intro-copy {
   margin: 0;
   color: var(--reway-dim);
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 @keyframes shimmer {
