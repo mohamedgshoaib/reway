@@ -1080,12 +1080,16 @@ document.getElementById("save-session")?.addEventListener("click", () =>
 
 const addManualLinkBtn = document.getElementById("add-manual-link")
 const manualLinkInput = document.getElementById("links-manual-url")
+let isAddingManualLink = false
 
 if (addManualLinkBtn && manualLinkInput) {
   const handleAddLink = async () => {
+    if (isAddingManualLink || addManualLinkBtn.disabled) return
+
     const value = manualLinkInput.value.trim()
     if (!value) return
 
+    isAddingManualLink = true
     addManualLinkBtn.disabled = true
 
     let urlToAdd = value
@@ -1119,6 +1123,7 @@ if (addManualLinkBtn && manualLinkInput) {
     } catch (error) {
       console.error("Failed to add link", error)
     } finally {
+      isAddingManualLink = false
       addManualLinkBtn.disabled = false
       manualLinkInput.focus()
     }
@@ -1126,7 +1131,10 @@ if (addManualLinkBtn && manualLinkInput) {
 
   addManualLinkBtn.addEventListener("click", handleAddLink)
   manualLinkInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") handleAddLink()
+    if (event.key === "Enter") {
+      event.preventDefault()
+      handleAddLink()
+    }
   })
 }
 

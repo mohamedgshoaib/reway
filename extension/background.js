@@ -244,17 +244,35 @@ function normalizeHttpUrls(urls) {
 async function openUrlsInBackgroundTabs(urls) {
   const batchSize = 10;
   const delayMs = 150;
+  let openedCount = 0;
+  const failures = [];
 
   for (let index = 0; index < urls.length; index += batchSize) {
     const batch = urls.slice(index, index + batchSize);
-    await Promise.all(
+    const batchResults = await Promise.allSettled(
       batch.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
     );
+    batchResults.forEach((result, batchIndex) => {
+      if (result.status === "fulfilled") {
+        openedCount += 1;
+        return;
+      }
+
+      failures.push({
+        url: batch[batchIndex],
+        message: String(result.reason?.message || result.reason || "Failed"),
+      });
+    });
 
     if (index + batchSize < urls.length) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
+
+  return {
+    openedCount,
+    failures,
+  };
 }
 
 async function openUrlInForegroundTab(url) {
@@ -512,8 +530,12 @@ async function handleAccessMessage(message, sender) {
             (b) => b.url,
           ),
         );
-    await openUrlsInBackgroundTabs(urls);
-    return { ok: true, count: urls.length };
+    const { openedCount, failures } = await openUrlsInBackgroundTabs(urls);
+    return {
+      ok: failures.length === 0,
+      count: openedCount,
+      failures,
+    };
   }
 
   if (message?.type === "rewayAccessGetLoginUrl") {
@@ -736,14 +758,22 @@ async function handleOpenGroup(message, sender, sendResponse) {
     const normalizedUrls = normalizeHttpUrls(directUrls);
 
     if (normalizedUrls.length > 0) {
-      await openUrlsInBackgroundTabs(normalizedUrls);
-      sendResponse({ ok: true, count: normalizedUrls.length });
+      const { openedCount, failures } = await openUrlsInBackgroundTabs(normalizedUrls);
+      sendResponse({
+        ok: failures.length === 0,
+        count: openedCount,
+        failures,
+      });
       return;
     }
 
     const bookmarkUrls = await fetchGroupBookmarkUrls(message.groupId);
-    await openUrlsInBackgroundTabs(bookmarkUrls);
-    sendResponse({ ok: true, count: bookmarkUrls.length });
+    const { openedCount, failures } = await openUrlsInBackgroundTabs(bookmarkUrls);
+    sendResponse({
+      ok: failures.length === 0,
+      count: openedCount,
+      failures,
+    });
   } catch (error) {
     const msg = String(error?.message || "Failed");
     rewayErrorOnce(`open-group-failed:${msg}`, "Open group failed:", error);

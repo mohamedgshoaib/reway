@@ -22,6 +22,9 @@ const ACCESS_COMMAND_KEY = "rewayAccessCommand";
 const GROUP_ICON_MANIFEST_PATH = "js/group-icon-manifest.js";
 const GROUP_ICON_MANIFEST_ASSIGNMENT =
   "globalThis.REWAY_GROUP_ICON_MANIFEST = ";
+const MENU_ID = "reway-access-menu";
+const MENU_TITLE_ID = "reway-access-menu-title";
+const SUBMENU_ID = "reway-access-submenu";
 
 const ICONS = {
   logo: `<svg viewBox="0 0 512 512" aria-hidden="true"><circle cx="256" cy="256" r="256" fill="#1a1a1a"/><g transform="matrix(12.135672 0 0 12.135672 110.37194 110.37192)"><path fill="#ffffff" d="M4 17.9808V9.70753C4 6.07416 4 4.25748 5.17157 3.12874C6.34315 2 8.22876 2 12 2C15.7712 2 17.6569 2 18.8284 3.12874C20 4.25748 20 6.07416 20 9.70753V17.9808C20 20.2867 20 21.4396 19.2272 21.8523C17.7305 22.6514 14.9232 19.9852 13.59 19.1824C12.8168 18.7168 12.4302 18.484 12 18.484C11.5698 18.484 11.1832 18.7168 10.41 19.1824C9.0768 19.9852 6.26947 22.6514 4.77285 21.8523C4 21.4396 4 20.2867 4 17.9808Z"/></g></svg>`,
@@ -50,7 +53,7 @@ const state = {
   activeList: "groups",
   suppressHoverUntil: 0,
   activeRequestId: 0,
-  pendingOpenGroup: null,
+  armedOpenGroupIds: new Set(),
   menuSettleUntil: 0,
 };
 
@@ -71,6 +74,9 @@ let dragFrame = 0;
 let lifecycleController = null;
 let groupIconManifest = globalThis.REWAY_GROUP_ICON_MANIFEST || null;
 let groupIconManifestPromise = null;
+const openGroupConfirmTimers = new Map();
+let menuResizeObserver = null;
+let menuResizeFrame = 0;
 
 chrome.runtime.onMessage.addListener(handleRuntimeMessage);
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -316,20 +322,21 @@ function inject() {
   shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = `
     <div class="root" data-menu-open="false" data-menu-x="left" data-menu-y="above">
-      <button class="fab" type="button" aria-label="Open Reway quick access" aria-haspopup="menu" aria-expanded="false">
+      <button class="fab" type="button" aria-label="Open Reway quick access" aria-haspopup="dialog" aria-expanded="false" aria-controls="${MENU_ID}">
         <span class="fab-icon">${ICONS.logo}</span>
       </button>
       <div class="intro" role="status">
         <p class="intro-title">Reway quick access</p>
         <p class="intro-copy">Hover to open saved links</p>
       </div>
-      <section class="menu" role="dialog" aria-label="Reway quick access">
-        <div class="panel"></div>
+      <section class="menu" id="${MENU_ID}" role="dialog" aria-labelledby="${MENU_TITLE_ID}" aria-modal="false">
+        <h2 class="sr-only" id="${MENU_TITLE_ID}">Reway quick access</h2>
         <div class="search-wrap">
-          <input class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search bookmarks" aria-label="Search bookmarks" />
+          <input class="search-input" type="search" name="quick-access-search" autocomplete="off" spellcheck="false" placeholder="Search bookmarks…" aria-label="Search bookmarks" />
         </div>
+        <div class="panel"></div>
       </section>
-      <section class="submenu" role="region" aria-label="Group bookmarks"></section>
+      <section class="submenu" id="${SUBMENU_ID}" role="region" aria-label="Group bookmarks"></section>
     </div>
   `;
   refs = {
@@ -430,6 +437,8 @@ function bindEvents() {
 
 function handlePointerEnter() {
   clearTimeout(closeTimer);
+  clearTimeout(openTimer);
+  if (state.menuOpen) return;
   if (Date.now() < state.suppressHoverUntil) return;
   openTimer = setTimeout(
     () => openMenu({ focusSearch: false }),
@@ -497,8 +506,9 @@ function openMenu({ focusSearch }) {
   refs.root.dataset.keyboardMode = String(state.keyboardMode);
   refs.fab.dataset.open = "true";
   refs.fab.setAttribute("aria-expanded", "true");
+  attachMenuResizeObserver();
   renderPanel();
-  positionMenus();
+  syncMenuPosition();
   if (state.groupsStatus === "idle") {
     void loadGroups();
   }
@@ -509,13 +519,15 @@ function openMenu({ focusSearch }) {
 
 function closeMenu() {
   if (!refs.root || !refs.search || !refs.fab || !refs.menu) return;
+  const shouldRestoreFocus = shouldRestoreFocusToFab();
   clearTimeout(menuResizeTimer);
   clearTimeout(deferredPanelTimer);
+  detachMenuResizeObserver();
   state.menuOpen = false;
   state.keyboardMode = false;
   state.searchQuery = "";
   state.activeGroupId = null;
-  state.pendingOpenGroup = null;
+  clearAllOpenGroupConfirmations({ rerender: false });
   state.activeIndex = 0;
   state.activeList = "groups";
   state.menuSettleUntil = 0;
@@ -528,6 +540,9 @@ function closeMenu() {
   refs.menu.style.overflow = "";
   closeSubmenu();
   renderPanel();
+  if (shouldRestoreFocus) {
+    refs.fab.focus({ preventScroll: true });
+  }
 }
 
 function positionMenus() {
@@ -557,15 +572,15 @@ function getViewportAwareMenuLayout(anchorRect) {
     0,
     viewportHeight - anchorRect.bottom - MENU_GAP - MENU_VIEWPORT_GAP,
   );
-  const openBelow = availableBelow >= availableAbove;
-  const availableHeight = openBelow ? availableBelow : availableAbove;
+  const preferredBelow = availableBelow >= availableAbove;
+  const availableHeight = preferredBelow ? availableBelow : availableAbove;
   const maxHeight = Math.max(
     180,
     Math.min(MENU_MAX_HEIGHT, availableHeight, viewportHeight - MENU_VIEWPORT_GAP * 2),
   );
-  const measuredHeight = refs.menu?.scrollHeight
-    ? Math.min(refs.menu.scrollHeight, maxHeight)
-    : maxHeight;
+  const measuredHeight = getMeasuredMenuHeight(maxHeight);
+  const fitsAbove = measuredHeight <= availableAbove;
+  const fitsBelow = measuredHeight <= availableBelow;
   const unclampedLeft =
     anchorRect.right - menuWidth >= MENU_VIEWPORT_GAP
       ? anchorRect.right - menuWidth
@@ -575,6 +590,12 @@ function getViewportAwareMenuLayout(anchorRect) {
     MENU_VIEWPORT_GAP,
     viewportWidth - menuWidth - MENU_VIEWPORT_GAP,
   );
+  const openBelow =
+    fitsBelow && !fitsAbove
+      ? true
+      : fitsAbove && !fitsBelow
+        ? false
+        : preferredBelow;
   const top = openBelow
     ? anchorRect.bottom + MENU_GAP
     : anchorRect.top - MENU_GAP - measuredHeight;
@@ -592,8 +613,64 @@ function getViewportAwareMenuLayout(anchorRect) {
   };
 }
 
+function getMeasuredMenuHeight(maxHeight) {
+  if (!refs.menu) return maxHeight;
+
+  const visualHeight = refs.menu.getBoundingClientRect().height;
+  const contentHeight = refs.menu.scrollHeight;
+  const isAnimatingHeight = refs.menu.style.height !== "";
+
+  if (isAnimatingHeight && visualHeight > 0) {
+    return Math.min(visualHeight, maxHeight);
+  }
+
+  if (contentHeight > 0) {
+    return Math.min(contentHeight, maxHeight);
+  }
+
+  if (visualHeight > 0) {
+    return Math.min(visualHeight, maxHeight);
+  }
+
+  return maxHeight;
+}
+
+function attachMenuResizeObserver() {
+  if (menuResizeObserver || !refs.menu || typeof ResizeObserver !== "function") {
+    return;
+  }
+
+  menuResizeObserver = new ResizeObserver(() => {
+    if (!state.menuOpen || !refs.menu) return;
+    if (menuResizeFrame) return;
+    menuResizeFrame = requestAnimationFrame(() => {
+      menuResizeFrame = 0;
+      if (!state.menuOpen || !refs.menu) return;
+      syncMenuPosition();
+    });
+  });
+
+  menuResizeObserver.observe(refs.menu);
+}
+
+function detachMenuResizeObserver() {
+  if (menuResizeFrame) {
+    cancelAnimationFrame(menuResizeFrame);
+    menuResizeFrame = 0;
+  }
+  menuResizeObserver?.disconnect();
+  menuResizeObserver = null;
+}
+
 function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function shouldRestoreFocusToFab() {
+  if (!shadow) return false;
+  const activeElement = shadow.activeElement;
+  if (!activeElement) return false;
+  return refs.menu?.contains(activeElement) || refs.submenu?.contains(activeElement);
 }
 
 function handleResize() {
@@ -625,6 +702,9 @@ function dismissIntro() {
 function startDrag(event) {
   if (event.button !== 0) return;
   dismissIntro();
+  clearTimeout(openTimer);
+  clearTimeout(closeTimer);
+  state.suppressHoverUntil = Date.now() + 350;
   const rootRect = refs.root.getBoundingClientRect();
   dragState = {
     pointerId: event.pointerId,
@@ -702,7 +782,7 @@ function endDrag(event) {
   fab.removeEventListener("pointermove", moveDrag);
   fab.removeEventListener("pointerup", endDrag);
   fab.removeEventListener("pointercancel", endDrag);
-  if (dragState.moved) {
+  if (dragState.moved && event.type !== "pointercancel") {
     fab.style.transform = "translate3d(0, 0, 0)";
     setPosition(finalPosition, true);
     requestAnimationFrame(() => {
@@ -868,6 +948,7 @@ function isPublicFaviconDomain(domain) {
 }
 
 function handleSearchInput() {
+  clearAllOpenGroupConfirmations({ rerender: false });
   state.searchQuery = refs.search.value.trim();
   state.activeList = state.searchQuery.length >= 2 ? "search" : "groups";
   state.activeIndex = 0;
@@ -970,6 +1051,8 @@ function renderPanel() {
     row.dataset.index = String(index);
     row.dataset.groupId = group.id;
     row.dataset.active = String(isActive);
+    row.setAttribute("aria-expanded", String(state.activeGroupId === group.id));
+    row.setAttribute("aria-controls", SUBMENU_ID);
     row.style.setProperty("--group-color", group.color);
     row.innerHTML = `${renderGroupIconChip(group)}<span class="row-label"></span>`;
     row.querySelector(".row-label").textContent = group.name;
@@ -980,21 +1063,33 @@ function renderPanel() {
     });
     row.addEventListener("focus", () => activateGroup(group.id, index));
     row.addEventListener("click", () => activateGroup(group.id, index));
+    const isArmed = isOpenGroupArmed(group.id);
     const openGroupButton = document.createElement("button");
     openGroupButton.type = "button";
     openGroupButton.className = "group-open-button";
-    openGroupButton.title = `Open all bookmarks in ${group.name}`;
+    openGroupButton.dataset.confirm = String(isArmed);
+    openGroupButton.title = isArmed
+      ? `Confirm opening all bookmarks in ${group.name}`
+      : `Open all bookmarks in ${group.name}`;
     openGroupButton.setAttribute(
       "aria-label",
-      `Open all bookmarks in ${group.name}`,
+      isArmed
+        ? `Confirm opening all bookmarks in ${group.name}`
+        : `Open all bookmarks in ${group.name}`,
     );
-    openGroupButton.innerHTML = ICONS.external;
+    openGroupButton.innerHTML = isArmed
+      ? `<span class="group-open-button-label">Open?</span>`
+      : ICONS.external;
     openGroupButton.addEventListener("focus", () =>
       activateGroup(group.id, index),
     );
     openGroupButton.addEventListener("click", (event) => {
       event.stopPropagation();
-      void confirmAndOpenGroup(group);
+      if (isOpenGroupArmed(group.id)) {
+        void openConfirmedGroup(group);
+        return;
+      }
+      armOpenGroupConfirmation(group.id);
     });
     surface.append(row, openGroupButton);
     item.append(surface);
@@ -1117,6 +1212,7 @@ function animateMenuHeightFrom(beforeHeight) {
     if (!menu.isConnected) return;
     menu.style.height = "";
     menu.style.overflow = "";
+    syncMenuPosition();
   }, 220);
 }
 
@@ -1176,13 +1272,6 @@ function renderSearchResults() {
 
 function renderSubmenu() {
   if (!state.activeGroupId) return;
-  if (state.pendingOpenGroup?.group.id === state.activeGroupId) {
-    renderOpenGroupConfirmation(
-      state.pendingOpenGroup.group,
-      state.pendingOpenGroup.bookmarks,
-    );
-    return;
-  }
   const group = state.groups.find((item) => item.id === state.activeGroupId);
   if (!group) return;
   const status = state.bookmarksStatusByGroup.get(group.id) || "idle";
@@ -1511,7 +1600,6 @@ function isPointInPolygon(point, polygon) {
 
 function closeSubmenu() {
   const previousGroupId = state.activeGroupId;
-  state.pendingOpenGroup = null;
   if (state.activeList === "group") {
     const groupIndex = state.groups.findIndex(
       (group) => group.id === previousGroupId,
@@ -1655,7 +1743,48 @@ async function openBookmark(bookmark) {
   closeMenu();
 }
 
-async function confirmAndOpenGroup(group) {
+function isOpenGroupArmed(groupId) {
+  return state.armedOpenGroupIds.has(groupId);
+}
+
+function armOpenGroupConfirmation(groupId) {
+  disarmOpenGroupConfirmation(groupId, { rerender: false });
+  state.armedOpenGroupIds.add(groupId);
+  const timerId = setTimeout(() => {
+    disarmOpenGroupConfirmation(groupId);
+  }, 2500);
+  openGroupConfirmTimers.set(groupId, timerId);
+  renderPanel();
+}
+
+function disarmOpenGroupConfirmation(groupId, options = {}) {
+  const { rerender = true } = options;
+  const timerId = openGroupConfirmTimers.get(groupId);
+  if (timerId) {
+    clearTimeout(timerId);
+    openGroupConfirmTimers.delete(groupId);
+  }
+  if (!state.armedOpenGroupIds.delete(groupId)) return;
+  if (rerender && state.menuOpen && state.searchQuery.length < 2) {
+    renderPanel();
+  }
+}
+
+function clearAllOpenGroupConfirmations(options = {}) {
+  const { rerender = true } = options;
+  for (const timerId of openGroupConfirmTimers.values()) {
+    clearTimeout(timerId);
+  }
+  openGroupConfirmTimers.clear();
+  if (state.armedOpenGroupIds.size === 0) return;
+  state.armedOpenGroupIds.clear();
+  if (rerender && state.menuOpen && state.searchQuery.length < 2) {
+    renderPanel();
+  }
+}
+
+async function openConfirmedGroup(group) {
+  disarmOpenGroupConfirmation(group.id, { rerender: false });
   let bookmarks = state.bookmarksByGroup.get(group.id);
   if (!bookmarks) {
     const response = await sendMessage({
@@ -1665,51 +1794,14 @@ async function confirmAndOpenGroup(group) {
     bookmarks = normalizeBookmarks(response?.bookmarks || []);
     state.bookmarksByGroup.set(group.id, bookmarks);
   }
-  const count = bookmarks.length;
-  if (count === 0) return;
-  state.pendingOpenGroup = { group, bookmarks };
-  state.activeGroupId = group.id;
-  refs.submenu.dataset.open = "true";
-  renderOpenGroupConfirmation(group, bookmarks);
-}
-
-function renderOpenGroupConfirmation(group, bookmarks) {
-  const count = bookmarks.length;
-  const node = htmlToNode(`
-    <div class="confirm-open-group" role="group" aria-label="Open group confirmation">
-      <div class="confirm-open-title">Open ${count} tabs?</div>
-      <div class="confirm-open-copy">${escapeHtml(group.name)} has ${count} saved ${count === 1 ? "link" : "links"}.</div>
-      <div class="confirm-open-actions">
-        <button class="confirm-open-button" type="button" data-confirm-action="cancel">Cancel</button>
-        <button class="confirm-open-button confirm-open-button-primary" type="button" data-confirm-action="open">Open</button>
-      </div>
-    </div>
-  `);
-
-  node
-    .querySelector('[data-confirm-action="cancel"]')
-    ?.addEventListener("click", () => {
-      state.pendingOpenGroup = null;
-      renderSubmenu();
-    });
-  node
-    .querySelector('[data-confirm-action="open"]')
-    ?.addEventListener("click", () => {
-      void openConfirmedGroup();
-    });
-
-  refs.submenu.replaceChildren(node);
-  syncSubmenuPosition();
-}
-
-async function openConfirmedGroup() {
-  const pending = state.pendingOpenGroup;
-  if (!pending) return;
-  state.pendingOpenGroup = null;
+  if (!bookmarks.length) {
+    renderPanel();
+    return;
+  }
   await sendMessage({
     type: "rewayAccessOpenGroup",
-    groupId: pending.group.id,
-    urls: pending.bookmarks.map((bookmark) => bookmark.url),
+    groupId: group.id,
+    urls: bookmarks.map((bookmark) => bookmark.url),
   });
   closeMenu();
 }
@@ -1828,6 +1920,8 @@ function cleanupQuickAccess() {
   clearTimeout(introTimer);
   clearTimeout(menuResizeTimer);
   clearTimeout(deferredPanelTimer);
+  detachMenuResizeObserver();
+  clearAllOpenGroupConfirmations({ rerender: false });
   if (dragFrame) {
     cancelAnimationFrame(dragFrame);
     dragFrame = 0;

@@ -178,12 +178,15 @@ export function switchTab(tabId) {
   buttons.forEach((btn) => {
     const isActive = btn.dataset.tab === tabId
     btn.classList.toggle("active", isActive)
-    btn.setAttribute("aria-selected", isActive)
+    btn.setAttribute("aria-selected", String(isActive))
+    btn.setAttribute("tabindex", isActive ? "0" : "-1")
   })
 
   contents.forEach((content) => {
     const isActive = content.id === `tab-${tabId}`
     content.classList.toggle("active", isActive)
+    content.setAttribute("aria-hidden", String(!isActive))
+    content.setAttribute("tabindex", isActive ? "0" : "-1")
   })
 }
 
