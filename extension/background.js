@@ -199,11 +199,22 @@ function respondAsync(sendResponse, handler) {
       );
       sendResponse({
         success: false,
-        error: String(error?.message || "Failed"),
+        error: {
+          message: String(error?.message || "Failed"),
+          status: error?.status,
+          code: deriveErrorCode(error?.status),
+        },
       });
     }
   })();
   return true;
+}
+
+function deriveErrorCode(status) {
+  if (status === 401 || status === 403) return "AUTH_EXPIRED";
+  if (status === 429) return "RATE_LIMITED";
+  if (typeof status === "number" && status >= 500) return "SERVER_ERROR";
+  return "REQUEST_FAILED";
 }
 
 function isHttpUrl(candidateUrl) {
@@ -215,7 +226,7 @@ function isHttpUrl(candidateUrl) {
   }
 }
 
-function normalizeHttpUrls(urls, limit = 25) {
+function normalizeHttpUrls(urls) {
   return urls
     .flatMap((candidateUrl) => {
       try {
@@ -227,14 +238,23 @@ function normalizeHttpUrls(urls, limit = 25) {
       } catch {
         return [];
       }
-    })
-    .slice(0, limit);
+    });
 }
 
 async function openUrlsInBackgroundTabs(urls) {
-  await Promise.all(
-    urls.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
-  );
+  const batchSize = 10;
+  const delayMs = 150;
+
+  for (let index = 0; index < urls.length; index += batchSize) {
+    const batch = urls.slice(index, index + batchSize);
+    await Promise.all(
+      batch.map((tabUrl) => chrome.tabs.create({ url: tabUrl, active: false })),
+    );
+
+    if (index + batchSize < urls.length) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
 }
 
 async function openUrlInForegroundTab(url) {
@@ -486,12 +506,11 @@ async function handleAccessMessage(message, sender) {
 
   if (message?.type === "rewayAccessOpenGroup") {
     const urls = Array.isArray(message.urls)
-      ? normalizeHttpUrls(message.urls, 100)
+      ? normalizeHttpUrls(message.urls)
       : normalizeHttpUrls(
           (await fetchAccessBookmarks(message.groupId || NO_GROUP_ID)).map(
             (b) => b.url,
           ),
-          100,
         );
     await openUrlsInBackgroundTabs(urls);
     return { ok: true, count: urls.length };
@@ -728,7 +747,15 @@ async function handleOpenGroup(message, sender, sendResponse) {
   } catch (error) {
     const msg = String(error?.message || "Failed");
     rewayErrorOnce(`open-group-failed:${msg}`, "Open group failed:", error);
-    sendResponse({ ok: false, error: error?.message || "Failed" });
+    sendResponse({
+      ok: false,
+      error: {
+        message: error?.message || "Failed",
+        status: error?.status,
+        code: deriveErrorCode(error?.status),
+      },
+      status: error?.status,
+    });
   }
 }
 

@@ -1125,7 +1125,7 @@ if (addManualLinkBtn && manualLinkInput) {
   }
 
   addManualLinkBtn.addEventListener("click", handleAddLink)
-  manualLinkInput.addEventListener("keypress", (event) => {
+  manualLinkInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") handleAddLink()
   })
 }

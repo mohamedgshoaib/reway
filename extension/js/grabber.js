@@ -48,6 +48,21 @@ function finishLinkSave(createBtn, statusTarget, conflictCount) {
   setTimeout(() => window.close(), 800)
 }
 
+function showLinkBatchSummary(createBtn, statusTarget, successCount, conflictCount, failureCount) {
+  setLoading(createBtn, false, "Save Links")
+
+  if (failureCount > 0) {
+    setStatus(
+      `${successCount} saved, ${conflictCount} skipped, ${failureCount} failed. Review the list before retrying.`,
+      "error",
+      statusTarget,
+    )
+    return
+  }
+
+  finishLinkSave(createBtn, statusTarget, conflictCount)
+}
+
 export async function loadGrabbedLinks() {
   const listContainer = document.getElementById("grabbed-links-list")
   const emptyState = document.getElementById("links-empty")
@@ -186,13 +201,25 @@ export async function createGroupFromLinks(destination) {
       title: link.title || link.url,
       groupId,
     }))
-    const { conflicts, nonConflictFailures } = partitionBookmarkBatchResults(results)
+    const { fulfilled, conflicts, nonConflictFailures } = partitionBookmarkBatchResults(results)
+    const successCount = fulfilled.length
+    const failureCount = nonConflictFailures.length
 
-    if (nonConflictFailures.length > 0) {
+    if (failureCount > 0 && successCount === 0) {
       throw nonConflictFailures[0].reason
     }
-    await chrome.runtime.sendMessage({ type: "clearGrabbedLinks" })
-    finishLinkSave(createBtn, statusTarget, conflicts.length)
+
+    if (failureCount === 0) {
+      await chrome.runtime.sendMessage({ type: "clearGrabbedLinks" })
+    }
+
+    showLinkBatchSummary(
+      createBtn,
+      statusTarget,
+      successCount,
+      conflicts.length,
+      failureCount,
+    )
   } catch (err) {
     showLinkSaveError(createBtn, statusTarget, "")
     handleLinkSaveFailure(err, mode, statusTarget)

@@ -58,6 +58,21 @@ function finishSessionSave(saveBtn, statusTarget, conflictCount) {
   setTimeout(() => window.close(), 800)
 }
 
+function showSessionBatchSummary(saveBtn, statusTarget, successCount, conflictCount, failureCount) {
+  setLoading(saveBtn, false, failureCount > 0 ? "Save Session" : "Saved")
+
+  if (failureCount > 0) {
+    setStatus(
+      `${successCount} saved, ${conflictCount} skipped, ${failureCount} failed.`,
+      "error",
+      statusTarget,
+    )
+    return
+  }
+
+  finishSessionSave(saveBtn, statusTarget, conflictCount)
+}
+
 function handleSessionSaveError(err, mode, statusTarget) {
   let message = "Failed to save session"
 
@@ -200,13 +215,21 @@ export async function saveTabSession(destination) {
       title: tab.title || tab.url,
       groupId,
     }))
-    const { conflicts, nonConflictFailures } = partitionBookmarkBatchResults(results)
+    const { fulfilled, conflicts, nonConflictFailures } = partitionBookmarkBatchResults(results)
+    const successCount = fulfilled.length
+    const failureCount = nonConflictFailures.length
 
-    if (nonConflictFailures.length > 0) {
+    if (failureCount > 0 && successCount === 0) {
       throw nonConflictFailures[0].reason
     }
 
-    finishSessionSave(saveBtn, statusTarget, conflicts.length)
+    showSessionBatchSummary(
+      saveBtn,
+      statusTarget,
+      successCount,
+      conflicts.length,
+      failureCount,
+    )
   } catch (err) {
     setLoading(saveBtn, false, "Save Session")
     handleSessionSaveError(err, mode, statusTarget)

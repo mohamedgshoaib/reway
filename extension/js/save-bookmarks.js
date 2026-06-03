@@ -1,5 +1,7 @@
 import { apiFetch } from "./api.js"
 
+const DEFAULT_BATCH_CONCURRENCY = 4
+
 export async function resolveDestinationGroupId({ mode, existingGroupId, groupName }) {
   if (mode !== "new") {
     return existingGroupId
@@ -13,19 +15,24 @@ export async function resolveDestinationGroupId({ mode, existingGroupId, groupNa
   return groupData.group.id
 }
 
-export async function saveBookmarkBatch(items, buildPayload) {
+export async function saveBookmarkBatch(
+  items,
+  buildPayload,
+  concurrency = DEFAULT_BATCH_CONCURRENCY,
+) {
   const results = []
 
-  for (const item of items) {
-    try {
-      const value = await apiFetch("/api/extension/bookmarks", {
-        method: "POST",
-        body: JSON.stringify(buildPayload(item)),
-      })
-      results.push({ status: "fulfilled", value })
-    } catch (reason) {
-      results.push({ status: "rejected", reason })
-    }
+  for (let index = 0; index < items.length; index += concurrency) {
+    const batch = items.slice(index, index + concurrency)
+    const batchResults = await Promise.allSettled(
+      batch.map((item) =>
+        apiFetch("/api/extension/bookmarks", {
+          method: "POST",
+          body: JSON.stringify(buildPayload(item)),
+        }),
+      ),
+    )
+    results.push(...batchResults)
   }
 
   return results
@@ -46,11 +53,13 @@ export function isDuplicateBookmarkError(error) {
 }
 
 export function partitionBookmarkBatchResults(results) {
+  const fulfilled = results.filter((result) => result.status === "fulfilled")
   const rejected = results.filter((result) => result.status === "rejected")
   const conflicts = rejected.filter((result) => isDuplicateBookmarkError(result.reason))
   const nonConflictFailures = rejected.filter((result) => !isDuplicateBookmarkError(result.reason))
 
   return {
+    fulfilled,
     rejected,
     conflicts,
     nonConflictFailures,

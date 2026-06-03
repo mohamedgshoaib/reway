@@ -1768,8 +1768,13 @@ function sendMessage(message) {
           return;
         }
         if (response?.ok === false || response?.success === false) {
-          const error = new Error(response.error || "Request failed");
-          error.status = response.status;
+          const errorPayload =
+            response?.error && typeof response.error === "object"
+              ? response.error
+              : { message: response?.error || "Request failed" };
+          const error = new Error(errorPayload.message || "Request failed");
+          error.status = errorPayload.status ?? response.status;
+          error.code = errorPayload.code;
           reject(error);
           return;
         }

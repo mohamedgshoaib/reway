@@ -116,7 +116,8 @@
 
   // Handle bookmark button click
   async function handleBookmarkClick(event) {
-    const target = event.target
+    const target = event.target instanceof Element ? event.target : null
+    if (!target) return
 
     // Find the bookmark button - it has data-testid="bookmark" or "removeBookmark"
     const bookmarkButton =
