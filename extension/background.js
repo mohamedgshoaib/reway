@@ -425,6 +425,7 @@ async function getAccessBookmarks(groupId, tabId) {
 }
 
 async function searchAccessBookmarks(query, limit) {
+  const startedAt = Date.now();
   const normalizedQuery = String(query || "").trim().toLowerCase();
   const maxResults = Number.isFinite(limit) ? limit : 20;
   const params = new URLSearchParams();
@@ -434,8 +435,14 @@ async function searchAccessBookmarks(query, limit) {
   }
 
   let data;
+  let timing;
   try {
-    data = await apiFetch(`/api/extension/bookmarks/search?${params.toString()}`);
+    const result = await apiFetch(
+      `/api/extension/bookmarks/search?${params.toString()}`,
+      { returnMeta: true },
+    );
+    data = result.data;
+    timing = result.timing;
   } catch (error) {
     if (error?.status !== 404) throw error;
 
@@ -453,6 +460,13 @@ async function searchAccessBookmarks(query, limit) {
       fallback: true,
     };
   }
+
+  console.info("[Reway] FAB search timing", {
+    queryLength: normalizedQuery.length,
+    resultCount: Array.isArray(data.bookmarks) ? data.bookmarks.length : 0,
+    roundTripMs: Date.now() - startedAt,
+    server: timing || "unavailable",
+  });
 
   return {
     ok: true,

@@ -176,7 +176,7 @@ async function searchBookmarksForExtensionWithRank(
   limit: number,
 ) {
   const pattern = `%${searchQuery.replace(/[\\%_]/g, "\\$&")}%`;
-  const columns = ["title", "url", "domain"] as const;
+  const columns = ["title", "domain"] as const;
 
   const results = await Promise.all(
     columns.map((column) =>
@@ -216,7 +216,7 @@ async function searchBookmarksForExtensionWithoutRank(
   limit: number,
 ) {
   const pattern = `%${searchQuery.replace(/[\\%_]/g, "\\$&")}%`;
-  const columns = ["title", "url", "domain"] as const;
+  const columns = ["title", "domain"] as const;
 
   const results = await Promise.all(
     columns.map((column) =>

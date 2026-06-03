@@ -55,15 +55,16 @@ export async function getSettings() {
 }
 
 export async function apiFetch(endpoint, options = {}) {
+  const { returnMeta = false, ...fetchOptions } = options
   const { baseUrl } = await getSettings()
   const url = `${baseUrl}${endpoint}`
 
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...fetchOptions.headers,
     },
   })
 
@@ -98,7 +99,17 @@ export async function apiFetch(endpoint, options = {}) {
     return null
   }
 
-  return response.json()
+  const data = await response.json()
+  if (returnMeta) {
+    return {
+      data,
+      timing: response.headers.get("X-Reway-Timing"),
+      status: response.status,
+      url,
+    }
+  }
+
+  return data
 }
 
 function summarizeResponseText(text) {

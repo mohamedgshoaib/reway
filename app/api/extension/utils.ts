@@ -29,6 +29,7 @@ export function getCorsHeaders(request: Request) {
     "Access-Control-Allow-Headers": "Authorization, Content-Type, x-client-info",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Expose-Headers": "X-Reway-Timing",
   }
 }
 
