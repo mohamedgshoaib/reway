@@ -30,6 +30,7 @@ export function getCorsHeaders(request: Request) {
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Expose-Headers": "X-Reway-Timing",
+    "Access-Control-Max-Age": "86400",
   }
 }
 

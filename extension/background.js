@@ -436,6 +436,7 @@ async function searchAccessBookmarks(query, limit) {
 
   let data;
   let timing;
+  let clientTiming;
   try {
     const result = await apiFetch(
       `/api/extension/bookmarks/search?${params.toString()}`,
@@ -443,6 +444,7 @@ async function searchAccessBookmarks(query, limit) {
     );
     data = result.data;
     timing = result.timing;
+    clientTiming = result.clientTiming;
   } catch (error) {
     if (error?.status !== 404) throw error;
 
@@ -465,6 +467,7 @@ async function searchAccessBookmarks(query, limit) {
     queryLength: normalizedQuery.length,
     resultCount: Array.isArray(data.bookmarks) ? data.bookmarks.length : 0,
     roundTripMs: Date.now() - startedAt,
+    client: clientTiming || "unavailable",
     server: timing || "unavailable",
   });
 

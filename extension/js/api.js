@@ -1,6 +1,20 @@
 export const DEFAULT_BASE_URL = "https://www.reway.page"
 const ACCESS_CACHE_KEYS = ["rewayGroups", "rewayGroupsFetchedAt", "rewayAccessBookmarksByGroup"]
 const MAX_ERROR_BODY_LENGTH = 240
+const SETTINGS_CACHE_KEYS = ["rewayBaseUrl", "rewayGroups"]
+
+let cachedSettings = null
+let settingsRequest = null
+
+if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local") return
+    if (SETTINGS_CACHE_KEYS.some((key) => Object.hasOwn(changes, key))) {
+      cachedSettings = null
+      settingsRequest = null
+    }
+  })
+}
 
 function isLocalhostBaseUrl(baseUrl) {
   try {
@@ -29,7 +43,7 @@ async function isReachable(baseUrl) {
   }
 }
 
-export async function getSettings() {
+async function loadSettings() {
   const { rewayBaseUrl, rewayGroups } = await chrome.storage.local.get([
     "rewayBaseUrl",
     "rewayGroups",
@@ -54,19 +68,42 @@ export async function getSettings() {
   }
 }
 
+export async function getSettings() {
+  if (cachedSettings) return cachedSettings
+
+  settingsRequest ??= loadSettings().then((settings) => {
+    cachedSettings = settings
+    return settings
+  })
+
+  try {
+    return await settingsRequest
+  } finally {
+    settingsRequest = null
+  }
+}
+
 export async function apiFetch(endpoint, options = {}) {
   const { returnMeta = false, ...fetchOptions } = options
+  const startedAt = performance.now()
   const { baseUrl } = await getSettings()
+  const settingsMs = performance.now() - startedAt
   const url = `${baseUrl}${endpoint}`
+  const headers = new Headers(fetchOptions.headers)
+  const hasBody = fetchOptions.body !== undefined && fetchOptions.body !== null
+  const method = String(fetchOptions.method || "GET").toUpperCase()
 
+  if (hasBody && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json")
+  }
+
+  const fetchStartedAt = performance.now()
   const response = await fetch(url, {
     ...fetchOptions,
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...fetchOptions.headers,
-    },
+    headers,
   })
+  const fetchMs = performance.now() - fetchStartedAt
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -99,11 +136,20 @@ export async function apiFetch(endpoint, options = {}) {
     return null
   }
 
+  const jsonStartedAt = performance.now()
   const data = await response.json()
+  const jsonMs = performance.now() - jsonStartedAt
   if (returnMeta) {
     return {
       data,
       timing: response.headers.get("X-Reway-Timing"),
+      clientTiming: {
+        settingsMs: Math.round(settingsMs),
+        fetchMs: Math.round(fetchMs),
+        jsonMs: Math.round(jsonMs),
+        totalMs: Math.round(performance.now() - startedAt),
+        method,
+      },
       status: response.status,
       url,
     }
