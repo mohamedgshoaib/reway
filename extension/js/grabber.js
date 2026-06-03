@@ -4,7 +4,7 @@ import {
   resolveDestinationGroupId,
   saveBookmarkBatch,
 } from "./save-bookmarks.js"
-import { setStatus, setLoading } from "./ui.js"
+import { setStatus, setLoading, refreshScrollSurface } from "./ui.js"
 
 function notifyPopup(type, detail) {
   document.dispatchEvent(new CustomEvent(type, { detail }))
@@ -88,6 +88,7 @@ export async function loadGrabbedLinks() {
     if (groupNameInput) groupNameInput.disabled = true
     if (createBtn) createBtn.disabled = true
     listContainer.querySelectorAll(".session-tab-item").forEach((item) => item.remove())
+    refreshScrollSurface(listContainer)
     return
   }
 
@@ -164,6 +165,8 @@ export async function loadGrabbedLinks() {
     item.appendChild(removeBtn)
     listContainer.appendChild(item)
   })
+
+  refreshScrollSurface(listContainer)
 }
 
 export async function createGroupFromLinks(destination) {

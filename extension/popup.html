@@ -116,7 +116,9 @@
 
           <label class="field field-secondary">
             <span>Description</span>
-            <textarea id="description" rows="2" placeholder="Optional summary"></textarea>
+            <div class="scroll-surface-frame textarea-scroll-frame">
+              <textarea id="description" rows="2" placeholder="Optional summary"></textarea>
+            </div>
           </label>
 
           <div class="field">
@@ -362,60 +364,89 @@
         </div>
 
         <div class="settings-section">
-          <label class="switch-field" for="quick-access-toggle">
-            <span class="switch-copy">
-              <span class="switch-title">Quick access button</span>
-              <span class="switch-note">Show Reway on normal webpages.</span>
-            </span>
-            <input id="quick-access-toggle" type="checkbox" role="switch" />
-          </label>
+          <section class="settings-group">
+            <button
+              id="general-settings-toggle"
+              class="section-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="general-settings-panel"
+            >
+              <span>General</span>
+              <span class="advanced-chevron" aria-hidden="true"></span>
+            </button>
 
-          <label class="switch-field" for="x-auto-capture-toggle">
-            <span class="switch-copy">
-              <span class="switch-title">Capture X bookmarks automatically</span>
-              <span class="switch-note">
-                Save new X bookmarks into your X Bookmarks group.
-              </span>
-            </span>
-            <input id="x-auto-capture-toggle" type="checkbox" role="switch" />
-          </label>
+            <div id="general-settings-panel" class="settings-group-panel hidden">
+              <p class="settings-group-copy">Control capture behavior across the extension.</p>
 
-          <div class="field">
-            <span>Hidden hosts</span>
-            <div class="inline-input">
-              <input
-                id="hidden-host-input"
-                type="text"
-                placeholder="example.com"
-                aria-label="Hidden host"
-              />
-              <button
-                id="add-hidden-host"
-                class="secondary link-action-button icon-button"
-                type="button"
-                aria-label="Add hidden host"
-                title="Add hidden host"
-              >
-                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path
-                    d="M8 3.25v9.5M3.25 8h9.5"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
+              <label class="switch-field" for="x-auto-capture-toggle">
+                <span class="switch-copy">
+                  <span class="switch-title">Capture X bookmarks automatically</span>
+                  <span class="switch-note">
+                    Save new X bookmarks into your X Bookmarks group.
+                  </span>
+                </span>
+                <input id="x-auto-capture-toggle" type="checkbox" role="switch" />
+              </label>
             </div>
-            <div id="hidden-host-list" class="hidden-host-list" role="list"></div>
-            <p id="hidden-host-empty" class="field-hint">No hidden hosts.</p>
-          </div>
+          </section>
+
+          <section id="quick-access-settings-group" class="settings-group">
+            <button
+              id="quick-access-settings-toggle"
+              class="section-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="quick-access-settings-panel"
+            >
+              <span>Quick Access</span>
+              <span class="advanced-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div id="quick-access-settings-panel" class="settings-group-panel hidden">
+              <p class="settings-group-copy">Control the floating FAB and where it stays hidden.</p>
+
+              <label class="switch-field" for="quick-access-toggle">
+                <span class="switch-copy">
+                  <span class="switch-title">Quick access button</span>
+                  <span class="switch-note">Show Reway on normal webpages.</span>
+                </span>
+                <input id="quick-access-toggle" type="checkbox" role="switch" />
+              </label>
+
+              <div class="field">
+                <span>Hidden hosts</span>
+                <div class="inline-input">
+                  <input
+                    id="hidden-host-input"
+                    type="text"
+                    placeholder="example.com"
+                    aria-label="Hidden host"
+                  />
+                  <button
+                    id="add-hidden-host"
+                    class="secondary link-action-button icon-button"
+                    type="button"
+                    aria-label="Add hidden host"
+                    title="Add hidden host"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path
+                        d="M8 3.25v9.5M3.25 8h9.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div id="hidden-host-list" class="hidden-host-list" role="list"></div>
+                <p id="hidden-host-empty" class="field-hint">No hidden hosts.</p>
+              </div>
+            </div>
+          </section>
 
           <div id="access-settings-status" class="status"></div>
-
-          <div class="actions settings-actions">
-            <button id="save-access-settings" class="secondary">Save Settings</button>
-            <button id="cancel-access-settings" class="ghost" type="button">Cancel</button>
-          </div>
         </div>
 
         <div class="settings-advanced">

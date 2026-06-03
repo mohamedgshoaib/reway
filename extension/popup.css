@@ -86,6 +86,37 @@ button[disabled] {
   --duration-fast: 140ms;
   --duration-base: 180ms;
   --duration-popover: 160ms;
+  --scroll-mask-t-from: calc(100% - 18px);
+  --scroll-mask-b-from: calc(100% - 18px);
+}
+
+@property --scroll-mask-t-from {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@property --scroll-mask-b-from {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@keyframes scroll-mask-y-scroll {
+  0% {
+    --scroll-mask-t-from: 100%;
+  }
+  10%,
+  100% {
+    --scroll-mask-t-from: var(--scroll-mask-fade-from-t);
+  }
+  0%,
+  90% {
+    --scroll-mask-b-from: var(--scroll-mask-fade-from-b);
+  }
+  100% {
+    --scroll-mask-b-from: 100%;
+  }
 }
 
 * {
@@ -99,6 +130,29 @@ body {
   color: var(--foreground);
   background: var(--background);
   -webkit-font-smoothing: antialiased;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground), transparent 70%) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--muted-foreground), transparent 70%);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--foreground), transparent 40%);
 }
 
 .shell {
@@ -459,9 +513,11 @@ body {
 .field textarea {
   height: auto;
   min-height: 58px;
+  max-height: 96px;
   padding: 9px 12px;
   border-radius: var(--control-radius);
   resize: vertical;
+  overflow-y: auto;
 }
 
 .field input::placeholder,
@@ -716,6 +772,43 @@ button.success::after {
   text-wrap: pretty;
 }
 
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-group-copy {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+.settings-group.is-disabled {
+  opacity: 0.62;
+}
+
+.section-toggle,
+.advanced-toggle {
+  width: 100%;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: color-mix(in oklab, var(--input), transparent 84%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
+}
+
+.section-toggle[aria-expanded="true"] .advanced-chevron,
+.advanced-toggle[aria-expanded="true"] .advanced-chevron {
+  transform: rotate(180deg);
+}
+
+.settings-group-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .hint {
   margin-top: 8px;
   font-size: 12px;
@@ -825,11 +918,7 @@ button.success::after {
 }
 
 .select-menu {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 100;
+  --scroll-surface-bg: var(--popover);
   min-width: 100%;
   max-height: 280px;
   background: var(--popover);
@@ -838,17 +927,31 @@ button.success::after {
   padding: var(--popover-padding);
   overflow-y: auto;
   overflow-x: hidden;
-  display: none;
-  animation: slideInDown var(--duration-popover) var(--ease-out);
-  transform-origin: bottom center;
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%),
     inset 0 0 0 1px color-mix(in oklab, white, transparent 95%),
     0 10px 38px -10px color-mix(in oklab, black, transparent 65%),
     0 10px 20px -15px color-mix(in oklab, black, transparent 80%);
+  display: block;
 }
 
-.select.open .select-menu {
+.select > .select-menu {
+  display: none;
+}
+
+.select-menu-frame {
+  --scroll-surface-bg: var(--popover);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: none;
+  animation: slideInDown var(--duration-popover) var(--ease-out);
+  transform-origin: bottom center;
+}
+
+.select.open .select-menu-frame {
   display: block;
 }
 
@@ -861,28 +964,6 @@ button.success::after {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-}
-
-/* Scrollbar styling for dropdown */
-.select-menu::-webkit-scrollbar {
-  width: 8px;
-}
-
-.select-menu::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 6px 0;
-}
-
-.select-menu::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--foreground), transparent 85%);
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-.select-menu::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--foreground), transparent 75%);
-  background-clip: padding-box;
 }
 
 .select-option {
@@ -1111,12 +1192,144 @@ button.success::after {
 }
 
 .session-preview {
+  --scroll-surface-bg: var(--muted);
   max-height: 180px;
   overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 10px;
   border-radius: var(--inset-radius);
   background: var(--muted);
   padding: var(--nested-surface-padding);
+}
+
+.scroll-surface-frame {
+  position: relative;
+  --scroll-surface-bg: var(--muted);
+}
+
+.session-preview-frame {
+  margin-bottom: 10px;
+  border-radius: var(--inset-radius);
+}
+
+.session-preview-frame .session-preview {
+  margin-bottom: 0;
+}
+
+.textarea-scroll-frame {
+  --scroll-surface-bg: color-mix(in oklab, var(--input), transparent 80%);
+  border-radius: var(--control-radius);
+}
+
+.textarea-scroll-frame textarea {
+  display: block;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground), transparent 70%) transparent;
+}
+
+.textarea-scroll-frame textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.textarea-scroll-frame textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.textarea-scroll-frame textarea::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--muted-foreground), transparent 70%);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.textarea-scroll-frame textarea::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--foreground), transparent 40%);
+  background-clip: padding-box;
+}
+
+.scroll-surface {
+  position: relative;
+  z-index: 0;
+  --scroll-mask-fade-from-t: calc(0% + 18px);
+  --scroll-mask-fade-from-b: calc(100% - 18px);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-surface::-webkit-scrollbar {
+  display: none;
+}
+
+.textarea-scroll-frame > .scroll-surface {
+  scrollbar-width: thin;
+  -ms-overflow-style: auto;
+}
+
+.textarea-scroll-frame > .scroll-surface::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-surface {
+    --scroll-mask-t: linear-gradient(
+      to top,
+      black,
+      black var(--scroll-mask-t-from),
+      transparent
+    );
+    --scroll-mask-b: linear-gradient(
+      to bottom,
+      black,
+      black var(--scroll-mask-b-from),
+      transparent
+    );
+    animation: scroll-mask-y-scroll linear;
+    animation-timeline: scroll(self block);
+    mask-image: var(--scroll-mask-t), var(--scroll-mask-b);
+    mask-composite: intersect;
+    -webkit-mask-image: var(--scroll-mask-t), var(--scroll-mask-b);
+    -webkit-mask-composite: source-in;
+  }
+}
+
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  color: color-mix(in oklab, var(--foreground), transparent 54%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.scroll-cue-top {
+  top: 1px;
+}
+
+.scroll-cue-bottom {
+  bottom: 1px;
+}
+
+.scroll-cue svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.scroll-surface-frame[data-scroll-top="true"] .scroll-cue-top {
+  opacity: 1;
+  transform: translate(-50%, -1px);
+}
+
+.scroll-surface-frame[data-scroll-bottom="true"] .scroll-cue-bottom {
+  opacity: 1;
+  transform: translate(-50%, 1px);
 }
 
 .link-tab-item {
@@ -1334,10 +1547,6 @@ button.success::after {
     inset 0 0 0 1px color-mix(in oklab, white, transparent 95%);
 }
 
-.settings-actions {
-  margin-top: 0;
-}
-
 .settings-section {
   display: flex;
   flex-direction: column;
@@ -1473,14 +1682,6 @@ button.success::after {
   margin-top: 12px;
 }
 
-.advanced-toggle {
-  width: 100%;
-  justify-content: space-between;
-  padding: 0 12px;
-  background: color-mix(in oklab, var(--input), transparent 84%);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground), transparent 95%);
-}
-
 .advanced-chevron {
   width: 12px;
   height: 12px;
@@ -1502,34 +1703,10 @@ button.success::after {
   transform: translateY(-1px) rotate(45deg);
 }
 
-.advanced-toggle[aria-expanded="true"] .advanced-chevron {
-  transform: rotate(180deg);
-}
-
 .advanced-panel {
   margin-top: 10px;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--muted-foreground), transparent 70%);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--foreground), transparent 40%);
-}
 /* Skeleton Loading */
 .skeleton {
   background-color: var(--muted);

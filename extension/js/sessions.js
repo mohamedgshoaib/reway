@@ -5,7 +5,7 @@ import {
   resolveDestinationGroupId,
   saveBookmarkBatch,
 } from "./save-bookmarks.js"
-import { setStatus, setLoading } from "./ui.js"
+import { setStatus, setLoading, refreshScrollSurface } from "./ui.js"
 
 function notifyPopup(type, detail) {
   document.dispatchEvent(new CustomEvent(type, { detail }))
@@ -118,6 +118,7 @@ export async function loadTabSession() {
       emptyState.classList.remove("hidden")
       sessionNameInput.disabled = true
       saveBtn.disabled = true
+      refreshScrollSurface(sessionPreview)
       return
     }
 
@@ -166,6 +167,8 @@ export async function loadTabSession() {
       item.appendChild(title)
       sessionPreview.appendChild(item)
     })
+
+    refreshScrollSurface(sessionPreview)
   } catch (error) {
     console.error("Failed to load session:", error)
   }

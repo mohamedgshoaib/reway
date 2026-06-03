@@ -308,7 +308,7 @@ button {
   left: 50%;
   z-index: 1;
   width: 18px;
-  height: 14px;
+  height: 18px;
   color: color-mix(in oklab, var(--reway-text), transparent 54%);
   opacity: 0;
   pointer-events: none;
@@ -318,32 +318,18 @@ button {
     transform var(--duration-fast) var(--ease-out);
 }
 
-.scroll-cue::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-}
-
 .scroll-cue-top {
   top: 1px;
-}
-
-.scroll-cue-top::before {
-  top: 5px;
-  transform: translateX(-50%) rotate(225deg);
 }
 
 .scroll-cue-bottom {
   bottom: 1px;
 }
 
-.scroll-cue-bottom::before {
-  bottom: 5px;
-  transform: translateX(-50%) rotate(45deg);
+.scroll-cue svg {
+  display: block;
+  width: 18px;
+  height: 18px;
 }
 
 .scroll-frame[data-scroll-top="true"] .scroll-cue-top {

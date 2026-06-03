@@ -3,7 +3,14 @@ import { MAX_NAME_LENGTH } from "./js/config.js"
 import { loadGrabbedLinks, createGroupFromLinks } from "./js/grabber.js"
 import { fetchPageMeta } from "./js/metadata.js"
 import { loadTabSession, saveTabSession } from "./js/sessions.js"
-import { elements, setStatus, switchTab, setLoading } from "./js/ui.js"
+import {
+  elements,
+  setStatus,
+  switchTab,
+  setLoading,
+  initScrollSurface,
+  refreshScrollSurface,
+} from "./js/ui.js"
 
 const destinationState = {
   save: { mode: "existing" },
@@ -140,6 +147,11 @@ function setSettingsPanelOpen(isOpen) {
 function setAdvancedSettingsOpen(isOpen) {
   elements.advancedSettingsToggle?.setAttribute("aria-expanded", String(isOpen))
   elements.advancedSettingsPanel?.classList.toggle("hidden", !isOpen)
+}
+
+function setSettingsSectionOpen(toggle, panel, isOpen) {
+  toggle?.setAttribute("aria-expanded", String(isOpen))
+  panel?.classList.toggle("hidden", !isOpen)
 }
 
 function setGroupUiState(flow, state, message = "") {
@@ -319,6 +331,8 @@ function createGroupSelect(flow) {
 
       menu.appendChild(button)
     })
+
+    refreshScrollSurface(menu)
   }
 
   const close = () => {
@@ -592,10 +606,9 @@ const accessSettingsDraft = {
   xAutoCaptureEnabled: true,
   hiddenHosts: [],
   editingIndex: null,
-  savedEnabled: true,
-  savedXAutoCaptureEnabled: true,
-  savedHiddenHosts: [],
 }
+
+let accessSettingsSaveVersion = 0
 
 function switchEnv(env) {
   currentDevEnv = env
@@ -647,30 +660,50 @@ function normalizeHostInput(value) {
   }
 }
 
-function areAccessSettingsDirty() {
-  if (accessSettingsDraft.enabled !== accessSettingsDraft.savedEnabled) return true
-  if (accessSettingsDraft.xAutoCaptureEnabled !== accessSettingsDraft.savedXAutoCaptureEnabled) {
-    return true
-  }
-  if (accessSettingsDraft.hiddenHosts.length !== accessSettingsDraft.savedHiddenHosts.length) {
-    return true
-  }
-  return accessSettingsDraft.hiddenHosts.some(
-    (host, index) => host !== accessSettingsDraft.savedHiddenHosts[index],
-  )
-}
-
 function setAccessSettingsStatus(message, tone = "") {
   setStatus(message, tone, elements.accessSettingsStatus)
 }
 
 function updateAccessSettingsControls() {
-  const dirty = areAccessSettingsDirty()
-  if (elements.saveAccessSettings) {
-    elements.saveAccessSettings.disabled = !dirty
+  const quickAccessEnabled = accessSettingsDraft.enabled
+
+  elements.quickAccessSettingsGroup?.classList.toggle("is-disabled", !quickAccessEnabled)
+
+  if (elements.hiddenHostInput) {
+    elements.hiddenHostInput.disabled = !quickAccessEnabled
   }
-  if (elements.cancelAccessSettings) {
-    elements.cancelAccessSettings.disabled = !dirty
+
+  if (elements.addHiddenHost) {
+    elements.addHiddenHost.disabled = !quickAccessEnabled
+  }
+
+  elements.hiddenHostList?.querySelectorAll("button").forEach((button) => {
+    button.disabled = !quickAccessEnabled
+  })
+}
+
+async function persistAccessSettings({ silent = false } = {}) {
+  const saveVersion = ++accessSettingsSaveVersion
+  const hiddenHosts = Array.from(new Set(accessSettingsDraft.hiddenHosts)).sort()
+
+  try {
+    await chrome.storage.local.set({
+      rewayAccessFabEnabled: accessSettingsDraft.enabled,
+      rewayXAutoCaptureEnabled: accessSettingsDraft.xAutoCaptureEnabled,
+      rewayAccessFabHiddenHosts: hiddenHosts,
+    })
+
+    if (saveVersion !== accessSettingsSaveVersion) return
+    accessSettingsDraft.hiddenHosts = hiddenHosts
+
+    if (!silent) {
+      setAccessSettingsStatus("Saved. Refresh pages to apply.", "success")
+    } else if (elements.accessSettingsStatus?.dataset.tone !== "error") {
+      setAccessSettingsStatus("")
+    }
+  } catch {
+    if (saveVersion !== accessSettingsSaveVersion) return
+    setAccessSettingsStatus("Couldn’t save settings right now.", "error")
   }
 }
 
@@ -729,8 +762,7 @@ function renderHiddenHosts() {
         accessSettingsDraft.editingIndex -= 1
       }
       renderHiddenHosts()
-      updateAccessSettingsControls()
-      setAccessSettingsStatus("")
+      void persistAccessSettings({ silent: true })
     })
 
     actions.append(edit, remove)
@@ -769,6 +801,7 @@ function addOrUpdateHiddenHost() {
   elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
   setAccessSettingsStatus("")
   renderHiddenHosts()
+  void persistAccessSettings({ silent: true })
 }
 
 async function hydrateAccessSettings() {
@@ -786,9 +819,6 @@ async function hydrateAccessSettings() {
   accessSettingsDraft.enabled = rewayAccessFabEnabled !== false
   accessSettingsDraft.xAutoCaptureEnabled = rewayXAutoCaptureEnabled !== false
   accessSettingsDraft.hiddenHosts = uniqueHosts
-  accessSettingsDraft.savedEnabled = accessSettingsDraft.enabled
-  accessSettingsDraft.savedXAutoCaptureEnabled = accessSettingsDraft.xAutoCaptureEnabled
-  accessSettingsDraft.savedHiddenHosts = [...uniqueHosts]
   accessSettingsDraft.editingIndex = null
 
   if (elements.accessToggle) {
@@ -802,41 +832,7 @@ async function hydrateAccessSettings() {
   }
 
   renderHiddenHosts()
-  setAccessSettingsStatus("")
-}
-
-async function saveAccessSettings() {
-  const hiddenHosts = Array.from(new Set(accessSettingsDraft.hiddenHosts)).sort()
-  await chrome.storage.local.set({
-    rewayAccessFabEnabled: accessSettingsDraft.enabled,
-    rewayXAutoCaptureEnabled: accessSettingsDraft.xAutoCaptureEnabled,
-    rewayAccessFabHiddenHosts: hiddenHosts,
-  })
-
-  accessSettingsDraft.hiddenHosts = hiddenHosts
-  accessSettingsDraft.savedEnabled = accessSettingsDraft.enabled
-  accessSettingsDraft.savedXAutoCaptureEnabled = accessSettingsDraft.xAutoCaptureEnabled
-  accessSettingsDraft.savedHiddenHosts = [...hiddenHosts]
-  accessSettingsDraft.editingIndex = null
-  renderHiddenHosts()
-  setAccessSettingsStatus("Saved. Refresh pages to apply.", "success")
-}
-
-function cancelAccessSettings() {
-  accessSettingsDraft.enabled = accessSettingsDraft.savedEnabled
-  accessSettingsDraft.xAutoCaptureEnabled = accessSettingsDraft.savedXAutoCaptureEnabled
-  accessSettingsDraft.hiddenHosts = [...accessSettingsDraft.savedHiddenHosts]
-  accessSettingsDraft.editingIndex = null
-  if (elements.accessToggle) {
-    elements.accessToggle.checked = accessSettingsDraft.enabled
-  }
-  if (elements.xAutoCaptureToggle) {
-    elements.xAutoCaptureToggle.checked = accessSettingsDraft.xAutoCaptureEnabled
-  }
-  if (elements.hiddenHostInput) {
-    elements.hiddenHostInput.value = ""
-  }
-  renderHiddenHosts()
+  updateAccessSettingsControls()
   setAccessSettingsStatus("")
 }
 
@@ -934,6 +930,7 @@ async function hydratePageMeta() {
     }
     if (meta?.description) {
       elements.description.value = meta.description
+      refreshScrollSurface(elements.description)
     }
 
     popupState.metadata = meta ? "ready" : "unavailable"
@@ -972,6 +969,9 @@ function initializeShell() {
   document.querySelector(".shell").style.opacity = "1"
 
   setupGroupSelects()
+  document.querySelectorAll(".session-preview, .select-menu, #description").forEach((surface) => {
+    initScrollSurface(surface)
+  })
   setDestinationMode("save", "existing")
   setDestinationMode("links", "existing")
   setDestinationMode("session", "existing")
@@ -990,6 +990,10 @@ function init() {
 document.addEventListener("DOMContentLoaded", init)
 
 elements.saveBookmarkBtn?.addEventListener("click", saveBookmark)
+
+elements.description?.addEventListener("input", () => {
+  refreshScrollSurface(elements.description)
+})
 
 if (elements.loginButton) {
   elements.loginButton.addEventListener("click", async () => {
@@ -1014,6 +1018,22 @@ elements.settingsToggle?.addEventListener("click", () => {
   const isOpen = elements.devPanel?.classList.contains("open")
   setSettingsPanelOpen(!isOpen)
 })
+elements.generalSettingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.generalSettingsToggle?.getAttribute("aria-expanded") === "true"
+  setSettingsSectionOpen(
+    elements.generalSettingsToggle,
+    document.getElementById("general-settings-panel"),
+    !isOpen,
+  )
+})
+elements.quickAccessSettingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.quickAccessSettingsToggle?.getAttribute("aria-expanded") === "true"
+  setSettingsSectionOpen(
+    elements.quickAccessSettingsToggle,
+    document.getElementById("quick-access-settings-panel"),
+    !isOpen,
+  )
+})
 elements.advancedSettingsToggle?.addEventListener("click", () => {
   const isOpen = elements.advancedSettingsToggle?.getAttribute("aria-expanded") === "true"
   setAdvancedSettingsOpen(!isOpen)
@@ -1026,11 +1046,12 @@ elements.accessToggle?.addEventListener("change", () => {
   accessSettingsDraft.enabled = elements.accessToggle.checked
   setAccessSettingsStatus("")
   updateAccessSettingsControls()
+  void persistAccessSettings({ silent: true })
 })
 elements.xAutoCaptureToggle?.addEventListener("change", () => {
   accessSettingsDraft.xAutoCaptureEnabled = elements.xAutoCaptureToggle.checked
   setAccessSettingsStatus("")
-  updateAccessSettingsControls()
+  void persistAccessSettings({ silent: true })
 })
 elements.addHiddenHost?.addEventListener("click", addOrUpdateHiddenHost)
 elements.hiddenHostInput?.addEventListener("keydown", (event) => {
@@ -1045,11 +1066,6 @@ elements.hiddenHostInput?.addEventListener("keydown", (event) => {
     setAccessSettingsStatus("")
   }
 })
-elements.saveAccessSettings?.addEventListener("click", () => {
-  void saveAccessSettings()
-})
-elements.cancelAccessSettings?.addEventListener("click", cancelAccessSettings)
-
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && elements.devPanel?.classList.contains("open")) {
     setSettingsPanelOpen(false)

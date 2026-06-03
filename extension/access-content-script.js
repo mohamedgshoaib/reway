@@ -37,6 +37,11 @@ const ICONS = {
   empty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h9M4 17h7"/><circle cx="18" cy="17" r="3"/></svg>`,
 };
 
+const SCROLL_CUE_ICONS = {
+  up: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17.9998 15C17.9998 15 13.5809 9.00001 11.9998 9C10.4187 8.99999 5.99985 15 5.99985 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  down: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+};
+
 const state = {
   enabled: true,
   introSeen: false,
@@ -1166,10 +1171,12 @@ function createScrollFrame(list) {
   const topCue = document.createElement("span");
   topCue.className = "scroll-cue scroll-cue-top";
   topCue.setAttribute("aria-hidden", "true");
+  topCue.innerHTML = SCROLL_CUE_ICONS.up;
 
   const bottomCue = document.createElement("span");
   bottomCue.className = "scroll-cue scroll-cue-bottom";
   bottomCue.setAttribute("aria-hidden", "true");
+  bottomCue.innerHTML = SCROLL_CUE_ICONS.down;
 
   list.addEventListener("scroll", () => updateScrollIndicators(list), {
     passive: true,

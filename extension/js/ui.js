@@ -12,6 +12,8 @@ export const selectors = {
   loginButton: "#login-button",
   devPanel: "#dev-mode-panel",
   settingsToggle: "#settings-toggle",
+  generalSettingsToggle: "#general-settings-toggle",
+  quickAccessSettingsToggle: "#quick-access-settings-toggle",
   advancedSettingsToggle: "#advanced-settings-toggle",
   advancedSettingsPanel: "#advanced-settings-panel",
   envProd: "#env-prod",
@@ -25,9 +27,8 @@ export const selectors = {
   addHiddenHost: "#add-hidden-host",
   hiddenHostList: "#hidden-host-list",
   hiddenHostEmpty: "#hidden-host-empty",
+  quickAccessSettingsGroup: "#quick-access-settings-group",
   accessSettingsStatus: "#access-settings-status",
-  saveAccessSettings: "#save-access-settings",
-  cancelAccessSettings: "#cancel-access-settings",
   // Save Page
   saveBookmarkBtn: "#save",
   favicon: "#favicon",
@@ -197,4 +198,93 @@ export function showSection(sectionId) {
       sec.classList.toggle("hidden", sec.id !== sectionId)
     }
   })
+}
+
+const scrollSurfaceRegistry = new WeakSet()
+const scrollSurfaceFrames = new WeakMap()
+const SCROLL_CUE_ICONS = {
+  up: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17.9998 15C17.9998 15 13.5809 9.00001 11.9998 9C10.4187 8.99999 5.99985 15 5.99985 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  down: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+}
+
+function getScrollSurfaceFrame(surface) {
+  const existingFrame = scrollSurfaceFrames.get(surface)
+  if (existingFrame) return existingFrame
+
+  if (surface.parentElement?.classList.contains("scroll-surface-frame")) {
+    scrollSurfaceFrames.set(surface, surface.parentElement)
+    return surface.parentElement
+  }
+
+  const frame = document.createElement("div")
+  frame.className = "scroll-surface-frame"
+
+  if (surface.classList.contains("select-menu")) {
+    frame.classList.add("select-menu-frame")
+  } else if (surface.classList.contains("session-preview")) {
+    frame.classList.add("session-preview-frame")
+  } else if (surface.tagName === "TEXTAREA") {
+    frame.classList.add("textarea-scroll-frame")
+  }
+
+  surface.before(frame)
+  frame.append(surface)
+  scrollSurfaceFrames.set(surface, frame)
+  return frame
+}
+
+function ensureScrollSurfaceCues(surface) {
+  if (surface.tagName === "TEXTAREA") return
+  const frame = getScrollSurfaceFrame(surface)
+  let topCue = frame.querySelector(":scope > .scroll-cue-top")
+  let bottomCue = frame.querySelector(":scope > .scroll-cue-bottom")
+
+  if (!topCue) {
+    topCue = document.createElement("span")
+    topCue.className = "scroll-cue scroll-cue-top"
+    topCue.setAttribute("aria-hidden", "true")
+    topCue.innerHTML = SCROLL_CUE_ICONS.up
+    frame.append(topCue)
+  }
+
+  if (!bottomCue) {
+    bottomCue = document.createElement("span")
+    bottomCue.className = "scroll-cue scroll-cue-bottom"
+    bottomCue.setAttribute("aria-hidden", "true")
+    bottomCue.innerHTML = SCROLL_CUE_ICONS.down
+    frame.append(bottomCue)
+  }
+}
+
+function updateScrollSurface(surface) {
+  if (!surface) return
+  const frame = getScrollSurfaceFrame(surface)
+  const maxScrollTop = surface.scrollHeight - surface.clientHeight
+  const canScroll = maxScrollTop > 1
+  frame.dataset.scrollTop = String(canScroll && surface.scrollTop > 1)
+  frame.dataset.scrollBottom = String(
+    canScroll && surface.scrollTop < maxScrollTop - 1,
+  )
+}
+
+export function initScrollSurface(surface) {
+  if (!surface || scrollSurfaceRegistry.has(surface)) return
+  scrollSurfaceRegistry.add(surface)
+  surface.classList.add("scroll-surface")
+  ensureScrollSurfaceCues(surface)
+  surface.addEventListener("scroll", () => updateScrollSurface(surface), {
+    passive: true,
+  })
+
+  requestAnimationFrame(() => updateScrollSurface(surface))
+}
+
+export function refreshScrollSurface(surface) {
+  if (!surface) return
+  if (!scrollSurfaceRegistry.has(surface)) {
+    initScrollSurface(surface)
+    return
+  }
+  ensureScrollSurfaceCues(surface)
+  requestAnimationFrame(() => updateScrollSurface(surface))
 }
