@@ -25,6 +25,8 @@ const GROUP_ICON_MANIFEST_ASSIGNMENT =
 const MENU_ID = "reway-access-menu";
 const MENU_TITLE_ID = "reway-access-menu-title";
 const SUBMENU_ID = "reway-access-submenu";
+const GROUP_ROW_ID_PREFIX = "reway-access-group";
+const BOOKMARK_ROW_ID_PREFIX = "reway-access-bookmark";
 
 const ICONS = {
   logo: `<svg viewBox="0 0 512 512" aria-hidden="true"><circle cx="256" cy="256" r="256" fill="#1a1a1a"/><g transform="matrix(12.135672 0 0 12.135672 110.37194 110.37192)"><path fill="#ffffff" d="M4 17.9808V9.70753C4 6.07416 4 4.25748 5.17157 3.12874C6.34315 2 8.22876 2 12 2C15.7712 2 17.6569 2 18.8284 3.12874C20 4.25748 20 6.07416 20 9.70753V17.9808C20 20.2867 20 21.4396 19.2272 21.8523C17.7305 22.6514 14.9232 19.9852 13.59 19.1824C12.8168 18.7168 12.4302 18.484 12 18.484C11.5698 18.484 11.1832 18.7168 10.41 19.1824C9.0768 19.9852 6.26947 22.6514 4.77285 21.8523C4 21.4396 4 20.2867 4 17.9808Z"/></g></svg>`,
@@ -49,7 +51,7 @@ const state = {
   searchQuery: "",
   searchStatus: "idle",
   searchResults: [],
-  activeIndex: 0,
+  activeIndex: null,
   activeList: "groups",
   suppressHoverUntil: 0,
   activeRequestId: 0,
@@ -134,6 +136,7 @@ function shouldRouteMenuKey(event) {
   if (!state.menuOpen || !refs.search) return false;
   if (event.defaultPrevented || event.isComposing) return false;
   if (isSearchEventTarget(event)) return false;
+  if (isPanelKeyboardEventTarget(event)) return false;
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
 
   return (
@@ -187,6 +190,15 @@ function editSearchText(key) {
 function isSearchEventTarget(event) {
   return (
     event.composedPath?.().includes(refs.search) || event.target === refs.search
+  );
+}
+
+function isPanelKeyboardEventTarget(event) {
+  const path = event.composedPath?.() || [];
+  return path.some(
+    (node) =>
+      node instanceof Element &&
+      (refs.menu?.contains(node) || refs.submenu?.contains(node)),
   );
 }
 
@@ -450,6 +462,7 @@ function handlePointerLeave() {
   clearTimeout(openTimer);
   if (
     !isSearchEngaged() &&
+    !isPanelFocusEngaged() &&
     !refs.menu?.matches(":hover") &&
     !refs.submenu?.matches(":hover")
   ) {
@@ -459,9 +472,9 @@ function handlePointerLeave() {
 
 function scheduleClose() {
   clearTimeout(closeTimer);
-  if (isSearchEngaged()) return;
+  if (isSearchEngaged() || isPanelFocusEngaged()) return;
   closeTimer = setTimeout(() => {
-    if (isSearchEngaged()) return;
+    if (isSearchEngaged() || isPanelFocusEngaged()) return;
     if (
       !refs.root?.matches(":hover") &&
       !refs.menu?.matches(":hover") &&
@@ -480,7 +493,7 @@ function isSearchEngaged() {
 }
 
 function maybeCloseAfterSearchDisengaged() {
-  if (!state.menuOpen || isSearchEngaged()) return;
+  if (!state.menuOpen || isSearchEngaged() || isPanelFocusEngaged()) return;
   if (
     !refs.root?.matches(":hover") &&
     !refs.menu?.matches(":hover") &&
@@ -501,7 +514,7 @@ function openMenu({ focusSearch }) {
   }
   state.keyboardMode = Boolean(focusSearch);
   state.activeList = "groups";
-  state.activeIndex = 0;
+  state.activeIndex = null;
   refs.root.dataset.menuOpen = "true";
   refs.root.dataset.keyboardMode = String(state.keyboardMode);
   refs.fab.dataset.open = "true";
@@ -528,10 +541,11 @@ function closeMenu() {
   state.searchQuery = "";
   state.activeGroupId = null;
   clearAllOpenGroupConfirmations({ rerender: false });
-  state.activeIndex = 0;
+  state.activeIndex = null;
   state.activeList = "groups";
   state.menuSettleUntil = 0;
   refs.search.value = "";
+  clearVirtualActiveDescendant();
   refs.root.dataset.menuOpen = "false";
   refs.root.dataset.keyboardMode = "false";
   refs.fab.dataset.open = "false";
@@ -670,6 +684,13 @@ function shouldRestoreFocusToFab() {
   if (!shadow) return false;
   const activeElement = shadow.activeElement;
   if (!activeElement) return false;
+  return refs.menu?.contains(activeElement) || refs.submenu?.contains(activeElement);
+}
+
+function isPanelFocusEngaged() {
+  if (!shadow) return false;
+  const activeElement = shadow.activeElement;
+  if (!(activeElement instanceof Element)) return false;
   return refs.menu?.contains(activeElement) || refs.submenu?.contains(activeElement);
 }
 
@@ -846,6 +867,14 @@ async function loadBookmarks(groupId) {
       normalizeBookmarks(response?.bookmarks || []),
     );
     state.bookmarksStatusByGroup.set(groupId, "ready");
+    if (
+      state.activeGroupId === groupId &&
+      state.activeList === "group" &&
+      state.activeIndex === null
+    ) {
+      state.activeIndex = getFirstBookmarkIndex(groupId);
+      updateActiveRows();
+    }
   } catch (error) {
     state.bookmarksStatusByGroup.set(
       groupId,
@@ -951,7 +980,8 @@ function handleSearchInput() {
   clearAllOpenGroupConfirmations({ rerender: false });
   state.searchQuery = refs.search.value.trim();
   state.activeList = state.searchQuery.length >= 2 ? "search" : "groups";
-  state.activeIndex = 0;
+  state.activeIndex = null;
+  clearVirtualActiveDescendant();
   clearTimeout(searchTimer);
   if (state.searchQuery.length < 2) {
     state.searchStatus = "idle";
@@ -1047,6 +1077,7 @@ function renderPanel() {
     const row = document.createElement("button");
     row.type = "button";
     row.className = "row-button";
+    row.id = getGroupRowId(group.id);
     row.dataset.source = "groups";
     row.dataset.index = String(index);
     row.dataset.groupId = group.id;
@@ -1061,8 +1092,9 @@ function renderPanel() {
         activateGroup(group.id, index);
       }
     });
-    row.addEventListener("focus", () => activateGroup(group.id, index));
+    row.addEventListener("focus", () => handleGroupRowFocus(group.id, index));
     row.addEventListener("click", () => activateGroup(group.id, index));
+    row.addEventListener("keydown", handleFocusableRowKeyDown);
     const isArmed = isOpenGroupArmed(group.id);
     const openGroupButton = document.createElement("button");
     openGroupButton.type = "button";
@@ -1080,9 +1112,12 @@ function renderPanel() {
     openGroupButton.innerHTML = isArmed
       ? `<span class="group-open-button-label">Open?</span>`
       : ICONS.external;
-    openGroupButton.addEventListener("focus", () =>
-      activateGroup(group.id, index),
-    );
+    openGroupButton.addEventListener("focus", () => {
+      clearVirtualActiveDescendant();
+      state.activeList = "groups";
+      state.activeIndex = index;
+      updateActiveRows();
+    });
     openGroupButton.addEventListener("click", (event) => {
       event.stopPropagation();
       if (isOpenGroupArmed(group.id)) {
@@ -1091,6 +1126,7 @@ function renderPanel() {
       }
       armOpenGroupConfirmation(group.id);
     });
+    openGroupButton.addEventListener("keydown", handleFocusableRowKeyDown);
     surface.append(row, openGroupButton);
     item.append(surface);
     list.append(item);
@@ -1163,6 +1199,7 @@ function updatePanelContent(update) {
   const beforeHeight = shouldAnimate ? refs.menu.getBoundingClientRect().height : 0;
 
   update();
+  syncVirtualActiveDescendant();
 
   if (shouldAnimate) {
     animateMenuHeightFrom(beforeHeight);
@@ -1316,6 +1353,7 @@ function renderSubmenu() {
   refs.submenu.replaceChildren(
     createScrollFrame(renderBookmarkList(bookmarks, "group")),
   );
+  updateActiveRows();
   syncSubmenuPosition();
 }
 
@@ -1327,6 +1365,7 @@ function renderBookmarkList(bookmarks, source) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "bookmark-button";
+    button.id = getBookmarkRowId(bookmark, source, index);
     button.dataset.index = String(index);
     button.dataset.source = source;
     button.dataset.active = String(
@@ -1347,7 +1386,11 @@ function renderBookmarkList(bookmarks, source) {
       }
     };
     button.addEventListener("mouseenter", activateBookmarkRow);
-    button.addEventListener("focus", activateBookmarkRow);
+    button.addEventListener("focus", () => {
+      clearVirtualActiveDescendant();
+      activateBookmarkRow();
+    });
+    button.addEventListener("keydown", handleFocusableRowKeyDown);
     button.addEventListener("click", () => openBookmark(bookmark));
     item.append(button);
     list.append(item);
@@ -1477,7 +1520,7 @@ function activateGroup(groupId, index, options = {}) {
   clearTimeout(submenuCloseTimer);
   state.activeGroupId = groupId;
   state.activeList = options.focusBookmarks ? "group" : "groups";
-  state.activeIndex = options.focusBookmarks ? 0 : index;
+  state.activeIndex = options.focusBookmarks ? getFirstBookmarkIndex(groupId) : index;
   updateActiveRows();
   refs.submenu.dataset.open = "true";
   if (!state.bookmarksByGroup.has(groupId)) {
@@ -1485,6 +1528,16 @@ function activateGroup(groupId, index, options = {}) {
   } else {
     renderSubmenu();
   }
+}
+
+function handleGroupRowFocus(groupId, index) {
+  clearVirtualActiveDescendant();
+  state.activeList = "groups";
+  state.activeIndex = index;
+  if (state.activeGroupId === groupId) {
+    refs.submenu.dataset.open = "true";
+  }
+  updateActiveRows();
 }
 
 function positionSubmenu() {
@@ -1605,7 +1658,7 @@ function closeSubmenu() {
       (group) => group.id === previousGroupId,
     );
     state.activeList = "groups";
-    state.activeIndex = Math.max(0, groupIndex);
+    state.activeIndex = groupIndex >= 0 ? groupIndex : null;
   }
   state.activeGroupId = null;
   refs.submenu.dataset.open = "false";
@@ -1625,6 +1678,10 @@ function updateActiveRows() {
       node.dataset.source === "groups" &&
       state.searchQuery.length < 2
     ) {
+      node.setAttribute(
+        "aria-expanded",
+        String(state.activeGroupId === node.dataset.groupId),
+      );
       isActive = isGroupActive(node.dataset.groupId, Number(node.dataset.index));
       node.dataset.active = String(isActive);
       updateGroupSurfaceState(node, isActive);
@@ -1632,10 +1689,12 @@ function updateActiveRows() {
     }
     isActive =
       node.dataset.source === state.activeList &&
+      state.activeIndex !== null &&
       Number(node.dataset.index) === state.activeIndex;
     node.dataset.active = String(isActive);
     updateGroupSurfaceState(node, isActive);
   });
+  syncVirtualActiveDescendant();
 }
 
 function isGroupActive(groupId, index) {
@@ -1647,7 +1706,11 @@ function isGroupActive(groupId, index) {
     return groupId === state.activeGroupId;
   }
 
-  return state.activeList === "groups" && index === state.activeIndex;
+  return (
+    state.activeList === "groups" &&
+    state.activeIndex !== null &&
+    index === state.activeIndex
+  );
 }
 
 function updateGroupSurfaceState(node, isActive) {
@@ -1666,21 +1729,17 @@ function handleGroupListScroll() {
 
 function handleSearchKeyDown(event) {
   if (!state.menuOpen) return;
-  const items = getCurrentItems();
   if (event.key === "ArrowDown") {
     event.preventDefault();
-    if (items.length === 0) return;
-    state.activeIndex = Math.min(items.length - 1, state.activeIndex + 1);
-    updateActiveRows();
+    moveVirtualCursor(1);
   } else if (event.key === "ArrowUp") {
     event.preventDefault();
-    if (items.length === 0) return;
-    state.activeIndex = Math.max(0, state.activeIndex - 1);
-    updateActiveRows();
+    moveVirtualCursor(-1);
   } else if (event.key === "ArrowRight") {
     if (
       state.searchQuery.length < 2 &&
       state.activeList === "groups" &&
+      state.activeIndex !== null &&
       state.groups[state.activeIndex]
     ) {
       event.preventDefault();
@@ -1688,8 +1747,19 @@ function handleSearchKeyDown(event) {
       activateGroup(group.id, state.activeIndex, { focusBookmarks: true });
     }
   } else if (event.key === "ArrowLeft") {
-    event.preventDefault();
-    closeSubmenu();
+    if (state.searchQuery.length < 2 && state.activeList === "group") {
+      event.preventDefault();
+      closeSubmenu();
+    }
+  } else if (event.key === "Tab") {
+    if (!event.shiftKey && state.activeIndex !== null) {
+      const activeRow = getVirtualActiveElement();
+      if (activeRow) {
+        event.preventDefault();
+        clearVirtualActiveDescendant();
+        activeRow.focus({ preventScroll: true });
+      }
+    }
   } else if (event.key === "Enter") {
     event.preventDefault();
     activateCurrentItem();
@@ -1698,8 +1768,9 @@ function handleSearchKeyDown(event) {
     if (state.searchQuery) {
       state.searchQuery = "";
       state.activeList = "groups";
-      state.activeIndex = 0;
+      state.activeIndex = null;
       refs.search.value = "";
+      clearVirtualActiveDescendant();
       renderPanel();
     } else if (state.activeGroupId) {
       closeSubmenu();
@@ -1717,7 +1788,30 @@ function getCurrentItems() {
   return state.groups;
 }
 
+function moveVirtualCursor(direction) {
+  const items = getCurrentItems();
+  if (items.length === 0) return;
+
+  if (state.activeIndex === null) {
+    if (direction > 0) {
+      state.activeIndex = 0;
+      updateActiveRows();
+    }
+    return;
+  }
+
+  const nextIndex = clampNumber(
+    state.activeIndex + direction,
+    0,
+    items.length - 1,
+  );
+  if (nextIndex === state.activeIndex) return;
+  state.activeIndex = nextIndex;
+  updateActiveRows();
+}
+
 function activateCurrentItem() {
+  if (state.activeIndex === null) return;
   if (state.searchQuery.length >= 2) {
     const bookmark = state.searchResults[state.activeIndex];
     if (bookmark) openBookmark(bookmark);
@@ -1745,6 +1839,77 @@ async function openBookmark(bookmark) {
 
 function isOpenGroupArmed(groupId) {
   return state.armedOpenGroupIds.has(groupId);
+}
+
+function handleFocusableRowKeyDown(event) {
+  if (!state.menuOpen) return;
+  if (
+    event.key !== "ArrowDown" &&
+    event.key !== "ArrowUp" &&
+    event.key !== "ArrowRight" &&
+    event.key !== "ArrowLeft" &&
+    event.key !== "Escape"
+  ) {
+    return;
+  }
+
+  if (!refs.search) return;
+  event.preventDefault();
+  event.stopPropagation();
+  refs.search.focus({ preventScroll: true });
+  handleSearchKeyDown(event);
+}
+
+function getGroupRowId(groupId) {
+  return `${GROUP_ROW_ID_PREFIX}-${toDomIdPart(groupId)}`;
+}
+
+function getBookmarkRowId(bookmark, source, index) {
+  const sourceKey =
+    source === "group" && state.activeGroupId
+      ? `${source}-${state.activeGroupId}`
+      : source;
+  const bookmarkKey = bookmark?.id || bookmark?.url || index;
+  return `${BOOKMARK_ROW_ID_PREFIX}-${toDomIdPart(sourceKey)}-${toDomIdPart(bookmarkKey)}`;
+}
+
+function toDomIdPart(value) {
+  return String(value || "item")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
+}
+
+function getVirtualActiveElement() {
+  if (!shadow || state.activeIndex === null) return null;
+  return shadow.querySelector(
+    `[data-source="${cssEscape(state.activeList)}"][data-index="${state.activeIndex}"]`,
+  );
+}
+
+function syncVirtualActiveDescendant() {
+  if (!refs.search) return;
+  if (shadow?.activeElement !== refs.search || state.activeIndex === null) {
+    clearVirtualActiveDescendant();
+    return;
+  }
+
+  const activeElement = getVirtualActiveElement();
+  if (!activeElement?.id) {
+    clearVirtualActiveDescendant();
+    return;
+  }
+
+  refs.search.setAttribute("aria-activedescendant", activeElement.id);
+}
+
+function clearVirtualActiveDescendant() {
+  refs.search?.removeAttribute("aria-activedescendant");
+}
+
+function getFirstBookmarkIndex(groupId) {
+  const bookmarks = state.bookmarksByGroup.get(groupId) || [];
+  return bookmarks.length > 0 ? 0 : null;
 }
 
 function armOpenGroupConfirmation(groupId) {
