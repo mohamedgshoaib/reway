@@ -86,37 +86,6 @@ button[disabled] {
   --duration-fast: 140ms;
   --duration-base: 180ms;
   --duration-popover: 160ms;
-  --scroll-mask-t-from: calc(100% - 18px);
-  --scroll-mask-b-from: calc(100% - 18px);
-}
-
-@property --scroll-mask-t-from {
-  syntax: "<length-percentage>";
-  inherits: false;
-  initial-value: 100%;
-}
-
-@property --scroll-mask-b-from {
-  syntax: "<length-percentage>";
-  inherits: false;
-  initial-value: 100%;
-}
-
-@keyframes scroll-mask-y-scroll {
-  0% {
-    --scroll-mask-t-from: 100%;
-  }
-  10%,
-  100% {
-    --scroll-mask-t-from: var(--scroll-mask-fade-from-t);
-  }
-  0%,
-  90% {
-    --scroll-mask-b-from: var(--scroll-mask-fade-from-b);
-  }
-  100% {
-    --scroll-mask-b-from: 100%;
-  }
 }
 
 * {
@@ -1207,6 +1176,10 @@ button.success::after {
   --scroll-surface-bg: var(--muted);
 }
 
+.select .select-menu-frame {
+  position: absolute;
+}
+
 .session-preview-frame {
   margin-bottom: 10px;
   border-radius: var(--inset-radius);
@@ -1250,8 +1223,6 @@ button.success::after {
 .scroll-surface {
   position: relative;
   z-index: 0;
-  --scroll-mask-fade-from-t: calc(0% + 18px);
-  --scroll-mask-fade-from-b: calc(100% - 18px);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1268,29 +1239,6 @@ button.success::after {
 .textarea-scroll-frame > .scroll-surface::-webkit-scrollbar {
   display: block;
   width: 8px;
-}
-
-@supports (animation-timeline: scroll()) {
-  .scroll-surface {
-    --scroll-mask-t: linear-gradient(
-      to top,
-      black,
-      black var(--scroll-mask-t-from),
-      transparent
-    );
-    --scroll-mask-b: linear-gradient(
-      to bottom,
-      black,
-      black var(--scroll-mask-b-from),
-      transparent
-    );
-    animation: scroll-mask-y-scroll linear;
-    animation-timeline: scroll(self block);
-    mask-image: var(--scroll-mask-t), var(--scroll-mask-b);
-    mask-composite: intersect;
-    -webkit-mask-image: var(--scroll-mask-t), var(--scroll-mask-b);
-    -webkit-mask-composite: source-in;
-  }
 }
 
 .scroll-cue {

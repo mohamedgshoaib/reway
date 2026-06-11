@@ -267,6 +267,15 @@ function updateScrollSurface(surface) {
   )
 }
 
+function scheduleScrollSurfaceUpdate(surface) {
+  if (!surface) return
+  updateScrollSurface(surface)
+  requestAnimationFrame(() => {
+    updateScrollSurface(surface)
+    requestAnimationFrame(() => updateScrollSurface(surface))
+  })
+}
+
 export function initScrollSurface(surface) {
   if (!surface || scrollSurfaceRegistry.has(surface)) return
   scrollSurfaceRegistry.add(surface)
@@ -276,7 +285,12 @@ export function initScrollSurface(surface) {
     passive: true,
   })
 
-  requestAnimationFrame(() => updateScrollSurface(surface))
+  if (typeof ResizeObserver !== "undefined") {
+    const observer = new ResizeObserver(() => scheduleScrollSurfaceUpdate(surface))
+    observer.observe(surface)
+  }
+
+  scheduleScrollSurfaceUpdate(surface)
 }
 
 export function refreshScrollSurface(surface) {
@@ -286,5 +300,5 @@ export function refreshScrollSurface(surface) {
     return
   }
   ensureScrollSurfaceCues(surface)
-  requestAnimationFrame(() => updateScrollSurface(surface))
+  scheduleScrollSurfaceUpdate(surface)
 }

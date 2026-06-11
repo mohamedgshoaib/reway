@@ -350,6 +350,7 @@ function createGroupSelect(flow) {
     if (disabled || options.length === 0) return
     container.classList.add("open")
     trigger.setAttribute("aria-expanded", "true")
+    refreshScrollSurface(menu)
     focusSelectedOrFirst()
   }
 
