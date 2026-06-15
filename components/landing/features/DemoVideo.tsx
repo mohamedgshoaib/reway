@@ -54,21 +54,32 @@ export function DemoVideo({
 
   useEffect(() => {
     let rafId: number
-    const updateProgress = () => {
-      const video = videoRef.current
-      if (video && !video.paused) {
-        const duration = video.duration
-        const current = video.currentTime
-        if (duration > 0) {
-          const newProgress = (current / duration) * 100
-          if (!hideControls) setProgress(newProgress)
-          onProgressUpdateRef.current?.(newProgress)
-        }
+    const video = videoRef.current
+    if (!video) return
+
+    const tick = () => {
+      const { duration, currentTime, paused } = video
+      if (duration > 0) {
+        const pct = (currentTime / duration) * 100
+        if (!hideControls) setProgress(pct)
+        onProgressUpdateRef.current?.(pct)
       }
-      rafId = requestAnimationFrame(updateProgress)
+      if (!paused) rafId = requestAnimationFrame(tick)
     }
-    rafId = requestAnimationFrame(updateProgress)
-    return () => cancelAnimationFrame(rafId)
+
+    const startTick = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(tick) }
+    const stopTick = () => cancelAnimationFrame(rafId)
+
+    video.addEventListener("play", startTick)
+    video.addEventListener("pause", stopTick)
+    video.addEventListener("ended", stopTick)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      video.removeEventListener("play", startTick)
+      video.removeEventListener("pause", stopTick)
+      video.removeEventListener("ended", stopTick)
+    }
   }, [hideControls])
 
   useEffect(() => {
@@ -213,6 +224,7 @@ export function DemoVideo({
           ref={videoRef}
           poster={poster}
           preload="none"
+          suppressHydrationWarning
           loop={loop}
           muted
           playsInline
@@ -306,8 +318,7 @@ export function DemoVideo({
       </div>
 
       {/* Portal overlay — rendered directly under document.body, outside all stacking contexts */}
-      {typeof window !== "undefined" &&
-        isMaximized &&
+      {isMaximized &&
         createPortal(
           <div
             role="button"

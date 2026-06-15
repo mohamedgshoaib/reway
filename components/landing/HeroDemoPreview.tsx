@@ -4,6 +4,7 @@ import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTheme } from "next-themes"
 import { useRef, useState, useSyncExternalStore } from "react"
+import { m, AnimatePresence, useInView, useReducedMotion } from "motion/react"
 import RewayLogo from "@/components/logo"
 import { ThemeIcon } from "@/components/theme-icons/ThemeIcon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -53,6 +54,9 @@ export function HeroDemoPreview() {
   const { resolvedTheme, setTheme } = useTheme()
   const hasHydrated = useHasHydrated()
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const commandBarRef = useRef<HTMLDivElement | null>(null)
+  const commandBarInView = useInView(commandBarRef, { once: true, margin: "-80px" })
+  const shouldReduceMotion = useReducedMotion()
 
   const {
     copiedIndex,
@@ -223,7 +227,19 @@ export function HeroDemoPreview() {
                   </div>
                 </div>
 
-                <div className="relative w-full" data-onboarding="command-bar">
+                <div className="relative w-full" data-onboarding="command-bar" ref={commandBarRef}>
+                  <AnimatePresence>
+                    {commandInputValue.length > 0 && !isCommandFocused && !shouldReduceMotion && (
+                      <m.span
+                        key="typing-ring"
+                        className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-primary/20"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 0.85, 0] }}
+                        exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
+                  </AnimatePresence>
                   <div
                     className={`group relative flex items-center justify-between gap-2 rounded-2xl px-1.5 py-1.5 after:absolute after:inset-0 after:rounded-2xl after:ring-1 after:pointer-events-none after:content-[''] shadow-none isolate ${
                       isCommandFocused
@@ -330,6 +346,7 @@ export function HeroDemoPreview() {
                   onCopy={handleCopy}
                   onOpen={handleOpen}
                   onEdit={handleEdit}
+                  inView={commandBarInView}
                 />
               </div>
             </div>
