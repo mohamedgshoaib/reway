@@ -1,0 +1,2251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reway — FAB Prototype</title>
+    <style>
+      :root {
+        --page-bg: #0f0f1a;
+        --panel-surface: oklch(0.22 0 0);
+        --panel-raised: oklch(0.25 0 0);
+        --muted-surface: oklch(0.28 0 0);
+        --text-primary: oklch(0.98 0 0);
+        --text-subtle: oklch(0.72 0 0);
+        --text-dim: oklch(0.52 0 0);
+        --border: rgba(255, 255, 255, 0.05);
+        --border-strong: rgba(255, 255, 255, 0.08);
+        --accent-teal: oklch(0.78 0.1 205);
+        --amber: #d4a017;
+        --indigo: #7c6ef7;
+        --rose: #e05a6e;
+        --grey-dot: #a7adb6;
+        --destructive: oklch(0.55 0.22 28);
+
+        --ease: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        background: var(--page-bg);
+        color: var(--text-primary);
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* -------------------- Fake webpage background -------------------- */
+
+      .fake-page {
+        position: fixed;
+        inset: 0;
+        background: #0f0f1a;
+        overflow-y: auto;
+        padding: 64px 0 200px;
+      }
+
+      .fake-page-inner {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      .fake-page h1 {
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+      }
+
+      .fake-page .byline {
+        font-size: 13px;
+        color: var(--text-dim);
+        margin-bottom: 40px;
+      }
+
+      .fake-page p {
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--text-subtle);
+        margin-bottom: 20px;
+      }
+
+      .fake-page h2 {
+        font-size: 19px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 40px 0 16px;
+      }
+
+      /* -------------------- FAB -------------------- */
+
+      .fab {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #1a1a1a;
+        border: none;
+        cursor: grab;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.72;
+        filter: saturate(0.82);
+        transition:
+          opacity 180ms var(--ease),
+          filter 180ms var(--ease),
+          transform 180ms var(--ease),
+          box-shadow 180ms var(--ease),
+          top 220ms var(--ease),
+          left 220ms var(--ease),
+          right 220ms var(--ease),
+          bottom 220ms var(--ease);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        padding: 0;
+        touch-action: none;
+      }
+
+      .fab:hover {
+        opacity: 1;
+        filter: saturate(1);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      }
+
+      .fab:active {
+        transform: scale(0.94);
+      }
+
+      .fab svg {
+        width: 26px;
+        height: 26px;
+        display: block;
+      }
+
+      .fab.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.9);
+      }
+
+      /* -------------------- Panel shell -------------------- */
+
+      .panel-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        pointer-events: none;
+      }
+
+      .panel-overlay.is-open {
+        pointer-events: auto;
+      }
+
+      .panel {
+        position: fixed;
+        width: 300px;
+        border-radius: 20px;
+        background: var(--panel-surface);
+        box-shadow:
+          0 12px 40px rgba(0, 0, 0, 0.45),
+          0 0 0 1px var(--border);
+        padding: 6px;
+        opacity: 0;
+        transform: scale(0.95);
+        transition:
+          opacity 180ms var(--ease),
+          transform 180ms var(--ease);
+        overflow: hidden;
+      }
+
+      /* Default corner: bottom-right (panel opens upward, aligned right) */
+      .panel-overlay[data-corner="bottom-right"] .panel {
+        bottom: 72px;
+        right: 20px;
+        transform-origin: bottom right;
+      }
+
+      .panel-overlay[data-corner="bottom-left"] .panel {
+        bottom: 72px;
+        left: 20px;
+        transform-origin: bottom left;
+      }
+
+      .panel-overlay[data-corner="top-right"] .panel {
+        top: 72px;
+        right: 20px;
+        transform-origin: top right;
+      }
+
+      .panel-overlay[data-corner="top-left"] .panel {
+        top: 72px;
+        left: 20px;
+        transform-origin: top left;
+      }
+
+      .panel-overlay.is-open .panel {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .panel-views {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px;
+      }
+
+      /* -------------------- Shared bits -------------------- */
+
+      .save-strip {
+        background: var(--muted-surface);
+        border-radius: 14px;
+        padding: 10px 10px 10px 10px;
+        margin-bottom: 6px;
+      }
+
+      .save-strip-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .favicon-placeholder {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        background: oklch(0.4 0 0);
+        flex-shrink: 0;
+      }
+
+      .save-strip-title {
+        font-size: 12px;
+        color: var(--text-subtle);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+      }
+
+      .save-cta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .save-cta {
+        flex: 1;
+        height: 36px;
+        border-radius: 12px;
+        background: var(--text-primary);
+        color: #1a1a1a;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 160ms var(--ease);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 0 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .save-cta:hover {
+        background: oklch(0.88 0 0);
+      }
+
+      .save-cta:active {
+        background: oklch(0.8 0 0);
+      }
+
+      .change-group-btn {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 160ms var(--ease),
+          color 160ms var(--ease);
+      }
+
+      .change-group-btn:hover {
+        background: var(--border-strong);
+        color: var(--text-subtle);
+      }
+
+      .search-bar {
+        margin: 6px 4px 8px;
+      }
+
+      .search-input {
+        width: 100%;
+        height: 38px;
+        border-radius: 14px;
+        border: 1px solid var(--border-strong);
+        background: var(--panel-raised);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: inherit;
+        padding: 0 14px;
+        outline: none;
+        transition: border-color 160ms var(--ease);
+      }
+
+      .search-input::placeholder {
+        color: var(--text-dim);
+      }
+
+      .search-input:focus {
+        border-color: var(--border-strong);
+      }
+
+      .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-dim);
+        padding: 8px 12px 4px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 38px;
+        padding: 0 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition:
+          background 140ms var(--ease),
+          border-color 140ms var(--ease);
+      }
+
+      .row:hover {
+        background: var(--panel-raised);
+        border-color: var(--border-strong);
+      }
+
+      .group-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .group-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .group-name-pin-wrap {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .group-name-pin-wrap .group-name {
+        min-width: 0;
+      }
+
+      /* Picker-mode rows have no wrap — the bare .group-name needs to flex on its own */
+      .row[data-picker-select] .group-name {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .picker-check {
+        color: var(--accent-teal);
+        flex-shrink: 0;
+      }
+
+      .chevron {
+        color: var(--text-dim);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .bottom-link-wrap {
+        padding: 10px 0 6px;
+        text-align: center;
+      }
+
+      .bottom-link {
+        font-size: 12px;
+        color: var(--text-dim);
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .bottom-link:hover {
+        text-decoration: underline;
+        color: var(--text-subtle);
+      }
+
+      /* -------------------- View transitions (slide) -------------------- */
+
+      .view {
+        width: 100%;
+      }
+
+      #view-groups {
+        transition:
+          transform 200ms var(--ease),
+          opacity 200ms var(--ease);
+      }
+
+      #view-bookmarks {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        transform: translateX(100%);
+        opacity: 0;
+        transition:
+          transform 200ms var(--ease),
+          opacity 200ms var(--ease);
+        pointer-events: none;
+      }
+
+      .panel-views.show-bookmarks #view-groups {
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .panel-views.show-bookmarks #view-bookmarks {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* -------------------- Drill-in header -------------------- */
+
+      .drill-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        padding: 0 6px 0 4px;
+        margin-bottom: 4px;
+      }
+
+      .back-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-subtle);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 140ms var(--ease);
+      }
+
+      .back-btn:hover {
+        background: var(--panel-raised);
+      }
+
+      .drill-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .drill-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      /* -------------------- Bookmark rows -------------------- */
+
+      .bookmark-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 46px;
+        padding: 6px 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition:
+          background 140ms var(--ease),
+          border-color 140ms var(--ease);
+      }
+
+      .bookmark-row:hover {
+        background: var(--panel-raised);
+        border-color: var(--border-strong);
+      }
+
+      .bookmark-favicon {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        background: oklch(0.4 0 0);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-subtle);
+      }
+
+      .bookmark-meta {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .bookmark-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bookmark-domain {
+        font-size: 11px;
+        color: var(--text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 1px;
+      }
+
+      .contextual-save {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 12px 6px;
+        font-size: 12px;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: color 140ms var(--ease);
+      }
+
+      .contextual-save:hover {
+        color: var(--accent-teal);
+      }
+
+      /* scrollable area for lists */
+      .list-scroll {
+        max-height: 320px;
+        overflow-y: auto;
+        padding: 0 2px;
+      }
+
+      .list-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .list-scroll::-webkit-scrollbar-thumb {
+        background: var(--border-strong);
+        border-radius: 4px;
+      }
+
+      .list-scroll-wrap {
+        position: relative;
+      }
+
+      .list-scroll-wrap::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 32px;
+        background: linear-gradient(to bottom, transparent, oklch(0.22 0 0));
+        pointer-events: none;
+        border-radius: 0 0 14px 14px;
+        opacity: 0;
+        transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .list-scroll-wrap.has-overflow::after {
+        opacity: 1;
+      }
+
+      /* -------------------- Session micro-utility line -------------------- */
+
+      .session-line {
+        font-size: 12px;
+        color: var(--text-dim);
+        background: none;
+        text-align: left;
+        padding: 2px 8px 8px;
+        cursor: pointer;
+        width: fit-content;
+        transition: color 140ms var(--ease);
+      }
+
+      .session-line:hover {
+        color: var(--text-subtle);
+      }
+
+      /* -------------------- Search bar: clear button + picker label -------------------- */
+
+      .search-input-wrap {
+        position: relative;
+      }
+
+      .search-input {
+        padding-right: 34px;
+      }
+
+      .search-clear {
+        position: absolute;
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 140ms var(--ease),
+          color 140ms var(--ease);
+      }
+
+      .search-clear:hover {
+        background: var(--border-strong);
+        color: var(--text-subtle);
+      }
+
+      .search-bar.has-query .search-clear {
+        display: flex;
+      }
+
+      .search-bar.has-query .search-input-wrap {
+        display: block;
+      }
+
+      .picker-label {
+        display: none;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-dim);
+        padding: 10px 12px 6px;
+      }
+
+      .search-bar.picker-mode .search-input-wrap {
+        display: none;
+      }
+
+      .search-bar.picker-mode .picker-label {
+        display: block;
+      }
+
+      /* -------------------- Group icon + pin affordance -------------------- */
+
+      .group-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 5px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .pin-btn {
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition:
+          opacity 140ms var(--ease),
+          background 140ms var(--ease),
+          color 140ms var(--ease);
+        margin-right: 6px;
+      }
+
+      .row:hover .pin-btn,
+      .row.is-pinned .pin-btn {
+        opacity: 1;
+      }
+
+      .pin-btn:hover {
+        background: var(--border-strong);
+        color: var(--accent-teal);
+      }
+
+      .pin-btn.is-active {
+        color: var(--accent-teal);
+      }
+
+      /* -------------------- Search results view -------------------- */
+
+      .result-bookmark-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 38px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition:
+          background 140ms var(--ease),
+          border-color 140ms var(--ease);
+      }
+
+      .result-bookmark-row:hover {
+        background: var(--panel-raised);
+        border-color: var(--border-strong);
+      }
+
+      .result-bookmark-favicon {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        background: oklch(0.4 0 0);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 700;
+        color: var(--text-subtle);
+      }
+
+      .result-bookmark-text {
+        font-size: 12px;
+        color: var(--text-primary);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .result-bookmark-text .group-suffix {
+        color: var(--text-dim);
+      }
+
+      .no-results {
+        font-size: 12px;
+        color: var(--text-dim);
+        padding: 16px 12px;
+        text-align: center;
+      }
+
+      /* -------------------- Save strip: session mode -------------------- */
+
+      .session-back-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 10px;
+        cursor: pointer;
+      }
+
+      .session-back-row .back-btn {
+        width: 24px;
+        height: 24px;
+      }
+
+      .session-back-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-subtle);
+      }
+
+      .session-name-input {
+        width: 100%;
+        height: 36px;
+        border-radius: 12px;
+        border: 1px solid var(--border-strong);
+        background: var(--panel-raised);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        padding: 0 12px;
+        outline: none;
+        margin-bottom: 8px;
+      }
+
+      /* -------------------- Save strip: success mode -------------------- */
+
+      .save-cta.is-success {
+        background: oklch(0.62 0.14 155);
+        color: oklch(0.98 0 0);
+      }
+
+      .save-cta.is-success:hover {
+        background: oklch(0.62 0.14 155);
+      }
+
+      .success-nav-arrow {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+      }
+
+      .also-save-link {
+        font-size: 12px;
+        color: var(--text-dim);
+        text-align: left;
+        padding: 8px 4px 0;
+        cursor: pointer;
+        width: fit-content;
+        transition: color 140ms var(--ease);
+      }
+
+      .also-save-link:hover {
+        color: var(--text-subtle);
+      }
+
+      /* -------------------- Drill-in: ··· menu popover -------------------- */
+
+      .drill-menu-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .more-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-subtle);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 140ms var(--ease);
+      }
+
+      .more-btn:hover {
+        background: var(--panel-raised);
+      }
+
+      .more-popover {
+        position: absolute;
+        top: 34px;
+        right: 0;
+        min-width: 180px;
+        background: var(--panel-surface);
+        border: 1px solid var(--border-strong);
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        padding: 4px;
+        z-index: 10;
+        opacity: 0;
+        transform: translateY(-4px) scale(0.97);
+        pointer-events: none;
+        transition:
+          opacity 140ms var(--ease),
+          transform 140ms var(--ease);
+      }
+
+      .more-popover.is-open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .popover-item {
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 12px;
+        font-family: inherit;
+        padding: 9px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 140ms var(--ease);
+      }
+
+      .popover-item:hover {
+        background: var(--panel-raised);
+      }
+
+      .drill-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 5px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+
+      /* -------------------- FAB drag tooltip -------------------- */
+
+      .fab-tooltip {
+        position: fixed;
+        bottom: 72px;
+        right: 20px;
+        background: oklch(0.15 0 0);
+        color: var(--text-primary);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 160ms var(--ease);
+        z-index: 1001;
+        white-space: nowrap;
+      }
+
+      .fab-tooltip.is-visible {
+        opacity: 1;
+      }
+
+      .fab.is-dragging {
+        transition: none;
+        cursor: grabbing;
+      }
+
+      /* -------------------- Demo controls -------------------- */
+
+      .demo-toggle-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1002;
+        background: oklch(0.3 0 0);
+        color: var(--text-subtle);
+        border: 1px solid var(--border-strong);
+        border-radius: 10px;
+        font-size: 12px;
+        font-family: inherit;
+        padding: 8px 14px;
+        cursor: pointer;
+        transition:
+          background 140ms var(--ease),
+          color 140ms var(--ease);
+      }
+
+      .demo-toggle-btn:hover {
+        background: oklch(0.34 0 0);
+        color: var(--text-primary);
+      }
+
+      /* -------------------- Restricted-page popup card -------------------- */
+
+      .restricted-card {
+        position: fixed;
+        top: 70px;
+        left: 20px;
+        width: 240px;
+        background: var(--panel-surface);
+        border-radius: 18px;
+        box-shadow:
+          0 12px 40px rgba(0, 0, 0, 0.45),
+          0 0 0 1px var(--border);
+        padding: 12px;
+        z-index: 1002;
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+        pointer-events: none;
+        transition:
+          opacity 180ms var(--ease),
+          transform 180ms var(--ease);
+      }
+
+      .restricted-card.is-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .restricted-strip {
+        background: var(--muted-surface);
+        border-radius: 12px;
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+
+      .favicon-placeholder.is-disabled {
+        opacity: 0.4;
+        margin-bottom: 8px;
+      }
+
+      .restricted-cta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .save-cta.is-disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        height: 32px;
+        font-size: 12px;
+      }
+
+      .save-cta.is-disabled:hover {
+        background: var(--text-primary);
+      }
+
+      .picker-caret-disabled {
+        color: var(--text-dim);
+        font-size: 12px;
+        opacity: 0.45;
+      }
+
+      .restricted-link {
+        display: block;
+        text-align: center;
+        padding: 4px 0 10px;
+      }
+
+      .restricted-divider {
+        height: 1px;
+        background: var(--border-strong);
+        margin-bottom: 10px;
+      }
+
+      .restricted-message {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-dim);
+        margin-bottom: 10px;
+      }
+
+      .restricted-dismiss {
+        width: 100%;
+        height: 30px;
+        border-radius: 10px;
+        border: 1px solid var(--border-strong);
+        background: transparent;
+        color: var(--text-subtle);
+        font-size: 12px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 140ms var(--ease);
+      }
+
+      .restricted-dismiss:hover {
+        background: var(--panel-raised);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Fake webpage background to simulate FAB sitting on a real page -->
+    <div class="fake-page">
+      <div class="fake-page-inner">
+        <h1>The Pragmatic Programmer — Book Notes</h1>
+        <div class="byline">Reading notes · Chapter 3 · 9 min read</div>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat.
+        </p>
+        <p>
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+          dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+          proident, sunt in culpa qui officia deserunt mollit anim id est
+          laborum.
+        </p>
+        <h2>Orthogonality</h2>
+        <p>
+          Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+          accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae
+          ab illo inventore veritatis et quasi architecto beatae vitae dicta
+          sunt explicabo.
+        </p>
+        <p>
+          Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut
+          fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem
+          sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor
+          sit amet.
+        </p>
+        <h2>Reversibility</h2>
+        <p>
+          At vero eos et accusamus et iusto odio dignissimos ducimus qui
+          blanditiis praesentium voluptatum deleniti atque corrupti quos dolores
+          et quas molestias excepturi sint occaecati cupiditate non provident.
+        </p>
+        <p>
+          Similique sunt in culpa qui officia deserunt mollitia animi, id est
+          laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita
+          distinctio.
+        </p>
+      </div>
+    </div>
+
+    <!-- FAB drag tooltip -->
+    <div class="fab-tooltip" id="fabTooltip">Drag to move</div>
+
+    <!-- FAB -->
+    <button class="fab" id="fab" aria-label="Open Reway">
+      <svg viewBox="0 0 512 512" width="26" height="26">
+        <circle cx="256" cy="256" r="256" fill="#1a1a1a" />
+        <g transform="matrix(12.135672 0 0 12.135672 110.37194 110.37192)">
+          <path
+            fill="#ffffff"
+            d="M4 17.9808V9.70753C4 6.07416 4 4.25748 5.17157 3.12874C6.34315 2 8.22876 2 12 2C15.7712 2 17.6569 2 18.8284 3.12874C20 4.25748 20 6.07416 20 9.70753V17.9808C20 20.2867 20 21.4396 19.2272 21.8523C17.7305 22.6514 14.9232 19.9852 13.59 19.1824C12.8168 18.7168 12.4302 18.484 12 18.484C11.5698 18.484 11.1832 18.7168 10.41 19.1824C9.0768 19.9852 6.26947 22.6514 4.77285 21.8523C4 21.4396 4 20.2867 4 17.9808Z"
+          />
+        </g>
+      </svg>
+    </button>
+
+    <!-- Demo controls (outside the extension UI, for prototype evaluation only) -->
+    <button class="demo-toggle-btn" id="demoToggleBtn">
+      Simulate restricted page
+    </button>
+
+    <!-- Restricted-page popup card -->
+    <div class="restricted-card" id="restrictedCard">
+      <div class="restricted-strip">
+        <div class="favicon-placeholder is-disabled"></div>
+        <div class="restricted-cta-row">
+          <button class="save-cta is-disabled" disabled>
+            Save to Design Research
+          </button>
+          <span class="picker-caret-disabled">▾</span>
+        </div>
+      </div>
+      <a class="bottom-link restricted-link" id="restrictedLibraryLink"
+        >Open full library →</a
+      >
+      <div class="restricted-divider"></div>
+      <p class="restricted-message">
+        Reway can't run on this type of page. Save from the address bar or
+        switch to a regular tab.
+      </p>
+      <button class="restricted-dismiss" id="restrictedDismiss">Dismiss</button>
+    </div>
+
+    <!-- Panel overlay (click outside to close) -->
+    <div class="panel-overlay" id="panelOverlay">
+      <div class="panel" id="panel">
+        <div class="panel-views" id="panelViews">
+          <!-- ===================== STATE 2: Groups list ===================== -->
+          <div class="view" id="view-groups">
+            <!-- Save strip: page mode / session mode / success mode all render here -->
+            <div class="save-strip" id="saveStrip">
+              <!-- populated by JS (renderSaveStrip) -->
+            </div>
+
+            <!-- Session micro-utility line (page mode only) -->
+            <div class="session-line" id="sessionLine">
+              or save 8 open tabs as a session →
+            </div>
+
+            <!-- Search / picker label row -->
+            <div class="search-bar" id="searchBarWrap">
+              <div class="search-input-wrap">
+                <input
+                  class="search-input"
+                  type="text"
+                  placeholder="Search groups and links…"
+                  id="searchInput"
+                />
+                <button
+                  class="search-clear"
+                  id="searchClear"
+                  aria-label="Clear search"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div class="picker-label" id="pickerLabel">
+                Select destination
+              </div>
+            </div>
+
+            <div class="list-scroll-wrap" id="groupsScrollWrap">
+              <div class="list-scroll" id="groupsScroll">
+                <!-- populated by JS (renderGroupsList / renderSearchResults) -->
+              </div>
+            </div>
+
+            <div class="bottom-link-wrap">
+              <a class="bottom-link" id="openLibraryLink">Manage library →</a>
+            </div>
+          </div>
+
+          <!-- ===================== STATE 3: Bookmarks drill-in ===================== -->
+          <div class="view" id="view-bookmarks">
+            <div class="drill-header">
+              <button class="back-btn" id="backBtn" aria-label="Back">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M15 6l-6 6 6 6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <span class="drill-icon" id="drillIcon"></span>
+              <span class="drill-title" id="drillTitle">Design Research</span>
+              <div class="drill-menu-wrap">
+                <button class="more-btn" id="moreBtn" aria-label="More options">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="5" cy="12" r="1.6" fill="currentColor" />
+                    <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+                    <circle cx="19" cy="12" r="1.6" fill="currentColor" />
+                  </svg>
+                </button>
+                <div class="more-popover" id="morePopover">
+                  <button class="popover-item" id="openAllTabsBtn">
+                    Open all <span id="openAllCount">12</span> in tabs
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="search-bar">
+              <input
+                class="search-input"
+                type="text"
+                placeholder="Search bookmarks…"
+              />
+            </div>
+
+            <div class="list-scroll-wrap" id="bookmarksScrollWrap">
+              <div class="list-scroll" id="bookmarksList">
+                <!-- populated by JS -->
+              </div>
+            </div>
+
+            <div class="contextual-save" id="contextualSave">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span id="contextualSaveText"
+                >Save this page to Design Research</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ===================== Element refs =====================
+      const fab = document.getElementById("fab");
+      const fabTooltip = document.getElementById("fabTooltip");
+      const panelOverlay = document.getElementById("panelOverlay");
+      const panel = document.getElementById("panel");
+      const panelViews = document.getElementById("panelViews");
+      const backBtn = document.getElementById("backBtn");
+      const drillTitle = document.getElementById("drillTitle");
+      const drillIcon = document.getElementById("drillIcon");
+      const bookmarksList = document.getElementById("bookmarksList");
+      const contextualSaveRow = document.getElementById("contextualSave");
+      const contextualSaveLabel = document.getElementById("contextualSaveText");
+      const groupsScroll = document.getElementById("groupsScroll");
+      const groupsScrollWrap = document.getElementById("groupsScrollWrap");
+      const bookmarksScrollWrap = document.getElementById(
+        "bookmarksScrollWrap",
+      );
+      const saveStrip = document.getElementById("saveStrip");
+      const sessionLine = document.getElementById("sessionLine");
+      const searchBarWrap = document.getElementById("searchBarWrap");
+      const searchInput = document.getElementById("searchInput");
+      const searchClear = document.getElementById("searchClear");
+      const moreBtn = document.getElementById("moreBtn");
+      const morePopover = document.getElementById("morePopover");
+      const openAllTabsBtn = document.getElementById("openAllTabsBtn");
+      const demoToggleBtn = document.getElementById("demoToggleBtn");
+      const restrictedCard = document.getElementById("restrictedCard");
+      const restrictedDismiss = document.getElementById("restrictedDismiss");
+      const restrictedLibraryLink = document.getElementById(
+        "restrictedLibraryLink",
+      );
+
+      // ===================== Data model =====================
+
+      // Groups in display order. `pinned` controls Pinned vs Recently saved/All groups bucketing.
+      // `bucket` = 'recent' | 'all' determines which non-pinned section a group falls back to.
+      const groups = [
+        {
+          name: "Design Research",
+          dot: "#4db8b8",
+          icon: "🎨",
+          bookmarks: "design-research",
+          pinned: true,
+          bucket: "recent",
+        },
+        {
+          name: "Dev Tools",
+          dot: "#d4a017",
+          icon: "🛠️",
+          bookmarks: "dev-tools",
+          pinned: true,
+          bucket: "recent",
+        },
+        {
+          name: "Work Links",
+          dot: "#7c6ef7",
+          icon: "💼",
+          bookmarks: "work-links",
+          pinned: false,
+          bucket: "recent",
+        },
+        {
+          name: "Reading List",
+          dot: "#e05a6e",
+          icon: "📚",
+          bookmarks: "reading-list",
+          pinned: false,
+          bucket: "recent",
+        },
+        {
+          name: "Research",
+          dot: "#a7adb6",
+          icon: "🔬",
+          bookmarks: "research",
+          pinned: false,
+          bucket: "recent",
+        },
+        {
+          name: "Architecture",
+          dot: "#b06ab3",
+          icon: "🏛️",
+          bookmarks: "architecture",
+          pinned: false,
+          bucket: "all",
+        },
+        {
+          name: "Frontend",
+          dot: "#4facde",
+          icon: "🖥️",
+          bookmarks: "frontend",
+          pinned: false,
+          bucket: "all",
+        },
+        {
+          name: "Ideas",
+          dot: "#f7971e",
+          icon: "💡",
+          bookmarks: "ideas",
+          pinned: false,
+          bucket: "all",
+        },
+        {
+          name: "Marketing",
+          dot: "#43cea2",
+          icon: "📣",
+          bookmarks: "marketing",
+          pinned: false,
+          bucket: "all",
+        },
+        {
+          name: "Side Projects",
+          dot: "#ee9ca7",
+          icon: "🚀",
+          bookmarks: "side-projects",
+          pinned: false,
+          bucket: "all",
+        },
+        {
+          name: "UX Research",
+          dot: "#6a82fb",
+          icon: "🔍",
+          bookmarks: "ux-research",
+          pinned: false,
+          bucket: "all",
+        },
+        {
+          name: "Writing",
+          dot: "#c9d6ff",
+          icon: "✍️",
+          bookmarks: "writing",
+          pinned: false,
+          bucket: "all",
+        },
+      ];
+
+      function getGroup(name) {
+        return groups.find((g) => g.name === name);
+      }
+
+      const bookmarkData = {
+        "design-research": [
+          {
+            title: "Linear – Design System Documentation",
+            domain: "linear.app",
+          },
+          {
+            title: "Refactoring UI – Practical Design Tips",
+            domain: "refactoringui.com",
+          },
+          { title: "The Component Gallery", domain: "component.gallery" },
+          {
+            title: "Inclusive Components",
+            domain: "inclusive-components.design",
+          },
+          {
+            title: "Smashing Magazine – UI Patterns",
+            domain: "smashingmagazine.com",
+          },
+        ],
+        "dev-tools": [
+          {
+            title: "Can I use — Browser support tables",
+            domain: "caniuse.com",
+          },
+          {
+            title: "Vite – Next Generation Frontend Tooling",
+            domain: "vitejs.dev",
+          },
+          {
+            title: "Regex101 – Build, test, debug regex",
+            domain: "regex101.com",
+          },
+        ],
+        "work-links": [
+          { title: "Q3 Roadmap – Shared Doc", domain: "docs.google.com" },
+          { title: "Engineering Standup Notes", domain: "notion.so" },
+        ],
+        "reading-list": [
+          {
+            title: "The Pragmatic Programmer – Book Notes",
+            domain: "pragprog.com",
+          },
+          {
+            title: "A Philosophy of Software Design",
+            domain: "web.stanford.edu",
+          },
+        ],
+        research: [
+          { title: "Attention Is All You Need", domain: "arxiv.org" },
+          { title: "CRDTs for Mortals", domain: "jakelazaroff.com" },
+        ],
+        architecture: [
+          { title: "A Pattern Language", domain: "patternlanguage.com" },
+          {
+            title: "Notes on Client-Side Architecture",
+            domain: "martinfowler.com",
+          },
+          {
+            title: "Designing Data-Intensive Applications",
+            domain: "dataintensive.net",
+          },
+        ],
+        frontend: [
+          { title: "CSS Grid Garden", domain: "cssgridgarden.com" },
+          { title: "web.dev – Performance Patterns", domain: "web.dev" },
+          { title: "Josh Comeau – CSS for JS Devs", domain: "joshwcomeau.com" },
+        ],
+        ideas: [
+          { title: "Things I wish I knew sooner", domain: "paulgraham.com" },
+          { title: "Idea backlog – personal notes", domain: "notion.so" },
+        ],
+        marketing: [
+          {
+            title: "Positioning – Obviously Awesome",
+            domain: "aprilduneford.com",
+          },
+          {
+            title: "Lenny's Newsletter Archive",
+            domain: "lennysnewsletter.com",
+          },
+          { title: "StoryBrand Framework Overview", domain: "storybrand.com" },
+        ],
+        "side-projects": [
+          {
+            title: "Indie Hackers – Launch Threads",
+            domain: "indiehackers.com",
+          },
+          { title: "Side project tracker board", domain: "trello.com" },
+        ],
+        "ux-research": [
+          { title: "Nielsen Norman Group – Heuristics", domain: "nngroup.com" },
+          { title: "Just Enough Research", domain: "erikahall.com" },
+          {
+            title: "User Interviews – Field Guide",
+            domain: "userinterviews.com",
+          },
+        ],
+        writing: [
+          { title: "On Writing Well – Notes", domain: "goodreads.com" },
+          { title: "The Sense of Style", domain: "stevenpinker.com" },
+        ],
+      };
+
+      // Hardcoded search scenarios: typing these substrings shows curated results.
+      const searchScenarios = {
+        linear: {
+          groupMatches: ["Design Research"],
+          bookmarkMatches: [
+            { title: "Linear Docs", domain: "linear.app", group: "Dev Tools" },
+            {
+              title: "Linear Changelog",
+              domain: "linear.app",
+              group: "Dev Tools",
+            },
+          ],
+        },
+        design: {
+          groupMatches: ["Design Research", "UX Research"],
+          bookmarkMatches: [
+            {
+              title: "The Component Gallery",
+              domain: "component.gallery",
+              group: "Design Research",
+            },
+          ],
+        },
+        note: {
+          groupMatches: [],
+          bookmarkMatches: [
+            {
+              title: "Engineering Standup Notes",
+              domain: "notion.so",
+              group: "Work Links",
+            },
+            {
+              title: "Idea backlog – personal notes",
+              domain: "notion.so",
+              group: "Ideas",
+            },
+          ],
+        },
+      };
+
+      // ===================== App state =====================
+      let currentGroupName = "Design Research"; // selected save destination
+      let pickerMode = false; // is the groups list acting as a destination picker
+      let pickerReturnTo = "page"; // 'page' | 'session' | 'success' — where picker returns to
+      let stripMode = "page"; // 'page' | 'session' | 'success'
+      let lastSavedGroupName = "Design Research";
+      let successResetTimer = null;
+      let fabHasDragged = false;
+      let fabCorner = "bottom-right"; // bottom-right | bottom-left | top-right | top-left
+
+      // ===================== Save strip rendering =====================
+
+      function renderSaveStrip() {
+        if (stripMode === "session") {
+          saveStrip.innerHTML = `
+        <div class="session-back-row" id="sessionBackRow">
+          <button class="back-btn" aria-label="Back to page mode">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span class="session-back-label">Save as session</span>
+        </div>
+        <input class="session-name-input" id="sessionNameInput" type="text" value="${currentGroupName} Tabs +7">
+        <div class="save-cta-row">
+          <button class="save-cta" id="saveCta">Save to ${currentGroupName}</button>
+          <button class="change-group-btn" id="changeGroupBtn" aria-label="Change group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      `;
+          sessionLine.style.display = "none";
+          const nameInput = document.getElementById("sessionNameInput");
+          requestAnimationFrame(() => {
+            nameInput.focus();
+            nameInput.select();
+          });
+          document
+            .getElementById("sessionBackRow")
+            .addEventListener("click", () => {
+              stripMode = "page";
+              renderSaveStrip();
+            });
+        } else if (stripMode === "success") {
+          saveStrip.innerHTML = `
+        <div class="save-strip-row">
+          <div class="favicon-placeholder"></div>
+          <div class="save-strip-title">The Pragmatic Programmer – Book Notes</div>
+        </div>
+        <div class="save-cta-row">
+          <button class="save-cta is-success" id="saveCta">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Saved to ${lastSavedGroupName}
+            <span class="success-nav-arrow" id="successNavArrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </button>
+        </div>
+        <div class="also-save-link" id="alsoSaveLink">+ Also save to another group</div>
+      `;
+          sessionLine.style.display = "none";
+          document
+            .getElementById("successNavArrow")
+            .addEventListener("click", (e) => {
+              e.stopPropagation();
+              clearSuccessTimer();
+              const g = getGroup(lastSavedGroupName);
+              if (g) drillIntoGroup(g);
+            });
+          document
+            .getElementById("alsoSaveLink")
+            .addEventListener("click", (e) => {
+              e.stopPropagation();
+              clearSuccessTimer();
+              enterPickerMode("success");
+            });
+          startSuccessTimer();
+        } else {
+          // page mode
+          saveStrip.innerHTML = `
+        <div class="save-strip-row">
+          <div class="favicon-placeholder"></div>
+          <div class="save-strip-title">The Pragmatic Programmer – Book Notes</div>
+        </div>
+        <div class="save-cta-row">
+          <button class="save-cta" id="saveCta">Save to ${currentGroupName}</button>
+          <button class="change-group-btn" id="changeGroupBtn" aria-label="Change group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      `;
+          sessionLine.style.display = pickerMode ? "none" : "";
+        }
+        wireSaveCta();
+      }
+
+      function wireSaveCta() {
+        const saveCta = document.getElementById("saveCta");
+        const changeGroupBtn = document.getElementById("changeGroupBtn");
+        if (saveCta && stripMode !== "success") {
+          saveCta.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleSaveClick();
+          });
+        }
+        if (changeGroupBtn) {
+          changeGroupBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            enterPickerMode(stripMode === "session" ? "session" : "page");
+          });
+        }
+      }
+
+      function handleSaveClick() {
+        lastSavedGroupName = currentGroupName;
+        stripMode = "success";
+        renderSaveStrip();
+      }
+
+      function clearSuccessTimer() {
+        if (successResetTimer) {
+          clearTimeout(successResetTimer);
+          successResetTimer = null;
+        }
+      }
+
+      function startSuccessTimer() {
+        clearSuccessTimer();
+        successResetTimer = setTimeout(() => {
+          stripMode = "page";
+          renderSaveStrip();
+        }, 5000);
+      }
+
+      // ===================== Picker mode =====================
+
+      function enterPickerMode(returnTo) {
+        pickerMode = true;
+        pickerReturnTo = returnTo;
+        searchBarWrap.classList.add("picker-mode");
+        sessionLine.style.display = "none";
+        renderGroupsList();
+      }
+
+      function exitPickerMode() {
+        pickerMode = false;
+        searchBarWrap.classList.remove("picker-mode");
+        if (stripMode === "page") {
+          sessionLine.style.display = "";
+        }
+        renderGroupsList();
+      }
+
+      function selectGroupFromPicker(name) {
+        currentGroupName = name;
+        const returnTo = pickerReturnTo;
+        exitPickerMode();
+        if (returnTo === "success") {
+          lastSavedGroupName = name;
+          stripMode = "success";
+        } else if (returnTo === "session") {
+          stripMode = "session";
+        } else {
+          stripMode = "page";
+        }
+        renderSaveStrip();
+      }
+
+      // ===================== Groups list rendering =====================
+
+      function rowMarkup(g, opts) {
+        const isPicker = opts && opts.picker;
+        const dotIcon = `<span class="group-icon" style="background:${hexToFaintBg(g.dot)}">${g.icon}</span>`;
+        if (isPicker) {
+          const selected = g.name === currentGroupName;
+          return `
+        <div class="row" data-group="${g.name}" data-picker-select="1">
+          ${dotIcon}
+          <span class="group-name">${g.name}</span>
+          ${selected ? '<svg class="picker-check" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ""}
+        </div>
+      `;
+        }
+        return `
+      <div class="row ${g.pinned ? "is-pinned" : ""}" data-group="${g.name}">
+        ${dotIcon}
+        <div class="group-name-pin-wrap">
+          <span class="group-name">${g.name}</span>
+          <button class="pin-btn ${g.pinned ? "is-active" : ""}" data-pin-toggle="1" aria-label="${g.pinned ? "Unpin" : "Pin"} ${g.name}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="${g.pinned ? "currentColor" : "none"}"><path d="M12 2l1.5 5.5L19 9l-4 4 1 6-4-3-4 3 1-6-4-4 5.5-1.5L12 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <span class="chevron">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+    `;
+      }
+
+      function hexToFaintBg(hex) {
+        // light tint background behind the emoji icon, derived from the group dot color
+        return hex + "26"; // ~15% alpha suffix
+      }
+
+      function renderGroupsList() {
+        if (pickerMode) {
+          const rows = groups
+            .map((g) => rowMarkup(g, { picker: true }))
+            .join("");
+          groupsScroll.innerHTML = `<div class="section-label">All groups</div>${rows}`;
+        } else {
+          const pinned = groups.filter((g) => g.pinned);
+          const recent = groups.filter(
+            (g) => !g.pinned && g.bucket === "recent",
+          );
+          const all = groups.filter((g) => !g.pinned && g.bucket === "all");
+
+          let html = "";
+          if (pinned.length) {
+            html +=
+              `<div class="section-label">Pinned</div>` +
+              pinned.map((g) => rowMarkup(g)).join("");
+          }
+          if (recent.length) {
+            html +=
+              `<div class="section-label">Recently saved</div>` +
+              recent.map((g) => rowMarkup(g)).join("");
+          }
+          if (all.length) {
+            html +=
+              `<div class="section-label">All groups</div>` +
+              all.map((g) => rowMarkup(g)).join("");
+          }
+          groupsScroll.innerHTML = html;
+        }
+        wireGroupsListEvents();
+        updateScrollFade(groupsScroll, groupsScrollWrap);
+      }
+
+      function wireGroupsListEvents() {
+        groupsScroll.querySelectorAll(".row[data-group]").forEach((row) => {
+          const name = row.getAttribute("data-group");
+          row.addEventListener("click", (e) => {
+            if (e.target.closest("[data-pin-toggle]")) return; // handled separately
+            if (pickerMode) {
+              selectGroupFromPicker(name);
+            } else {
+              drillIntoGroup(getGroup(name));
+            }
+          });
+        });
+        groupsScroll.querySelectorAll("[data-pin-toggle]").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const name = btn.closest(".row").getAttribute("data-group");
+            const g = getGroup(name);
+            if (g) {
+              g.pinned = !g.pinned;
+              renderGroupsList();
+            }
+          });
+        });
+      }
+
+      // ===================== Search results =====================
+
+      function findScenario(query) {
+        const q = query.trim().toLowerCase();
+        if (!q) return null;
+        // direct substring match against scenario keys
+        const matchKey = Object.keys(searchScenarios).find(
+          (key) => key.includes(q) || q.includes(key),
+        );
+        return matchKey ? searchScenarios[matchKey] : undefined;
+      }
+
+      function renderSearchResults(query) {
+        const scenario = findScenario(query);
+        if (scenario === undefined) {
+          groupsScroll.innerHTML = `<div class="no-results">No results for "${escapeHtml(query)}"</div>`;
+          updateScrollFade(groupsScroll, groupsScrollWrap);
+          return;
+        }
+        let html = "";
+        if (scenario.groupMatches.length) {
+          html += `<div class="section-label">Groups</div>`;
+          html += scenario.groupMatches
+            .map((name) => {
+              const g = getGroup(name);
+              return g ? rowMarkup(g) : "";
+            })
+            .join("");
+        }
+        if (scenario.bookmarkMatches.length) {
+          html += `<div class="section-label">Bookmarks</div>`;
+          html += scenario.bookmarkMatches
+            .map((b) => {
+              const letter = b.domain.charAt(0).toUpperCase();
+              return `
+          <div class="result-bookmark-row">
+            <div class="result-bookmark-favicon">${letter}</div>
+            <span class="result-bookmark-text">${b.title} <span class="group-suffix">— ${b.group}</span></span>
+          </div>
+        `;
+            })
+            .join("");
+        }
+        groupsScroll.innerHTML =
+          html ||
+          `<div class="no-results">No results for "${escapeHtml(query)}"</div>`;
+        wireGroupsListEvents();
+        updateScrollFade(groupsScroll, groupsScrollWrap);
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      searchInput.addEventListener("input", () => {
+        const value = searchInput.value;
+        if (value.length > 0) {
+          searchBarWrap.classList.add("has-query");
+          renderSearchResults(value);
+        } else {
+          searchBarWrap.classList.remove("has-query");
+          renderGroupsList();
+        }
+      });
+
+      searchClear.addEventListener("click", (e) => {
+        e.stopPropagation();
+        searchInput.value = "";
+        searchBarWrap.classList.remove("has-query");
+        renderGroupsList();
+        searchInput.focus();
+      });
+
+      // ===================== Scroll fade mask (from mock-2) =====================
+
+      function updateScrollFade(scrollEl, wrapEl) {
+        if (!scrollEl || !wrapEl) return;
+        const hasOverflow = scrollEl.scrollHeight > scrollEl.clientHeight;
+        const atBottom =
+          scrollEl.scrollTop + scrollEl.clientHeight >=
+          scrollEl.scrollHeight - 2;
+        if (hasOverflow && !atBottom) {
+          wrapEl.classList.add("has-overflow");
+        } else {
+          wrapEl.classList.remove("has-overflow");
+        }
+      }
+
+      // ===================== Panel open/close =====================
+
+      function openPanel() {
+        panelOverlay.classList.add("is-open");
+        fab.classList.add("is-hidden");
+        updateScrollFade(groupsScroll, groupsScrollWrap);
+      }
+
+      function closePanel() {
+        panelOverlay.classList.remove("is-open");
+        fab.classList.remove("is-hidden");
+        setTimeout(() => {
+          panelViews.classList.remove("show-bookmarks");
+          closeMorePopover();
+          if (pickerMode) exitPickerMode();
+          if (searchInput.value) {
+            searchInput.value = "";
+            searchBarWrap.classList.remove("has-query");
+            renderGroupsList();
+          }
+        }, 200);
+      }
+
+      // ===================== Drill-in (bookmarks view) =====================
+
+      function renderBookmarks(key) {
+        const items = bookmarkData[key] || [];
+        bookmarksList.innerHTML = items
+          .map((item) => {
+            const letter = item.domain.charAt(0).toUpperCase();
+            return `
+        <div class="bookmark-row">
+          <div class="bookmark-favicon">${letter}</div>
+          <div class="bookmark-meta">
+            <div class="bookmark-title">${item.title}</div>
+            <div class="bookmark-domain">${item.domain}</div>
+          </div>
+        </div>
+      `;
+          })
+          .join("");
+        updateScrollFade(bookmarksList, bookmarksScrollWrap);
+        return items.length;
+      }
+
+      function drillIntoGroup(g) {
+        if (!g) return;
+        drillTitle.textContent = g.name;
+        drillIcon.textContent = g.icon;
+        drillIcon.style.background = hexToFaintBg(g.dot);
+        contextualSaveLabel.textContent = `Save this page to ${g.name}`;
+        const count = renderBookmarks(g.bookmarks);
+        document.getElementById("openAllCount").textContent = count;
+
+        panelViews.classList.add("show-bookmarks");
+      }
+
+      function goBackToGroups() {
+        panelViews.classList.remove("show-bookmarks");
+        closeMorePopover();
+        updateScrollFade(groupsScroll, groupsScrollWrap);
+      }
+
+      // ===================== ··· popover (drill-in header) =====================
+
+      function closeMorePopover() {
+        morePopover.classList.remove("is-open");
+      }
+
+      moreBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        morePopover.classList.toggle("is-open");
+      });
+
+      openAllTabsBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeMorePopover();
+      });
+
+      document.addEventListener("click", (e) => {
+        if (
+          morePopover.classList.contains("is-open") &&
+          !e.target.closest(".drill-menu-wrap")
+        ) {
+          closeMorePopover();
+        }
+      });
+
+      // ===================== Core event wiring =====================
+
+      fab.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (fabHasDragged) {
+          fabHasDragged = false;
+          return;
+        } // suppress click right after a drag
+        openPanel();
+      });
+
+      panelOverlay.addEventListener("click", (e) => {
+        if (e.target === panelOverlay) {
+          closePanel();
+        }
+      });
+
+      panel.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+
+      backBtn.addEventListener("click", goBackToGroups);
+
+      groupsScroll.addEventListener("scroll", () =>
+        updateScrollFade(groupsScroll, groupsScrollWrap),
+      );
+      bookmarksList.addEventListener("scroll", () =>
+        updateScrollFade(bookmarksList, bookmarksScrollWrap),
+      );
+
+      document
+        .getElementById("openLibraryLink")
+        .addEventListener("click", (e) => e.preventDefault());
+      contextualSaveRow.addEventListener("click", () => {});
+
+      sessionLine.addEventListener("click", () => {
+        stripMode = "session";
+        renderSaveStrip();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && panelOverlay.classList.contains("is-open")) {
+          closePanel();
+        }
+      });
+
+      // ===================== FAB drag-to-snap =====================
+
+      let dragState = null;
+
+      function setFabCorner(corner, animate) {
+        fabCorner = corner;
+        fab.style.transition = animate ? "" : "none";
+        fab.style.top = "";
+        fab.style.bottom = "";
+        fab.style.left = "";
+        fab.style.right = "";
+        if (corner === "bottom-right") {
+          fab.style.bottom = "20px";
+          fab.style.right = "20px";
+        }
+        if (corner === "bottom-left") {
+          fab.style.bottom = "20px";
+          fab.style.left = "20px";
+        }
+        if (corner === "top-right") {
+          fab.style.top = "20px";
+          fab.style.right = "20px";
+        }
+        if (corner === "top-left") {
+          fab.style.top = "20px";
+          fab.style.left = "20px";
+        }
+        panelOverlay.setAttribute("data-corner", corner);
+        if (!animate) {
+          requestAnimationFrame(() => {
+            fab.style.transition = "";
+          });
+        }
+      }
+
+      function nearestCorner(x, y) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const isRight = x > vw / 2;
+        const isBottom = y > vh / 2;
+        if (isBottom && isRight) return "bottom-right";
+        if (isBottom && !isRight) return "bottom-left";
+        if (!isBottom && isRight) return "top-right";
+        return "top-left";
+      }
+
+      function fabCenter() {
+        const r = fab.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+
+      fab.addEventListener("pointerdown", (e) => {
+        if (fab.setPointerCapture) {
+          try {
+            fab.setPointerCapture(e.pointerId);
+          } catch (err) {
+            /* no-op */
+          }
+        }
+        const rect = fab.getBoundingClientRect();
+        dragState = {
+          startX: e.clientX,
+          startY: e.clientY,
+          originLeft: rect.left,
+          originTop: rect.top,
+          moved: false,
+        };
+      });
+
+      fab.addEventListener("pointermove", (e) => {
+        if (!dragState) return;
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        if (!dragState.moved && Math.hypot(dx, dy) > 4) {
+          dragState.moved = true;
+          fab.classList.add("is-dragging");
+          fabTooltip.classList.remove("is-visible");
+        }
+        if (dragState.moved) {
+          const newLeft = dragState.originLeft + dx;
+          const newTop = dragState.originTop + dy;
+          fab.style.transition = "none";
+          fab.style.left = newLeft + "px";
+          fab.style.top = newTop + "px";
+          fab.style.right = "auto";
+          fab.style.bottom = "auto";
+        }
+      });
+
+      fab.addEventListener("pointerup", (e) => {
+        if (!dragState) return;
+        if (dragState.moved) {
+          fabHasDragged = true;
+          fab.classList.remove("is-dragging");
+          const center = fabCenter();
+          const corner = nearestCorner(center.x, center.y);
+          setFabCorner(corner, true);
+          markFabDragged();
+        }
+        dragState = null;
+      });
+
+      let fabDraggedBefore = false;
+      function markFabDragged() {
+        fabDraggedBefore = true;
+      }
+
+      fab.addEventListener("mouseenter", () => {
+        if (!fabDraggedBefore && !panelOverlay.classList.contains("is-open")) {
+          fabTooltip.classList.add("is-visible");
+          positionTooltip();
+        }
+      });
+
+      fab.addEventListener("mouseleave", () => {
+        fabTooltip.classList.remove("is-visible");
+      });
+
+      function positionTooltip() {
+        const r = fab.getBoundingClientRect();
+        fabTooltip.style.left = "";
+        fabTooltip.style.right = "";
+        fabTooltip.style.top = "";
+        fabTooltip.style.bottom = "";
+        if (fabCorner.includes("right")) {
+          fabTooltip.style.right = window.innerWidth - r.left + 10 + "px";
+        } else {
+          fabTooltip.style.left = r.right + 10 + "px";
+        }
+        if (fabCorner.includes("bottom")) {
+          fabTooltip.style.bottom = window.innerHeight - r.bottom + "px";
+        } else {
+          fabTooltip.style.top = r.top + "px";
+        }
+      }
+
+      // initialize default corner
+      setFabCorner("bottom-right", false);
+
+      // ===================== Restricted-page demo toggle =====================
+
+      let restrictedVisible = false;
+
+      function setRestrictedVisible(visible) {
+        restrictedVisible = visible;
+        restrictedCard.classList.toggle("is-visible", visible);
+        demoToggleBtn.textContent = visible
+          ? "Hide restricted page demo"
+          : "Simulate restricted page";
+      }
+
+      demoToggleBtn.addEventListener("click", () =>
+        setRestrictedVisible(!restrictedVisible),
+      );
+      restrictedDismiss.addEventListener("click", () =>
+        setRestrictedVisible(false),
+      );
+      restrictedLibraryLink.addEventListener("click", (e) =>
+        e.preventDefault(),
+      );
+
+      // ===================== Initial render =====================
+
+      renderSaveStrip();
+      renderGroupsList();
+    </script>
+  </body>
+</html>
