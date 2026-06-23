@@ -31,7 +31,7 @@
   "commands": {
     "open-quick-access": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Y"
+        "default": "Alt+Shift+R"
       },
       "description": "Open Reway quick access"
     }
@@ -54,7 +54,7 @@
     },
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["access-content-script.js"],
+      "js": ["access-content-script.bundle.js"],
       "run_at": "document_idle",
       "all_frames": false
     }

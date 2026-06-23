@@ -60,7 +60,7 @@ Reway fixes this by putting everything in one place with fast search and clear v
 
 ### Installation
 
-1. Clone the repo: `git clone https://github.com/mohamed-g-shoaib/reway.git`
+1. Clone the repo: `git clone https://github.com/mohamedgshoaib/reway.git`
 2. Install dependencies: `pnpm install`
 3. Environment: Copy `.env.example` to `.env.local` and add your Supabase keys.
 4. Database: Run `pnpm run db:push` to set up the tables.
