@@ -7,104 +7,485 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div class="shell" id="shell">
+    <div class="shell">
       <header class="header">
-        <img src="icons/icon48.png" alt="" class="logo" aria-hidden="true" />
-        <span class="header-title">Reway</span>
-        <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings" aria-expanded="false">
-          <svg class="ico-gear" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M8 1.75 9.04 3.07l1.7.3 1.29-.77 1.4 1.4-.77 1.29.3 1.7L14.25 8l-1.32 1.04-.3 1.7.77 1.29-1.4 1.4-1.29-.77-1.7.3L8 14.25l-1.04-1.32-1.7-.3-1.29.77-1.4-1.4.77-1.29-.3-1.7L1.75 8l1.32-1.04.3-1.7-.77-1.29 1.4-1.4 1.29.77 1.7-.3L8 1.75Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-            <circle cx="8" cy="8" r="2.15" stroke="currentColor" stroke-width="1.3"/>
+        <div class="header-main">
+          <div id="extension-logo" class="logo">
+            <img src="icons/icon48.png" alt="Reway" />
+          </div>
+          <div class="header-copy">
+            <h1 id="popup-header-title">Save to Reway</h1>
+            <p id="popup-header-subtitle">Pick the way you want to save.</p>
+          </div>
+        </div>
+        <button
+          id="settings-toggle"
+          class="ghost icon-button settings-button"
+          type="button"
+          aria-label="Open settings"
+          aria-expanded="false"
+          title="Settings"
+        >
+          <svg class="settings-icon-gear" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 1.75 9.04 3.07l1.7.3 1.29-.77 1.4 1.4-.77 1.29.3 1.7L14.25 8l-1.32 1.04-.3 1.7.77 1.29-1.4 1.4-1.29-.77-1.7.3L8 14.25l-1.04-1.32-1.7-.3-1.29.77-1.4-1.4.77-1.29-.3-1.7L1.75 8l1.32-1.04.3-1.7-.77-1.29 1.4-1.4 1.29.77 1.7-.3L8 1.75Z"
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linejoin="round"
+            />
+            <circle cx="8" cy="8" r="2.15" stroke="currentColor" stroke-width="1.3" />
           </svg>
-          <svg class="ico-close" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M4.25 4.25 11.75 11.75M11.75 4.25 4.25 11.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <svg class="settings-icon-close" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M4.25 4.25 11.75 11.75M11.75 4.25 4.25 11.75"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </header>
 
-      <main id="main-view">
-        <p id="notice" class="notice" hidden></p>
-
-        <div class="card save-card">
-          <input id="save-url" class="url-input" type="url" placeholder="Paste a URL to save" autocomplete="off" spellcheck="false" />
-          <div class="group-picker-wrap">
-            <button id="group-btn" class="group-btn" type="button" aria-expanded="false" aria-haspopup="listbox">
-              <span id="group-label">Loading groups…</span>
-              <span class="chevron" aria-hidden="true"></span>
-            </button>
-            <div id="group-menu" class="group-menu" role="listbox" hidden></div>
-          </div>
-          <div id="save-status" class="status"></div>
-          <button id="save-btn" class="save-cta" type="button" disabled>
-            <span class="cta-star" aria-hidden="true">✦</span>
-            <span id="save-label">Save</span>
+      <section id="main-section" class="card">
+        <!-- Tab Navigation -->
+        <div class="tabs" id="real-content" role="tablist" aria-label="Extension features">
+          <button
+            class="tab-button active"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tab-save"
+            id="tab-save-btn"
+            data-tab="save"
+          >
+            Save Page
+          </button>
+          <button
+            class="tab-button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tab-links"
+            id="tab-links-btn"
+            data-tab="links"
+          >
+            Save Links
+          </button>
+          <button
+            class="tab-button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="tab-session"
+            id="tab-session-btn"
+            data-tab="session"
+          >
+            Tab Session
           </button>
         </div>
 
-        <button id="library-btn" class="library-link" type="button">Manage library →</button>
-      </main>
+        <div id="startup-panel" class="inline-panel hidden" role="status" aria-live="polite">
+          <div class="inline-panel-copy">
+            <h2 id="startup-panel-title" class="inline-panel-title">Connect to Reway</h2>
+            <p id="startup-panel-message" class="inline-panel-message">
+              Log in to load your groups and start saving.
+            </p>
+          </div>
+          <div class="inline-panel-actions">
+            <button id="login-button" class="secondary hidden">Log in to Reway</button>
+            <button id="retry-startup" class="ghost hidden" type="button">Retry</button>
+          </div>
+        </div>
 
-      <div id="settings-view" class="settings-view" hidden>
-        <div class="card settings-card">
-          <div class="switch-list">
-            <label class="switch-field" for="fab-toggle">
-              <span class="switch-copy">
-                <span class="switch-title">Quick access button</span>
-                <span class="switch-note">Show Reway on regular web pages.</span>
-              </span>
-              <input id="fab-toggle" type="checkbox" role="switch" />
-            </label>
-            <label class="switch-field" for="x-toggle">
-              <span class="switch-copy">
-                <span class="switch-title">X bookmark capture</span>
-                <span class="switch-note">Auto-save new X bookmarks.</span>
-              </span>
-              <input id="x-toggle" type="checkbox" role="switch" />
-            </label>
+        <!-- Tab Content: Save Bookmark -->
+        <div
+          id="tab-save"
+          class="tab-content active"
+          role="tabpanel"
+          aria-labelledby="tab-save-btn"
+        >
+          <div id="page-meta-card" class="page-meta is-loading">
+            <img id="favicon" class="favicon" alt="" />
+            <div class="page-meta-content">
+              <div id="page-url" class="url"></div>
+              <div id="page-meta-status" class="meta-status">Fetching page details…</div>
+            </div>
           </div>
 
-          <div class="field" id="hidden-hosts-field">
-            <span class="field-label">Hidden from FAB</span>
+          <label class="field">
+            <span>Title</span>
+            <input id="title" type="text" placeholder="Edit the saved title" />
+          </label>
+
+          <label class="field field-secondary">
+            <span>Description</span>
+            <div class="scroll-surface-frame textarea-scroll-frame">
+              <textarea id="description" rows="2" placeholder="Optional summary"></textarea>
+            </div>
+          </label>
+
+          <div class="field">
+            <div class="field-header">
+              <div class="destination-toggle" id="save-destination-toggle">
+                <button
+                  type="button"
+                  class="destination-toggle-button active"
+                  data-flow="save"
+                  data-mode="existing"
+                  aria-pressed="true"
+                >
+                  Existing group
+                </button>
+                <button
+                  type="button"
+                  class="destination-toggle-button"
+                  data-flow="save"
+                  data-mode="new"
+                  aria-pressed="false"
+                >
+                  New group
+                </button>
+              </div>
+            </div>
+            <div id="save-existing-group-field">
+              <div class="select" id="save-group-select">
+                <button
+                  id="save-group-trigger"
+                  class="select-trigger"
+                  type="button"
+                  aria-expanded="false"
+                >
+                  <span id="save-group-label">Select a group</span>
+                  <span class="select-chevron" aria-hidden="true"></span>
+                </button>
+                <div id="save-group-menu" class="select-menu" role="listbox"></div>
+              </div>
+            </div>
+            <div id="save-new-group-field" class="hidden">
+              <div class="input-with-suffix">
+                <input
+                  id="save-group-name"
+                  type="text"
+                  placeholder="Name this group"
+                  maxlength="18"
+                />
+                <span id="save-group-char-count" class="input-suffix char-count">0/18</span>
+              </div>
+            </div>
+            <div id="status" class="status"></div>
+          </div>
+
+          <div class="actions">
+            <button id="save" class="primary">Save Page</button>
+          </div>
+        </div>
+
+        <!-- Tab Content: Save Links -->
+        <div
+          id="tab-links"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="tab-links-btn"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <label class="field">
+            <span>Add a link manually</span>
             <div class="inline-input">
-              <input id="host-input" type="text" placeholder="example.com" aria-label="Host to hide" />
-              <button id="add-host-btn" class="icon-btn" type="button" aria-label="Add host">
+              <input id="links-manual-url" type="text" placeholder="Paste a link" />
+              <button
+                id="add-manual-link"
+                class="secondary link-action-button icon-button"
+                type="button"
+                aria-label="Add link"
+                title="Add link"
+              >
                 <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path
+                    d="M8 3.25v9.5M3.25 8h9.5"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </button>
             </div>
-            <div id="host-list" class="host-list" role="list"></div>
-            <p id="host-empty" class="field-hint">No hidden hosts.</p>
+            <div id="manual-link-status" class="status"></div>
+          </label>
+          <div class="session-header">
+            <span id="links-count" class="session-count">Loading…</span>
+          </div>
+          <div id="grabbed-links-list" class="session-preview">
+            <!-- Empty state -->
+            <div id="links-empty" class="empty-state">
+              <p>No links saved yet</p>
+              <p class="hint">Paste links to build a group</p>
+            </div>
           </div>
 
-          <div id="settings-status" class="status"></div>
+          <div id="links-actions" class="link-grab-actions">
+            <div class="field">
+              <div class="field-header">
+                <div class="destination-toggle" id="links-destination-toggle">
+                  <button
+                    type="button"
+                    class="destination-toggle-button active"
+                    data-flow="links"
+                    data-mode="existing"
+                    aria-pressed="true"
+                  >
+                    Existing group
+                  </button>
+                  <button
+                    type="button"
+                    class="destination-toggle-button"
+                    data-flow="links"
+                    data-mode="new"
+                    aria-pressed="false"
+                  >
+                    New group
+                  </button>
+                </div>
+              </div>
+              <div id="links-existing-group-field">
+                <div class="select" id="links-group-select">
+                  <button
+                    id="links-group-trigger"
+                    class="select-trigger"
+                    type="button"
+                    aria-expanded="false"
+                  >
+                    <span id="links-group-label">Select a group</span>
+                    <span class="select-chevron" aria-hidden="true"></span>
+                  </button>
+                  <div id="links-group-menu" class="select-menu" role="listbox"></div>
+                </div>
+              </div>
+              <div id="links-new-group-field" class="hidden">
+                <div class="input-with-suffix">
+                  <input
+                    id="links-group-name"
+                    type="text"
+                    placeholder="Name this group"
+                    maxlength="18"
+                  />
+                  <span id="links-group-char-count" class="input-suffix char-count">0/18</span>
+                </div>
+              </div>
+              <div id="links-status" class="status"></div>
+            </div>
+            <div class="actions">
+              <button id="create-group-from-links" class="primary">Save Links</button>
+            </div>
+          </div>
         </div>
 
-        <div class="advanced-wrap">
-          <button id="advanced-toggle" class="advanced-toggle" type="button" aria-expanded="false" aria-controls="advanced-panel">
-            <span>Advanced</span>
-            <span class="chevron" aria-hidden="true"></span>
-          </button>
-          <div id="advanced-panel" hidden>
-            <div class="card adv-card">
+        <!-- Tab Content: Tab Session -->
+        <div
+          id="tab-session"
+          class="tab-content"
+          role="tabpanel"
+          aria-labelledby="tab-session-btn"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <div class="session-header">
+            <span id="tab-count" class="session-count">Loading…</span>
+          </div>
+
+          <div id="session-preview" class="session-preview">
+            <!-- Tab preview will be inserted here -->
+            <div id="session-empty" class="empty-state hidden">
+              <p>No tabs to save</p>
+              <p class="hint">Open some tabs to create a session</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-header">
+              <div class="destination-toggle" id="session-destination-toggle">
+                <button
+                  type="button"
+                  class="destination-toggle-button active"
+                  data-flow="session"
+                  data-mode="existing"
+                  aria-pressed="true"
+                >
+                  Existing group
+                </button>
+                <button
+                  type="button"
+                  class="destination-toggle-button"
+                  data-flow="session"
+                  data-mode="new"
+                  aria-pressed="false"
+                >
+                  New group
+                </button>
+              </div>
+            </div>
+            <div id="session-existing-group-field">
+              <div class="select" id="session-group-select">
+                <button
+                  id="session-group-trigger"
+                  class="select-trigger"
+                  type="button"
+                  aria-expanded="false"
+                >
+                  <span id="session-group-label">Select a group</span>
+                  <span class="select-chevron" aria-hidden="true"></span>
+                </button>
+                <div id="session-group-menu" class="select-menu" role="listbox"></div>
+              </div>
+            </div>
+            <div id="session-new-group-field" class="hidden">
+              <div class="input-with-suffix">
+                <input
+                  id="session-name"
+                  type="text"
+                  placeholder="Name this session"
+                  maxlength="18"
+                />
+                <span id="session-char-count" class="input-suffix char-count">0/18</span>
+              </div>
+            </div>
+            <div id="session-status" class="status"></div>
+          </div>
+
+          <div class="actions">
+            <button id="save-session" class="primary">Save Session</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="dev-mode-panel" class="dev-panel card">
+        <div class="settings-header">
+          <div>
+            <h2>Settings</h2>
+            <p>Adjust extension behavior and testing preferences.</p>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <section class="settings-group">
+            <button
+              id="general-settings-toggle"
+              class="section-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="general-settings-panel"
+            >
+              <span>General</span>
+              <span class="advanced-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div id="general-settings-panel" class="settings-group-panel hidden">
+              <p class="settings-group-copy">Control capture behavior across the extension.</p>
+
+              <label class="switch-field" for="x-auto-capture-toggle">
+                <span class="switch-copy">
+                  <span class="switch-title">Capture X bookmarks automatically</span>
+                  <span class="switch-note">
+                    Save new X bookmarks into your X Bookmarks group.
+                  </span>
+                </span>
+                <input id="x-auto-capture-toggle" type="checkbox" role="switch" />
+              </label>
+            </div>
+          </section>
+
+          <section id="quick-access-settings-group" class="settings-group">
+            <button
+              id="quick-access-settings-toggle"
+              class="section-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="quick-access-settings-panel"
+            >
+              <span>Quick Access</span>
+              <span class="advanced-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div id="quick-access-settings-panel" class="settings-group-panel hidden">
+              <p class="settings-group-copy">Control the floating FAB and where it stays hidden.</p>
+
+              <label class="switch-field" for="quick-access-toggle">
+                <span class="switch-copy">
+                  <span class="switch-title">Quick access button</span>
+                  <span class="switch-note">Show Reway on normal webpages.</span>
+                </span>
+                <input id="quick-access-toggle" type="checkbox" role="switch" />
+              </label>
+
               <div class="field">
-                <span class="field-label">Environment</span>
-                <div class="env-toggle" role="group" aria-label="Environment">
-                  <button id="env-prod" class="env-btn active" type="button">Production</button>
-                  <button id="env-local" class="env-btn" type="button">Local</button>
+                <span>Hidden hosts</span>
+                <div class="inline-input">
+                  <input
+                    id="hidden-host-input"
+                    type="text"
+                    placeholder="example.com"
+                    aria-label="Hidden host"
+                  />
+                  <button
+                    id="add-hidden-host"
+                    class="secondary link-action-button icon-button"
+                    type="button"
+                    aria-label="Add hidden host"
+                    title="Add hidden host"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path
+                        d="M8 3.25v9.5M3.25 8h9.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                <p class="field-hint">Use Local only when testing against a local app.</p>
+                <div id="hidden-host-list" class="hidden-host-list" role="list"></div>
+                <p id="hidden-host-empty" class="field-hint">No hidden hosts.</p>
               </div>
-              <div id="local-port-field" class="field" hidden>
-                <span class="field-label">Port</span>
-                <input id="local-port" type="number" placeholder="3000" min="1024" max="65535" />
+            </div>
+          </section>
+
+          <div id="access-settings-status" class="status"></div>
+        </div>
+
+        <div class="settings-advanced">
+          <button
+            id="advanced-settings-toggle"
+            class="advanced-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="advanced-settings-panel"
+          >
+            <span>Advanced</span>
+            <span class="advanced-chevron" aria-hidden="true"></span>
+          </button>
+
+          <div id="advanced-settings-panel" class="advanced-panel hidden">
+            <div class="field">
+              <span>Environment</span>
+              <div class="env-toggle" role="group" aria-label="Environment target">
+                <button id="env-prod" class="env-toggle-button active" type="button">
+                  Production
+                </button>
+                <button id="env-local" class="env-toggle-button" type="button">Local</button>
               </div>
-              <button id="apply-env-btn" class="secondary-btn" type="button">Apply &amp; reload</button>
+              <p class="field-hint">Use Local only when testing against a local Reway app.</p>
+            </div>
+
+            <label id="local-port-field" class="field hidden">
+              <span>Local Port</span>
+              <input id="local-port" type="number" placeholder="3000" />
+            </label>
+
+            <div class="actions settings-actions">
+              <button id="save-dev-settings" class="secondary">Apply Changes</button>
             </div>
           </div>
         </div>
       </div>
     </div>
+
     <script type="module" src="popup.js"></script>
   </body>
 </html>

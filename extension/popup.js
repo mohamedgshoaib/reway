@@ -1,416 +1,1193 @@
-import { apiFetch, getSettings } from "./js/api.js";
+import { apiFetch, getSettings } from "./js/api.js"
+import { MAX_NAME_LENGTH } from "./js/config.js"
+import { loadGrabbedLinks, createGroupFromLinks } from "./js/grabber.js"
+import { fetchPageMeta } from "./js/metadata.js"
+import { loadTabSession, saveTabSession } from "./js/sessions.js"
+import {
+  elements,
+  setStatus,
+  switchTab,
+  setLoading,
+  initScrollSurface,
+  refreshScrollSurface,
+} from "./js/ui.js"
 
-const GROUP_CACHE_TTL = 5 * 60 * 1000;
-const LAST_GROUP_KEY = "rewayAccessLastGroup";
+const destinationState = {
+  save: { mode: "existing" },
+  links: { mode: "existing" },
+  session: { mode: "existing" },
+}
 
-const state = {
-  groups: [],
-  groupsReady: false,
-  selectedGroupId: "",
-  selectedGroupName: "",
-  hiddenHosts: [],
-  settingsOpen: false,
-};
+const popupState = {
+  groups: "loading",
+  metadata: "loading",
+}
 
-let currentEnv = "prod";
+const groupSelects = {}
+const GROUP_CACHE_MAX_AGE_MS = 5 * 60 * 1000
 
-// ── Boot ─────────────────────────────────────────────────────────────────────
+function getNow() {
+  return Date.now()
+}
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabUrl = tab?.url || "";
-  const isHttpPage = tabUrl.startsWith("http://") || tabUrl.startsWith("https://");
+function isFreshTimestamp(timestamp) {
+  return Number.isFinite(timestamp) && getNow() - timestamp < GROUP_CACHE_MAX_AGE_MS
+}
 
-  if (isHttpPage) {
-    const { rewayAccessFabEnabled, rewayAccessFabHiddenHosts } =
-      await chrome.storage.local.get(["rewayAccessFabEnabled", "rewayAccessFabHiddenHosts"]);
-    const fabEnabled = rewayAccessFabEnabled !== false;
-    const hiddenHosts = Array.isArray(rewayAccessFabHiddenHosts) ? rewayAccessFabHiddenHosts : [];
-    let tabHost = "";
-    try { tabHost = new URL(tabUrl).hostname.toLowerCase(); } catch {}
-    const isHiddenHost = hiddenHosts.some((h) => h.toLowerCase() === tabHost);
+async function readCachedGroups() {
+  const { rewayGroups, rewayGroupsFetchedAt } = await chrome.storage.local.get([
+    "rewayGroups",
+    "rewayGroupsFetchedAt",
+  ])
 
-    if (fabEnabled && !isHiddenHost) {
-      try { await chrome.tabs.sendMessage(tab.id, { type: "rewayOpenFab" }); } catch {}
-      window.close();
-      return;
-    }
+  return {
+    groups: Array.isArray(rewayGroups) ? rewayGroups : [],
+    fetchedAt: typeof rewayGroupsFetchedAt === "number" ? rewayGroupsFetchedAt : null,
+  }
+}
 
-    // FAB disabled or hidden on this host — pre-fill URL and show popup
-    document.getElementById("save-url").value = tabUrl;
-    const noticeEl = document.getElementById("notice");
-    noticeEl.textContent = isHiddenHost
-      ? `Reway is hidden on ${tabHost}.`
-      : "The Reway button is disabled. You can still save here.";
-    noticeEl.hidden = false;
+async function clearGroupCache() {
+  await chrome.storage.local.remove(["rewayGroups", "rewayGroupsFetchedAt"])
+}
+
+function getFlowStatusTarget(flow) {
+  return flow === "save" ? elements.status : document.getElementById(`${flow}-status`)
+}
+
+function setPopupHeader(mode) {
+  const titleEl = document.getElementById("popup-header-title")
+  const subtitleEl = document.getElementById("popup-header-subtitle")
+  if (!titleEl || !subtitleEl) return
+
+  if (mode === "auth") {
+    titleEl.textContent = "Save to Reway"
+    subtitleEl.textContent = "Log in to sync groups and keep capture fast"
+    return
+  }
+
+  if (mode === "error") {
+    titleEl.textContent = "Save to Reway"
+    subtitleEl.textContent = "The popup is ready while Reway finishes reconnecting"
+    return
+  }
+
+  titleEl.textContent = "Save to Reway"
+  subtitleEl.textContent = "Pick the way you want to save."
+}
+
+function setButtonDisabled(button, disabled) {
+  if (!button) return
+  button.disabled = disabled
+}
+
+function getActionButtons() {
+  return {
+    save: elements.saveBookmarkBtn,
+    links: document.getElementById("create-group-from-links"),
+    session: document.getElementById("save-session"),
+  }
+}
+
+function syncActionAvailability() {
+  const buttons = getActionButtons()
+  const groupsReady = popupState.groups === "ready"
+
+  Object.keys(destinationState).forEach((flow) => {
+    const button = buttons[flow]
+    if (!button) return
+
+    const requiresReadyGroups = !groupsReady
+    setButtonDisabled(button, requiresReadyGroups)
+  })
+}
+
+function updateStartupPanel() {
+  const panel = document.getElementById("startup-panel")
+  const title = document.getElementById("startup-panel-title")
+  const message = document.getElementById("startup-panel-message")
+  const loginButton = document.getElementById("login-button")
+  const retryButton = document.getElementById("retry-startup")
+
+  if (!panel || !title || !message || !loginButton || !retryButton) return
+
+  if (popupState.groups === "auth_required") {
+    panel.classList.remove("hidden")
+    title.textContent = "Connect to Reway"
+    message.textContent = "Log in to load your groups and start saving."
+    loginButton.classList.remove("hidden")
+    retryButton.classList.add("hidden")
+    setPopupHeader("auth")
+    return
+  }
+
+  if (popupState.groups === "error") {
+    panel.classList.remove("hidden")
+    title.textContent = "Groups are taking longer than expected"
+    message.textContent = "You can keep preparing your save while Reway reconnects."
+    loginButton.classList.add("hidden")
+    retryButton.classList.remove("hidden")
+    setPopupHeader("error")
+    return
+  }
+
+  panel.classList.add("hidden")
+  loginButton.classList.add("hidden")
+  retryButton.classList.add("hidden")
+  setPopupHeader("main")
+}
+
+function setSettingsPanelOpen(isOpen) {
+  document.querySelector(".shell")?.classList.toggle("settings-open", isOpen)
+  elements.devPanel?.classList.toggle("open", isOpen)
+  elements.settingsToggle?.setAttribute("aria-expanded", String(isOpen))
+  elements.settingsToggle?.setAttribute("aria-label", isOpen ? "Close settings" : "Open settings")
+  elements.settingsToggle?.setAttribute("title", isOpen ? "Close settings" : "Settings")
+}
+
+function setAdvancedSettingsOpen(isOpen) {
+  elements.advancedSettingsToggle?.setAttribute("aria-expanded", String(isOpen))
+  elements.advancedSettingsPanel?.classList.toggle("hidden", !isOpen)
+}
+
+function setSettingsSectionOpen(toggle, panel, isOpen) {
+  toggle?.setAttribute("aria-expanded", String(isOpen))
+  panel?.classList.toggle("hidden", !isOpen)
+}
+
+function setGroupUiState(flow, state, message = "") {
+  const select = groupSelects[flow]
+  const trigger = document.getElementById(`${flow}-group-trigger`)
+  const statusTarget = getFlowStatusTarget(flow)
+  const existingToggle = document.querySelector(
+    `.destination-toggle-button[data-flow="${flow}"][data-mode="existing"]`,
+  )
+  const newToggle = document.querySelector(
+    `.destination-toggle-button[data-flow="${flow}"][data-mode="new"]`,
+  )
+
+  let placeholder = flow === "save" ? "No group" : "Select a group"
+  let disabled = false
+
+  if (state === "loading") {
+    placeholder = "Loading groups…"
+    disabled = true
+  } else if (state === "auth_required") {
+    placeholder = "Log in to load groups"
+    disabled = true
+  } else if (state === "error") {
+    placeholder = "Couldn’t load groups"
+    disabled = true
+  }
+
+  select?.setDisabled(disabled)
+  select?.setPlaceholder(placeholder)
+  trigger?.setAttribute("aria-busy", String(state === "loading"))
+  trigger?.setAttribute("data-loading", String(state === "loading"))
+
+  if (existingToggle) {
+    existingToggle.disabled = state !== "ready"
+  }
+
+  if (newToggle) {
+    newToggle.disabled = state !== "ready"
+  }
+
+  setStatus(message, message ? "error" : "", statusTarget)
+}
+
+function applyGroupsState(state) {
+  popupState.groups = state
+
+  if (state === "loading") {
+    ;["save", "links", "session"].forEach((flow) => setGroupUiState(flow, state))
+  } else if (state === "auth_required") {
+    ;["save", "links", "session"].forEach((flow) =>
+      setGroupUiState(flow, state, "Log in to choose a group and save."),
+    )
+  } else if (state === "error") {
+    ;["save", "links", "session"].forEach((flow) =>
+      setGroupUiState(flow, state, "Couldn’t load groups right now. Try again."),
+    )
   } else {
-    const noticeEl = document.getElementById("notice");
-    noticeEl.textContent = "Reway can't access this page type.";
-    noticeEl.hidden = false;
+    ;["save", "links", "session"].forEach((flow) => setGroupUiState(flow, state))
   }
 
-  bindEvents();
-  void hydrateGroups();
-  void hydrateAccessSettings();
-  void hydrateEnvironment();
+  updateStartupPanel()
+  syncActionAvailability()
+}
 
-  document.getElementById("shell").style.opacity = "1";
-  if (!isHttpPage) document.getElementById("save-url").focus();
-});
+function setDestinationMode(flow, mode) {
+  destinationState[flow].mode = mode
 
-// ── Events ────────────────────────────────────────────────────────────────────
+  document.querySelectorAll(`.destination-toggle-button[data-flow="${flow}"]`).forEach((button) => {
+    const isActive = button.dataset.mode === mode
+    button.classList.toggle("active", isActive)
+    button.setAttribute("aria-pressed", String(isActive))
+  })
 
-function bindEvents() {
-  document.getElementById("settings-btn").addEventListener("click", toggleSettings);
+  const existingField = document.getElementById(`${flow}-existing-group-field`)
+  const newField = document.getElementById(`${flow}-new-group-field`)
 
-  const groupBtn = document.getElementById("group-btn");
-  const groupMenu = document.getElementById("group-menu");
-  groupBtn.addEventListener("click", () => {
-    if (groupMenu.hidden) openGroupMenu();
-    else closeGroupMenu();
-  });
-  document.addEventListener("click", (e) => {
-    if (!groupBtn.contains(e.target) && !groupMenu.contains(e.target)) closeGroupMenu();
-  });
+  existingField?.classList.toggle("hidden", mode !== "existing")
+  newField?.classList.toggle("hidden", mode !== "new")
 
-  document.getElementById("save-url").addEventListener("input", updateSaveButton);
-  document.getElementById("save-url").addEventListener("paste", () => setTimeout(updateSaveButton, 0));
-  document.getElementById("save-btn").addEventListener("click", handleSave);
+  if (mode !== "existing") {
+    groupSelects[flow]?.close()
+  }
 
-  document.getElementById("library-btn").addEventListener("click", async () => {
-    const { baseUrl } = await getSettings();
-    chrome.tabs.create({ url: baseUrl });
-  });
+  setStatus("", "", getFlowStatusTarget(flow))
 
-  document.getElementById("fab-toggle").addEventListener("change", () => persistSettings({ silent: true }));
-  document.getElementById("x-toggle").addEventListener("change", () => persistSettings({ silent: true }));
+  if (popupState.groups !== "ready" && mode === "existing") {
+    const stateMessage =
+      popupState.groups === "auth_required"
+        ? "Log in to choose a group and save."
+        : popupState.groups === "error"
+          ? "Couldn’t load groups right now. Try again."
+          : ""
+    setStatus(
+      stateMessage,
+      popupState.groups === "loading" ? "" : "error",
+      getFlowStatusTarget(flow),
+    )
+  }
 
-  document.getElementById("add-host-btn").addEventListener("click", addHiddenHost);
-  document.getElementById("host-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); addHiddenHost(); }
-  });
+  syncActionAvailability()
+}
 
-  const advancedToggle = document.getElementById("advanced-toggle");
-  advancedToggle.addEventListener("click", () => {
-    const open = advancedToggle.getAttribute("aria-expanded") === "true";
-    advancedToggle.setAttribute("aria-expanded", String(!open));
-    document.getElementById("advanced-panel").hidden = open;
-  });
+function createGroupSelect(flow) {
+  const trigger = document.getElementById(`${flow}-group-trigger`)
+  const label = document.getElementById(`${flow}-group-label`)
+  const menu = document.getElementById(`${flow}-group-menu`)
+  const container = trigger?.closest(".select")
+  const defaultPlaceholder = flow === "save" ? "No group" : "Select a group"
 
-  document.getElementById("env-prod").addEventListener("click", () => switchEnv("prod"));
-  document.getElementById("env-local").addEventListener("click", () => switchEnv("local"));
-  document.getElementById("apply-env-btn").addEventListener("click", applyEnvironment);
+  if (!trigger || !label || !menu || !container) return null
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      if (!document.getElementById("group-menu").hidden) closeGroupMenu();
-      else if (state.settingsOpen) toggleSettings();
+  let options = []
+  let selectedId = ""
+  let disabled = false
+  let placeholder = defaultPlaceholder
+
+  const createCheckIcon = () => {
+    const svgNs = "http://www.w3.org/2000/svg"
+    const svg = document.createElementNS(svgNs, "svg")
+    svg.setAttribute("viewBox", "0 0 16 16")
+    svg.setAttribute("fill", "none")
+    svg.setAttribute("aria-hidden", "true")
+
+    const path = document.createElementNS(svgNs, "path")
+    path.setAttribute("d", "M3.75 8.25 6.6 11.1 12.25 5.45")
+    path.setAttribute("stroke", "currentColor")
+    path.setAttribute("stroke-width", "1.85")
+    path.setAttribute("stroke-linecap", "round")
+    path.setAttribute("stroke-linejoin", "round")
+
+    svg.appendChild(path)
+    return svg
+  }
+
+  const updateLabel = () => {
+    const selected = options.find((option) => option.id === selectedId)
+    label.textContent = selected?.name || placeholder
+  }
+
+  const renderOptions = () => {
+    menu.replaceChildren()
+
+    options.forEach((option, index) => {
+      const button = document.createElement("button")
+      button.type = "button"
+      button.className = "select-option"
+      button.setAttribute("role", "option")
+      button.setAttribute("tabindex", "-1")
+      button.dataset.index = String(index)
+      button.dataset.groupId = option.id
+      const isSelected = option.id === selectedId
+      button.setAttribute("aria-selected", String(isSelected))
+      button.dataset.selected = String(isSelected)
+
+      if (isSelected) {
+        button.classList.add("active")
+      }
+
+      const text = document.createElement("span")
+      text.className = "select-option-text"
+      text.textContent = option.name
+
+      const check = document.createElement("span")
+      check.className = "select-option-check"
+      check.appendChild(createCheckIcon())
+
+      button.appendChild(text)
+      button.appendChild(check)
+
+      button.addEventListener("click", () => {
+        selectedId = option.id
+        updateLabel()
+        renderOptions()
+        close()
+        trigger.focus()
+      })
+
+      menu.appendChild(button)
+    })
+
+    refreshScrollSurface(menu)
+  }
+
+  const close = () => {
+    container.classList.remove("open")
+    trigger.setAttribute("aria-expanded", "false")
+  }
+
+  const focusSelectedOrFirst = () => {
+    const activeOption =
+      menu.querySelector(".select-option.active") || menu.querySelector(".select-option")
+    activeOption?.focus()
+  }
+
+  const open = () => {
+    if (disabled || options.length === 0) return
+    container.classList.add("open")
+    trigger.setAttribute("aria-expanded", "true")
+    refreshScrollSurface(menu)
+    focusSelectedOrFirst()
+  }
+
+  const toggle = () => {
+    if (disabled) return
+
+    if (container.classList.contains("open")) {
+      close()
+      return
     }
-  });
-}
 
-// ── Settings panel ────────────────────────────────────────────────────────────
-
-function toggleSettings() {
-  state.settingsOpen = !state.settingsOpen;
-  const shell = document.getElementById("shell");
-  shell.toggleAttribute("data-settings-open", state.settingsOpen);
-  document.getElementById("settings-btn").setAttribute("aria-expanded", String(state.settingsOpen));
-  document.getElementById("main-view").hidden = state.settingsOpen;
-  document.getElementById("settings-view").hidden = !state.settingsOpen;
-}
-
-// ── Group picker ──────────────────────────────────────────────────────────────
-
-function openGroupMenu() {
-  if (!state.groups.length) return;
-  const groupMenu = document.getElementById("group-menu");
-  groupMenu.hidden = false;
-  document.getElementById("group-btn").setAttribute("aria-expanded", "true");
-  groupMenu.querySelector("[aria-selected='true']")?.focus();
-}
-
-function closeGroupMenu() {
-  document.getElementById("group-menu").hidden = true;
-  document.getElementById("group-btn").setAttribute("aria-expanded", "false");
-}
-
-function renderGroupMenu() {
-  const menu = document.getElementById("group-menu");
-  menu.innerHTML = "";
-  state.groups.forEach((g) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "group-option";
-    btn.setAttribute("role", "option");
-    btn.setAttribute("aria-selected", String(g.id === state.selectedGroupId));
-    btn.dataset.groupId = g.id;
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "group-option-name";
-    nameSpan.textContent = g.name;
-    const checkSpan = document.createElement("span");
-    checkSpan.className = "group-option-check";
-    checkSpan.setAttribute("aria-hidden", "true");
-    checkSpan.textContent = "✓";
-    btn.append(nameSpan, checkSpan);
-    btn.addEventListener("click", () => {
-      selectGroup(g.id, g.name);
-      closeGroupMenu();
-      document.getElementById("group-btn").focus();
-    });
-    menu.appendChild(btn);
-  });
-}
-
-function selectGroup(id, name) {
-  state.selectedGroupId = id;
-  state.selectedGroupName = name;
-  document.getElementById("group-label").textContent = name;
-  void chrome.storage.local.set({ [LAST_GROUP_KEY]: id });
-  updateSaveButton();
-}
-
-// ── Save ──────────────────────────────────────────────────────────────────────
-
-function isValidHttpUrl(str) {
-  try {
-    const url = new URL(str);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch { return false; }
-}
-
-function updateSaveButton() {
-  const url = document.getElementById("save-url").value.trim();
-  const valid = isValidHttpUrl(url);
-  const saveBtn = document.getElementById("save-btn");
-  const saveLabel = document.getElementById("save-label");
-  saveBtn.disabled = !valid || !state.groupsReady;
-  if (valid && state.selectedGroupName) {
-    saveLabel.textContent = `Save to ${state.selectedGroupName}`;
-  } else {
-    saveLabel.textContent = "Save";
+    Object.values(groupSelects).forEach((select) => select?.close())
+    open()
   }
-}
 
-async function handleSave() {
-  const url = document.getElementById("save-url").value.trim();
-  if (!isValidHttpUrl(url)) return;
+  trigger.addEventListener("click", toggle)
+  trigger.addEventListener("keydown", (event) => {
+    if (disabled) return
 
-  const saveBtn = document.getElementById("save-btn");
-  const saveStatus = document.getElementById("save-status");
-  saveBtn.disabled = true;
-  setStatus(saveStatus, "", "");
-
-  try {
-    const data = await apiFetch("/api/extension/bookmarks", {
-      method: "POST",
-      body: JSON.stringify({
-        url,
-        title: "",
-        description: "",
-        faviconUrl: null,
-        groupId: state.selectedGroupId || null,
-      }),
-    });
-
-    if (data?.bookmark) void broadcastBookmark(data.bookmark);
-
-    saveBtn.classList.add("is-success");
-    document.getElementById("save-label").textContent = "Saved ✓";
-    document.querySelector(".cta-star").style.display = "none";
-    setTimeout(() => window.close(), 900);
-  } catch (error) {
-    saveBtn.disabled = false;
-    if (error?.status === 401) {
-      setStatus(saveStatus, "Sign in to Reway to save.", "error");
-    } else if (error?.status === 409) {
-      setStatus(saveStatus, "Already saved in this group.", "error");
-    } else {
-      setStatus(saveStatus, "Save failed. Try again.", "error");
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      toggle()
     }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      if (!container.classList.contains("open")) {
+        open()
+      } else {
+        const first = menu.querySelector(".select-option")
+        first?.focus()
+      }
+    }
+  })
+
+  container.addEventListener("keydown", (event) => {
+    const optionElements = Array.from(menu.querySelectorAll(".select-option"))
+    const currentIndex = optionElements.indexOf(document.activeElement)
+
+    if (event.key === "Escape") {
+      close()
+      trigger.focus()
+      return
+    }
+
+    if (event.key === "ArrowDown" && optionElements.length > 0) {
+      event.preventDefault()
+      const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % optionElements.length
+      optionElements[nextIndex]?.focus()
+    }
+
+    if (event.key === "ArrowUp" && optionElements.length > 0) {
+      event.preventDefault()
+      const prevIndex =
+        currentIndex < 0
+          ? optionElements.length - 1
+          : (currentIndex - 1 + optionElements.length) % optionElements.length
+      optionElements[prevIndex]?.focus()
+    }
+  })
+
+  updateLabel()
+
+  return {
+    close,
+    setDisabled(nextDisabled) {
+      disabled = nextDisabled
+      trigger.disabled = nextDisabled
+      if (nextDisabled) {
+        close()
+      }
+    },
+    setPlaceholder(nextPlaceholder) {
+      placeholder = nextPlaceholder || defaultPlaceholder
+      updateLabel()
+    },
+    setOptions(groups) {
+      options =
+        flow === "save"
+          ? [
+              { id: "", name: "No group" },
+              ...groups.map((group) => ({ id: group.id, name: group.name })),
+            ]
+          : groups.map((group) => ({ id: group.id, name: group.name }))
+      if (!options.some((option) => option.id === selectedId)) {
+        selectedId = ""
+      }
+      updateLabel()
+      renderOptions()
+    },
+    getValue() {
+      return selectedId
+    },
   }
+}
+
+function setupGroupSelects() {
+  ;["save", "links", "session"].forEach((flow) => {
+    groupSelects[flow] = createGroupSelect(flow)
+  })
+
+  document.addEventListener("click", (event) => {
+    Object.entries(groupSelects).forEach(([flow, select]) => {
+      const container = document.getElementById(`${flow}-group-trigger`)?.closest(".select")
+      if (container && !container.contains(event.target)) {
+        select?.close()
+      }
+    })
+  })
+}
+
+function renderGroups(groups) {
+  Object.values(groupSelects).forEach((select) => select?.setOptions(groups))
+}
+
+async function createGroup(name) {
+  const data = await apiFetch("/api/extension/groups", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  })
+
+  return data.group?.id || null
 }
 
 async function broadcastBookmark(bookmark) {
-  const settings = await getSettings();
-  const tabs = await chrome.tabs.query({ url: `${settings.baseUrl}/*` });
-  tabs.forEach((tab) => {
-    chrome.tabs.sendMessage(tab.id, { type: "broadcastBookmark", bookmark }).catch(() => {});
-  });
+  const settings = await getSettings()
+  const dashboardTabs = await chrome.tabs.query({
+    url: `${settings.baseUrl}/*`,
+  })
+
+  dashboardTabs.forEach((tab) => {
+    chrome.tabs
+      .sendMessage(tab.id, {
+        type: "broadcastBookmark",
+        bookmark,
+      })
+      .catch(() => {})
+  })
 }
 
-// ── Groups loading ────────────────────────────────────────────────────────────
+async function saveBookmark() {
+  const statusTarget = elements.status
+  const mode = destinationState.save.mode
+  const existingGroupId = groupSelects.save?.getValue() || ""
+  const newGroupName = document.getElementById("save-group-name")?.value.trim() || ""
 
-async function hydrateGroups() {
-  const keys = ["rewayGroups", "rewayGroupsFetchedAt", LAST_GROUP_KEY];
-  const stored = await chrome.storage.local.get(keys);
-  const cached = Array.isArray(stored.rewayGroups) ? stored.rewayGroups : [];
-  const fetchedAt = typeof stored.rewayGroupsFetchedAt === "number" ? stored.rewayGroupsFetchedAt : 0;
-  const freshEnough = Date.now() - fetchedAt < GROUP_CACHE_TTL;
-  const lastGroup = stored[LAST_GROUP_KEY] || null;
+  if (mode === "existing" && popupState.groups !== "ready") {
+    setStatus("Wait for your groups to finish loading.", "error", statusTarget)
+    return
+  }
 
-  if (cached.length) applyGroups(cached, lastGroup);
+  if (mode === "new" && popupState.groups !== "ready") {
+    setStatus("Finish reconnecting to Reway before creating a group.", "error", statusTarget)
+    return
+  }
 
-  if (freshEnough && cached.length) return;
+  if (mode === "new" && !newGroupName) {
+    setStatus("Enter a new group name", "error", statusTarget)
+    return
+  }
+
+  setLoading(elements.saveBookmarkBtn, true, "Saving")
 
   try {
-    const data = await apiFetch("/api/extension/groups");
-    const groups = data.groups || [];
-    await chrome.storage.local.set({ rewayGroups: groups, rewayGroupsFetchedAt: Date.now() });
-    applyGroups(groups, lastGroup);
-  } catch (error) {
-    if (!cached.length) {
-      const groupLabel = document.getElementById("group-label");
-      groupLabel.textContent = error?.status === 401 ? "Sign in to load groups" : "Couldn't load groups";
-      if (error?.status === 401) {
-        setStatus(document.getElementById("save-status"), "Sign in to Reway to save bookmarks.", "error");
+    let groupId = null
+
+    if (mode === "existing") {
+      groupId = existingGroupId
+    } else if (mode === "new") {
+      try {
+        groupId = await createGroup(newGroupName)
+      } catch (error) {
+        setLoading(elements.saveBookmarkBtn, false, "Save Page")
+
+        if (error?.status === 409) {
+          setStatus(
+            "A group with this name already exists. Switch to Existing group.",
+            "error",
+            statusTarget,
+          )
+          return
+        }
+
+        if (error?.status === 401) {
+          await handleAuthRequired({
+            flow: "save",
+            message: "Log in to create a group and save.",
+          })
+          return
+        }
+
+        setStatus("Failed to create group", "error", statusTarget)
+        return
       }
+    }
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    const payload = {
+      url: tab.url,
+      title: elements.title.value.trim(),
+      description: elements.description.value.trim(),
+      groupId,
+    }
+
+    const data = await apiFetch("/api/extension/bookmarks", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+
+    if (data?.bookmark) {
+      await broadcastBookmark(data.bookmark)
+    }
+
+    elements.saveBookmarkBtn.classList.add("success")
+    setLoading(elements.saveBookmarkBtn, false, "Saved")
+    setTimeout(() => window.close(), 800)
+  } catch (error) {
+    setLoading(elements.saveBookmarkBtn, false, "Save Page")
+
+    if (error?.status === 401) {
+      await handleAuthRequired({
+        flow: "save",
+        message: "Log in to keep saving to Reway.",
+      })
+      return
+    }
+
+    if (error?.status === 400) {
+      await handleInvalidGroup({
+        flow: "save",
+        message: "That group is no longer available. Refreshing your groups now.",
+      })
+      return
+    }
+
+    if (error?.status === 409) {
+      setStatus(
+        mode === "existing"
+          ? "This bookmark couldn't be saved because of a conflicting record in this group"
+          : "This bookmark couldn't be saved because of a conflicting record",
+        "error",
+        statusTarget,
+      )
+      return
+    }
+
+    setStatus("Failed to save", "error", statusTarget)
+  }
+}
+
+let currentDevEnv = "prod"
+const accessSettingsDraft = {
+  enabled: true,
+  xAutoCaptureEnabled: true,
+  hiddenHosts: [],
+  editingIndex: null,
+}
+
+let accessSettingsSaveVersion = 0
+
+function switchEnv(env) {
+  currentDevEnv = env
+  const isProd = env === "prod"
+  elements.envProd?.classList.toggle("active", env === "prod")
+  elements.envLocal?.classList.toggle("active", env === "local")
+  elements.localPortField.classList.toggle("hidden", isProd)
+}
+
+async function handleSaveDevSettings() {
+  if (currentDevEnv === "prod") {
+    await chrome.storage.local.remove("rewayBaseUrl")
+  } else {
+    const port = elements.localPort.value.trim() || "3000"
+    await chrome.storage.local.set({
+      rewayBaseUrl: `http://localhost:${port}`,
+    })
+  }
+  window.location.reload()
+}
+
+async function hydrateEnvironmentControls() {
+  const { rewayBaseUrl } = await chrome.storage.local.get("rewayBaseUrl")
+
+  if (rewayBaseUrl && rewayBaseUrl.includes("localhost")) {
+    switchEnv("local")
+    try {
+      elements.localPort.value = new URL(rewayBaseUrl).port || "3000"
+    } catch {
+      elements.localPort.value = "3000"
+    }
+    return
+  }
+
+  switchEnv("prod")
+}
+
+function normalizeHostInput(value) {
+  const raw = String(value || "").trim()
+  if (!raw) return null
+
+  try {
+    const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`)
+    const hostname = parsed.hostname.trim().toLowerCase().replace(/\.$/, "")
+    if (!hostname || hostname.includes(" ")) return null
+    return hostname
+  } catch {
+    return null
+  }
+}
+
+function setAccessSettingsStatus(message, tone = "") {
+  setStatus(message, tone, elements.accessSettingsStatus)
+}
+
+function updateAccessSettingsControls() {
+  const quickAccessEnabled = accessSettingsDraft.enabled
+
+  elements.quickAccessSettingsGroup?.classList.toggle("is-disabled", !quickAccessEnabled)
+
+  if (elements.hiddenHostInput) {
+    elements.hiddenHostInput.disabled = !quickAccessEnabled
+  }
+
+  if (elements.addHiddenHost) {
+    elements.addHiddenHost.disabled = !quickAccessEnabled
+  }
+
+  elements.hiddenHostList?.querySelectorAll("button").forEach((button) => {
+    button.disabled = !quickAccessEnabled
+  })
+}
+
+async function persistAccessSettings({ silent = false } = {}) {
+  const saveVersion = ++accessSettingsSaveVersion
+  const hiddenHosts = Array.from(new Set(accessSettingsDraft.hiddenHosts)).sort()
+
+  try {
+    await chrome.storage.local.set({
+      rewayAccessFabEnabled: accessSettingsDraft.enabled,
+      rewayXAutoCaptureEnabled: accessSettingsDraft.xAutoCaptureEnabled,
+      rewayAccessFabHiddenHosts: hiddenHosts,
+    })
+
+    if (saveVersion !== accessSettingsSaveVersion) return
+    accessSettingsDraft.hiddenHosts = hiddenHosts
+
+    if (!silent) {
+      setAccessSettingsStatus("Saved. Refresh pages to apply.", "success")
+    } else if (elements.accessSettingsStatus?.dataset.tone !== "error") {
+      setAccessSettingsStatus("")
+    }
+  } catch {
+    if (saveVersion !== accessSettingsSaveVersion) return
+    setAccessSettingsStatus("Couldn’t save settings right now.", "error")
+  }
+}
+
+function renderHiddenHosts() {
+  if (!elements.hiddenHostList || !elements.hiddenHostEmpty) return
+
+  elements.hiddenHostList.replaceChildren()
+  elements.hiddenHostEmpty.classList.toggle("hidden", accessSettingsDraft.hiddenHosts.length > 0)
+
+  accessSettingsDraft.hiddenHosts.forEach((host, index) => {
+    const row = document.createElement("div")
+    row.className = "hidden-host-row"
+    row.setAttribute("role", "listitem")
+
+    const name = document.createElement("span")
+    name.className = "hidden-host-name"
+    name.textContent = host
+
+    const actions = document.createElement("span")
+    actions.className = "hidden-host-actions"
+
+    const edit = document.createElement("button")
+    edit.type = "button"
+    edit.className = "ghost icon-button tiny-icon-button"
+    edit.setAttribute("aria-label", `Edit ${host}`)
+    edit.title = "Edit"
+    edit.innerHTML = `<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.25 11.75 3 13l1.25-.25 7.45-7.45a1.45 1.45 0 0 0-2.05-2.05L3.25 9.65v2.1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>`
+    edit.addEventListener("click", () => {
+      accessSettingsDraft.editingIndex = index
+      elements.hiddenHostInput.value = host
+      elements.hiddenHostInput.focus()
+      elements.addHiddenHost.title = "Save hidden host"
+      elements.addHiddenHost.setAttribute("aria-label", "Save hidden host")
+      setAccessSettingsStatus("")
+    })
+
+    const remove = document.createElement("button")
+    remove.type = "button"
+    remove.className = "ghost icon-button tiny-icon-button"
+    remove.setAttribute("aria-label", `Remove ${host}`)
+    remove.title = "Remove"
+    remove.innerHTML = `<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.25 4.25 11.75 11.75M11.75 4.25 4.25 11.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
+    remove.addEventListener("click", () => {
+      accessSettingsDraft.hiddenHosts = accessSettingsDraft.hiddenHosts.filter(
+        (_, i) => i !== index,
+      )
+      if (accessSettingsDraft.editingIndex === index) {
+        accessSettingsDraft.editingIndex = null
+        elements.hiddenHostInput.value = ""
+        elements.addHiddenHost.title = "Add hidden host"
+        elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
+      } else if (
+        accessSettingsDraft.editingIndex !== null &&
+        accessSettingsDraft.editingIndex > index
+      ) {
+        accessSettingsDraft.editingIndex -= 1
+      }
+      renderHiddenHosts()
+      void persistAccessSettings({ silent: true })
+    })
+
+    actions.append(edit, remove)
+    row.append(name, actions)
+    elements.hiddenHostList.append(row)
+  })
+
+  updateAccessSettingsControls()
+}
+
+function addOrUpdateHiddenHost() {
+  const host = normalizeHostInput(elements.hiddenHostInput?.value)
+  if (!host) {
+    setAccessSettingsStatus("Enter a valid host.", "error")
+    return
+  }
+
+  const existingIndex = accessSettingsDraft.hiddenHosts.indexOf(host)
+  if (existingIndex !== -1 && existingIndex !== accessSettingsDraft.editingIndex) {
+    setAccessSettingsStatus("Host is already hidden.", "error")
+    return
+  }
+
+  if (accessSettingsDraft.editingIndex !== null) {
+    accessSettingsDraft.hiddenHosts = accessSettingsDraft.hiddenHosts.map((item, index) =>
+      index === accessSettingsDraft.editingIndex ? host : item,
+    )
+  } else {
+    accessSettingsDraft.hiddenHosts = [...accessSettingsDraft.hiddenHosts, host]
+  }
+
+  accessSettingsDraft.hiddenHosts = [...accessSettingsDraft.hiddenHosts].sort()
+  accessSettingsDraft.editingIndex = null
+  elements.hiddenHostInput.value = ""
+  elements.addHiddenHost.title = "Add hidden host"
+  elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
+  setAccessSettingsStatus("")
+  renderHiddenHosts()
+  void persistAccessSettings({ silent: true })
+}
+
+async function hydrateAccessSettings() {
+  const { rewayAccessFabEnabled, rewayAccessFabHiddenHosts, rewayXAutoCaptureEnabled } =
+    await chrome.storage.local.get([
+    "rewayAccessFabEnabled",
+    "rewayAccessFabHiddenHosts",
+    "rewayXAutoCaptureEnabled",
+  ])
+  const hiddenHosts = Array.isArray(rewayAccessFabHiddenHosts)
+    ? rewayAccessFabHiddenHosts.flatMap((host) => normalizeHostInput(host) || [])
+    : []
+  const uniqueHosts = Array.from(new Set(hiddenHosts)).sort()
+
+  accessSettingsDraft.enabled = rewayAccessFabEnabled !== false
+  accessSettingsDraft.xAutoCaptureEnabled = rewayXAutoCaptureEnabled !== false
+  accessSettingsDraft.hiddenHosts = uniqueHosts
+  accessSettingsDraft.editingIndex = null
+
+  if (elements.accessToggle) {
+    elements.accessToggle.checked = accessSettingsDraft.enabled
+  }
+  if (elements.xAutoCaptureToggle) {
+    elements.xAutoCaptureToggle.checked = accessSettingsDraft.xAutoCaptureEnabled
+  }
+  if (elements.hiddenHostInput) {
+    elements.hiddenHostInput.value = ""
+  }
+
+  renderHiddenHosts()
+  updateAccessSettingsControls()
+  setAccessSettingsStatus("")
+}
+
+async function hydrateGroups() {
+  const cached = await readCachedGroups()
+  const hasCachedGroups = cached.groups.length > 0
+
+  if (hasCachedGroups) {
+    renderGroups(cached.groups)
+    applyGroupsState("ready")
+  } else {
+    applyGroupsState("loading")
+  }
+
+  const shouldShowLoadingState = !hasCachedGroups
+  const shouldSkipFetch = !hasCachedGroups && isFreshTimestamp(cached.fetchedAt)
+
+  if (shouldSkipFetch) {
+    return
+  }
+
+  if (shouldShowLoadingState) {
+    applyGroupsState("loading")
+  }
+
+  try {
+    const data = await apiFetch("/api/extension/groups")
+    const groups = data.groups || []
+    await chrome.storage.local.set({
+      rewayGroups: groups,
+      rewayGroupsFetchedAt: getNow(),
+    })
+    renderGroups(groups)
+    applyGroupsState("ready")
+  } catch (error) {
+    if (error?.status === 401) {
+      await clearGroupCache()
+      applyGroupsState("auth_required")
+      return
+    }
+
+    if (!hasCachedGroups) {
+      applyGroupsState("error")
     }
   }
 }
 
-function applyGroups(groups, lastGroupId) {
-  state.groups = groups;
-  state.groupsReady = true;
+async function handleAuthRequired(detail = {}) {
+  await clearGroupCache()
+  applyGroupsState("auth_required")
 
-  const preferred = groups.find((g) => g.id === lastGroupId) || groups[0];
-  if (preferred) {
-    state.selectedGroupId = preferred.id;
-    state.selectedGroupName = preferred.name;
-    document.getElementById("group-label").textContent = preferred.name;
-  } else {
-    state.selectedGroupId = "";
-    state.selectedGroupName = "";
-    document.getElementById("group-label").textContent = "No group";
+  if (detail.flow) {
+    setStatus(
+      detail.message || "Log in to keep saving to Reway.",
+      "error",
+      getFlowStatusTarget(detail.flow),
+    )
   }
-
-  renderGroupMenu();
-  updateSaveButton();
 }
 
-// ── Access settings ───────────────────────────────────────────────────────────
+async function handleInvalidGroup(detail = {}) {
+  await clearGroupCache()
+  applyGroupsState("loading")
+  void hydrateGroups()
 
-async function hydrateAccessSettings() {
-  const { rewayAccessFabEnabled, rewayXAutoCaptureEnabled, rewayAccessFabHiddenHosts } =
-    await chrome.storage.local.get([
-      "rewayAccessFabEnabled",
-      "rewayXAutoCaptureEnabled",
-      "rewayAccessFabHiddenHosts",
-    ]);
-
-  document.getElementById("fab-toggle").checked = rewayAccessFabEnabled !== false;
-  document.getElementById("x-toggle").checked = rewayXAutoCaptureEnabled !== false;
-
-  const hosts = Array.isArray(rewayAccessFabHiddenHosts)
-    ? rewayAccessFabHiddenHosts.flatMap((h) => normalizeHost(h) ? [normalizeHost(h)] : [])
-    : [];
-  state.hiddenHosts = [...new Set(hosts)].sort();
-  renderHiddenHosts();
+  if (detail.flow) {
+    setStatus(
+      detail.message || "That group is no longer available. Refreshing your groups now.",
+      "error",
+      getFlowStatusTarget(detail.flow),
+    )
+  }
 }
 
-async function persistSettings({ silent = false } = {}) {
+async function hydratePageMeta() {
+  const pageMetaCard = document.getElementById("page-meta-card")
+  const metaStatus = document.getElementById("page-meta-status")
+
   try {
-    await chrome.storage.local.set({
-      rewayAccessFabEnabled: document.getElementById("fab-toggle").checked,
-      rewayXAutoCaptureEnabled: document.getElementById("x-toggle").checked,
-      rewayAccessFabHiddenHosts: [...state.hiddenHosts],
-    });
-    if (!silent) setStatus(document.getElementById("settings-status"), "Saved. Refresh pages to apply.", "success");
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    if (!tab) {
+      popupState.metadata = "unavailable"
+      metaStatus?.classList.add("hidden")
+      pageMetaCard?.classList.remove("is-loading")
+      return
+    }
+
+    elements.pageUrl.textContent = tab.url || ""
+    elements.favicon.src = tab.favIconUrl || "icons/icon16.png"
+    elements.title.value = tab.title || ""
+
+    const meta = await fetchPageMeta(tab.id)
+    if (meta?.title) {
+      elements.title.value = meta.title
+    }
+    if (meta?.description) {
+      elements.description.value = meta.description
+      refreshScrollSurface(elements.description)
+    }
+
+    popupState.metadata = meta ? "ready" : "unavailable"
   } catch {
-    setStatus(document.getElementById("settings-status"), "Couldn't save settings.", "error");
+    popupState.metadata = "unavailable"
+  } finally {
+    pageMetaCard?.classList.remove("is-loading")
+    metaStatus?.classList.add("hidden")
   }
 }
 
-function addHiddenHost() {
-  const input = document.getElementById("host-input");
-  const host = normalizeHost(input.value);
-  const statusEl = document.getElementById("settings-status");
-  if (!host) { setStatus(statusEl, "Enter a valid hostname.", "error"); return; }
-  if (state.hiddenHosts.includes(host)) { setStatus(statusEl, "Already hidden.", "error"); return; }
-  state.hiddenHosts = [...state.hiddenHosts, host].sort();
-  input.value = "";
-  setStatus(statusEl, "", "");
-  renderHiddenHosts();
-  void persistSettings({ silent: true });
+function updateChars(input, countEl) {
+  if (!input || !countEl) return
+  const len = input.value.length
+  countEl.textContent = `${len}/${MAX_NAME_LENGTH}`
+  countEl.classList.toggle("error", len >= MAX_NAME_LENGTH)
 }
 
-function removeHiddenHost(host) {
-  state.hiddenHosts = state.hiddenHosts.filter((h) => h !== host);
-  renderHiddenHosts();
-  void persistSettings({ silent: true });
-}
+async function fetchManualLinkMetadata(url) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 1600)
 
-function renderHiddenHosts() {
-  const list = document.getElementById("host-list");
-  const empty = document.getElementById("host-empty");
-  list.innerHTML = "";
-  empty.hidden = state.hiddenHosts.length > 0;
-
-  state.hiddenHosts.forEach((host) => {
-    const row = document.createElement("div");
-    row.className = "host-row";
-    row.setAttribute("role", "listitem");
-
-    const name = document.createElement("span");
-    name.className = "host-name";
-    name.textContent = host;
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "host-remove";
-    btn.setAttribute("aria-label", `Remove ${host}`);
-    btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.25 4.25 11.75 11.75M11.75 4.25 4.25 11.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
-    btn.addEventListener("click", () => removeHiddenHost(host));
-
-    row.append(name, btn);
-    list.append(row);
-  });
-}
-
-// ── Environment ───────────────────────────────────────────────────────────────
-
-async function hydrateEnvironment() {
-  const { rewayBaseUrl } = await chrome.storage.local.get("rewayBaseUrl");
-  if (rewayBaseUrl?.includes("localhost")) {
-    switchEnv("local");
-    try { document.getElementById("local-port").value = new URL(rewayBaseUrl).port || "3000"; }
-    catch { document.getElementById("local-port").value = "3000"; }
-  } else {
-    switchEnv("prod");
-  }
-}
-
-function switchEnv(env) {
-  currentEnv = env;
-  document.getElementById("env-prod").classList.toggle("active", env === "prod");
-  document.getElementById("env-local").classList.toggle("active", env === "local");
-  document.getElementById("local-port-field").hidden = env !== "local";
-}
-
-async function applyEnvironment() {
-  if (currentEnv === "prod") {
-    await chrome.storage.local.remove("rewayBaseUrl");
-  } else {
-    const port = document.getElementById("local-port").value.trim() || "3000";
-    await chrome.storage.local.set({ rewayBaseUrl: `http://localhost:${port}` });
-  }
-  window.location.reload();
-}
-
-// ── Utilities ─────────────────────────────────────────────────────────────────
-
-function setStatus(el, message, tone) {
-  if (!el) return;
-  el.textContent = message;
-  el.dataset.tone = tone || "";
-}
-
-function normalizeHost(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
   try {
-    const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
-    const hostname = parsed.hostname.trim().toLowerCase().replace(/\.$/, "");
-    return hostname && !hostname.includes(" ") ? hostname : null;
-  } catch { return null; }
+    return await apiFetch(`/api/metadata?url=${encodeURIComponent(url)}`, {
+      method: "GET",
+      signal: controller.signal,
+    })
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
+
+function initializeShell() {
+  document.querySelector(".shell").style.opacity = "1"
+
+  setupGroupSelects()
+  document.querySelectorAll(".session-preview, .select-menu, #description").forEach((surface) => {
+    initScrollSurface(surface)
+  })
+  setDestinationMode("save", "existing")
+  setDestinationMode("links", "existing")
+  setDestinationMode("session", "existing")
+  applyGroupsState("loading")
+}
+
+function init() {
+  initializeShell()
+
+  void hydrateAccessSettings()
+  void hydrateEnvironmentControls()
+  void hydrateGroups()
+  void hydratePageMeta()
+}
+
+document.addEventListener("DOMContentLoaded", init)
+
+elements.saveBookmarkBtn?.addEventListener("click", saveBookmark)
+
+elements.description?.addEventListener("input", () => {
+  refreshScrollSurface(elements.description)
+})
+
+if (elements.loginButton) {
+  elements.loginButton.addEventListener("click", async () => {
+    const { baseUrl } = await getSettings()
+    chrome.tabs.create({ url: `${baseUrl}/login` })
+  })
+}
+
+document.getElementById("retry-startup")?.addEventListener("click", () => {
+  void hydrateGroups()
+})
+
+document.addEventListener("reway:auth-required", (event) => {
+  void handleAuthRequired(event.detail || {})
+})
+
+document.addEventListener("reway:invalid-group", (event) => {
+  void handleInvalidGroup(event.detail || {})
+})
+
+elements.settingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.devPanel?.classList.contains("open")
+  setSettingsPanelOpen(!isOpen)
+})
+elements.generalSettingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.generalSettingsToggle?.getAttribute("aria-expanded") === "true"
+  setSettingsSectionOpen(
+    elements.generalSettingsToggle,
+    document.getElementById("general-settings-panel"),
+    !isOpen,
+  )
+})
+elements.quickAccessSettingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.quickAccessSettingsToggle?.getAttribute("aria-expanded") === "true"
+  setSettingsSectionOpen(
+    elements.quickAccessSettingsToggle,
+    document.getElementById("quick-access-settings-panel"),
+    !isOpen,
+  )
+})
+elements.advancedSettingsToggle?.addEventListener("click", () => {
+  const isOpen = elements.advancedSettingsToggle?.getAttribute("aria-expanded") === "true"
+  setAdvancedSettingsOpen(!isOpen)
+})
+elements.envProd?.addEventListener("click", () => switchEnv("prod"))
+elements.envLocal?.addEventListener("click", () => switchEnv("local"))
+elements.saveDevSettings?.addEventListener("click", handleSaveDevSettings)
+
+elements.accessToggle?.addEventListener("change", () => {
+  accessSettingsDraft.enabled = elements.accessToggle.checked
+  setAccessSettingsStatus("")
+  updateAccessSettingsControls()
+  void persistAccessSettings({ silent: true })
+})
+elements.xAutoCaptureToggle?.addEventListener("change", () => {
+  accessSettingsDraft.xAutoCaptureEnabled = elements.xAutoCaptureToggle.checked
+  setAccessSettingsStatus("")
+  void persistAccessSettings({ silent: true })
+})
+elements.addHiddenHost?.addEventListener("click", addOrUpdateHiddenHost)
+elements.hiddenHostInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault()
+    addOrUpdateHiddenHost()
+  } else if (event.key === "Escape" && accessSettingsDraft.editingIndex !== null) {
+    accessSettingsDraft.editingIndex = null
+    elements.hiddenHostInput.value = ""
+    elements.addHiddenHost.title = "Add hidden host"
+    elements.addHiddenHost.setAttribute("aria-label", "Add hidden host")
+    setAccessSettingsStatus("")
+  }
+})
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && elements.devPanel?.classList.contains("open")) {
+    setSettingsPanelOpen(false)
+  }
+})
+
+document.querySelectorAll(".destination-toggle-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    setDestinationMode(button.dataset.flow, button.dataset.mode)
+  })
+})
+
+document.getElementById("create-group-from-links")?.addEventListener("click", () =>
+  createGroupFromLinks({
+    mode: destinationState.links.mode,
+    groupId: groupSelects.links?.getValue() || "",
+    groupName: document.getElementById("links-group-name")?.value.trim() || "",
+  }),
+)
+
+document.getElementById("save-session")?.addEventListener("click", () =>
+  saveTabSession({
+    mode: destinationState.session.mode,
+    groupId: groupSelects.session?.getValue() || "",
+    groupName: document.getElementById("session-name")?.value.trim() || "",
+  }),
+)
+
+const addManualLinkBtn = document.getElementById("add-manual-link")
+const manualLinkInput = document.getElementById("links-manual-url")
+let isAddingManualLink = false
+
+if (addManualLinkBtn && manualLinkInput) {
+  const handleAddLink = async () => {
+    if (isAddingManualLink || addManualLinkBtn.disabled) return
+
+    const value = manualLinkInput.value.trim()
+    if (!value) return
+
+    isAddingManualLink = true
+    addManualLinkBtn.disabled = true
+
+    let urlToAdd = value
+    if (!/^https?:\/\//i.test(urlToAdd)) {
+      urlToAdd = `https://${urlToAdd}`
+    }
+
+    try {
+      const metadata = await fetchManualLinkMetadata(urlToAdd)
+      const response = await chrome.runtime.sendMessage({
+        type: "addGrabbedLink",
+        url: urlToAdd,
+        title: metadata?.title || "",
+        favIconUrl: metadata?.favicon || null,
+        source: "manual",
+      })
+
+      if (response && response.success === false && response.reason === "duplicate") {
+        setStatus(
+          "This link is already in the list.",
+          "error",
+          document.getElementById("manual-link-status"),
+        )
+        setTimeout(() => {
+          setStatus("", "", document.getElementById("manual-link-status"))
+        }, 3000)
+      } else {
+        manualLinkInput.value = ""
+        loadGrabbedLinks()
+      }
+    } catch (error) {
+      console.error("Failed to add link", error)
+    } finally {
+      isAddingManualLink = false
+      addManualLinkBtn.disabled = false
+      manualLinkInput.focus()
+    }
+  }
+
+  addManualLinkBtn.addEventListener("click", handleAddLink)
+  manualLinkInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      handleAddLink()
+    }
+  })
+}
+
+document.querySelectorAll(".tab-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    setSettingsPanelOpen(false)
+    const tabId = button.dataset.tab
+    switchTab(tabId)
+    if (tabId === "links") loadGrabbedLinks()
+    if (tabId === "session") loadTabSession()
+  })
+})
+
+document
+  .getElementById("save-group-name")
+  ?.addEventListener("input", () =>
+    updateChars(
+      document.getElementById("save-group-name"),
+      document.getElementById("save-group-char-count"),
+    ),
+  )
+
+document
+  .getElementById("links-group-name")
+  ?.addEventListener("input", () =>
+    updateChars(
+      document.getElementById("links-group-name"),
+      document.getElementById("links-group-char-count"),
+    ),
+  )
+
+document
+  .getElementById("session-name")
+  ?.addEventListener("input", () =>
+    updateChars(
+      document.getElementById("session-name"),
+      document.getElementById("session-char-count"),
+    ),
+  )

@@ -1,5 +1,4 @@
 import {
-  BOOKMARK_CACHE_KEY,
   readCachedBookmarks,
   readCachedGroups,
   touchBookmarkCache,
@@ -76,7 +75,6 @@ async function prepareAccessCommandStorage() {
 }
 
 void prepareAccessCommandStorage();
-void migrateAccessFabPosition();
 
 // ============================================
 // Link Grab Storage Manager
@@ -520,75 +518,6 @@ async function getExtensionUrl(pathname) {
   return new URL(pathname, baseUrl).toString();
 }
 
-async function broadcastBookmark(bookmark) {
-  const settings = await getSettings();
-  const tabs = await chrome.tabs.query({ url: `${settings.baseUrl}/*` });
-  tabs.forEach((tab) => {
-    chrome.tabs
-      .sendMessage(tab.id, { type: "broadcastBookmark", bookmark })
-      .catch(() => {});
-  });
-}
-
-async function invalidateCachedBookmarks(groupId) {
-  const cacheKey = groupId || NO_GROUP_ID;
-  const { [BOOKMARK_CACHE_KEY]: cache } = await chrome.storage.local.get(BOOKMARK_CACHE_KEY);
-  if (!cache?.[cacheKey]) return;
-  await chrome.storage.local.set({
-    [BOOKMARK_CACHE_KEY]: {
-      ...cache,
-      [cacheKey]: { ...cache[cacheKey], fetchedAt: 0 },
-    },
-  });
-}
-
-async function saveAccessBookmark(message, favIconUrl) {
-  const { url, title, description, groupId } = message;
-
-  if (!url || !isHttpUrl(url)) {
-    return { ok: false, error: { message: "Invalid URL", code: "INVALID_URL" } };
-  }
-
-  const data = await apiFetch("/api/extension/bookmarks", {
-    method: "POST",
-    body: JSON.stringify({
-      url,
-      title: title || url,
-      description: description || "",
-      faviconUrl: favIconUrl || null,
-      groupId: groupId || null,
-    }),
-  });
-
-  void invalidateCachedBookmarks(groupId);
-  void broadcastBookmark(data.bookmark);
-
-  return { ok: true, bookmark: data.bookmark };
-}
-
-async function migrateAccessFabPosition() {
-  const { rewayAccessFabPosition, rewayAccessFabCorner } =
-    await chrome.storage.local.get(["rewayAccessFabPosition", "rewayAccessFabCorner"]);
-
-  if (rewayAccessFabCorner || !rewayAccessFabPosition) return;
-
-  let corner = "bottom-right";
-  const { x, y } = rewayAccessFabPosition;
-
-  if (typeof x === "number" && typeof y === "number") {
-    try {
-      const win = await chrome.windows.getCurrent();
-      const midX = (win.width || 1920) / 2;
-      const midY = (win.height || 1080) / 2;
-      corner = `${y >= midY ? "bottom" : "top"}-${x >= midX ? "right" : "left"}`;
-    } catch {
-      // Default to bottom-right if window info unavailable
-    }
-  }
-
-  await chrome.storage.local.set({ rewayAccessFabCorner: corner });
-}
-
 async function handleAccessMessage(message, sender) {
   const tabId = sender?.tab?.id;
 
@@ -632,10 +561,6 @@ async function handleAccessMessage(message, sender) {
 
   if (message?.type === "rewayAccessGetDashboardUrl") {
     return { ok: true, url: await getExtensionUrl("/dashboard") };
-  }
-
-  if (message?.type === "rewayAccessSaveBookmark") {
-    return saveAccessBookmark(message, sender?.tab?.favIconUrl || null);
   }
 
   return null;
