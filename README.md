@@ -1,10 +1,6 @@
+![Reway bookmark manager](public/cover.webp)
+
 # Reway
-
-<div align="center">
-  <img src="public/cover.webp" alt="Reway bookmark workspace" width="800">
-</div>
-
-> **Status: active development — July 2026**
 
 Reway is a personal bookmark operating system for people who save heavily and need to find things later. It pairs a synced web dashboard with a Chrome extension, making it easy to capture a page, a batch of links, or an entire tab session without turning saving into an organisational chore.
 
